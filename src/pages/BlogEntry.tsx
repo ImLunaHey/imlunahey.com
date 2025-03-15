@@ -10,11 +10,12 @@ import { useReadTime } from '../hooks/use-read-time';
 import { useViewCount } from '../hooks/use-view-count';
 import { Loading } from '../components/Loading';
 import { ProfileCard } from '../components/ProfileCard';
+import { Card } from '../components/Card';
 
 const Comment = ({ comment }: { comment: AppBskyFeedDefs.ThreadViewPost }) => {
   const record = comment.post.record as AppBskyFeedPost.Record;
   return (
-    <div key={comment.post.uri} className="border border-[#1a1a1a] p-2 bg-black">
+    <Card key={comment.post.uri} className="p-2">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <Link to={`https://bsky.app/profile/${comment.post.author.did}`}>
@@ -32,7 +33,7 @@ const Comment = ({ comment }: { comment: AppBskyFeedDefs.ThreadViewPost }) => {
           <RelativeTime date={new Date(record.createdAt)} />
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 

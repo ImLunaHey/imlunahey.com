@@ -1,8 +1,34 @@
+import { Card } from '../components/Card';
 import { NavBar } from '../components/NavBar';
 import { Page } from '../components/Page';
 import { RelativeTime } from '../components/RelativeTime';
 import { useBlogEntries } from '../hooks/use-blog-entries';
+import { useReadTime } from '../hooks/use-read-time';
+import { useViewCount } from '../hooks/use-view-count';
 import { Link } from '../lib/router';
+import { BlogEntry } from '../types/blog-entry';
+
+const Seperator = () => <div className="size-1 bg-gray-200 rounded-full" />;
+
+const Summary = ({ blogEntry }: { blogEntry: BlogEntry<'did:plc:k6acu4chiwkixvdedcmdgmal'> }) => {
+  const { data: readTime } = useReadTime({ rkey: blogEntry.uri.split('/').pop()! });
+  const { data: views } = useViewCount({ rkey: blogEntry.uri.split('/').pop()! });
+
+  return (
+    <Card key={blogEntry.value.createdAt} className="p-2">
+      <Link to={`/blog/${blogEntry.uri.split('/').pop()}`}>
+        <h2 className="text-2xl font-bold">{blogEntry.value.title}</h2>
+        <div className="flex items-center gap-2 text-sm">
+          {blogEntry.value.createdAt ? <RelativeTime date={new Date(blogEntry.value.createdAt)} /> : null}
+          <Seperator />
+          <div>{readTime?.text}</div>
+          <Seperator />
+          <div>{views} views</div>
+        </div>
+      </Link>
+    </Card>
+  );
+};
 
 export const BlogEntries = ({ count = 10 }: { count?: number }) => {
   const { data: blogEntries, isLoading } = useBlogEntries('did:plc:k6acu4chiwkixvdedcmdgmal');
@@ -16,14 +42,9 @@ export const BlogEntries = ({ count = 10 }: { count?: number }) => {
   }
 
   return (
-    <div className="max-w-screen-md mx-auto p-4">
-      {blogEntries.slice(0, count).map((entry) => (
-        <div key={entry.value.createdAt}>
-          <Link to={`/blog/${entry.uri.split('/').pop()}`}>
-            <h2 className="text-2xl font-bold">{entry.value.title}</h2>
-            <RelativeTime date={new Date(entry.value.createdAt)} />
-          </Link>
-        </div>
+    <div className="max-w-screen-md mx-auto">
+      {blogEntries.slice(0, count).map((blogEntry) => (
+        <Summary key={blogEntry.value.createdAt} blogEntry={blogEntry} />
       ))}
     </div>
   );

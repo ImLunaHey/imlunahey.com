@@ -13,6 +13,8 @@ import { BlogPage } from './pages/Blog.tsx';
 import { PhotosPage } from './pages/Photos.tsx';
 import { BlogEntryPage } from './pages/BlogEntry.tsx';
 import { Favicon } from './components/Favicon.tsx';
+import { ProjectsPage } from './pages/Projects.tsx';
+
 const queryClient = new QueryClient();
 
 const routes = [
@@ -20,6 +22,7 @@ const routes = [
   { path: '/blog', component: BlogPage, exact: true },
   { path: '/blog/:id', component: BlogEntryPage },
   { path: '/contact', component: ContactPage },
+  { path: '/projects', component: ProjectsPage },
   { path: '/photos', component: PhotosPage },
 ];
 
