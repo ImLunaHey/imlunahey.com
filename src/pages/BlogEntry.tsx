@@ -69,7 +69,7 @@ const BlogEntry = ({ rkey }: { rkey: string }) => {
     <div className="flex flex-col gap-2">
       <div className="flex flex-col gap-2 bg-black border border-[#1a1a1a] p-2">
         <h1 className="text-4xl font-bold">{blogEntry?.value.title}</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-sm">
           <img src={profile.avatar} className="size-6 rounded-full" loading="eager" />
           <div>{profile.displayName}</div>
           <Seperator />
