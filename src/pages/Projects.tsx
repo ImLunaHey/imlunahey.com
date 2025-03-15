@@ -1,6 +1,7 @@
 import { Page } from '../components/Page';
 import { NavBar } from '../components/NavBar';
 import { Card } from '../components/Card';
+import { Link } from '../lib/router';
 
 type Project = {
   name: string;
@@ -45,6 +46,11 @@ const projects: Project[] = [
     description: 'scrapes certificate transparency logs from the internet and saves them to axiom.co',
     url: 'https://github.com/imlunahey/ct-logs',
   },
+  {
+    name: 'CSS showcase',
+    description: 'a showcase of random CSS projects.',
+    url: '/showcase',
+  },
 ];
 
 export const ProjectsPage = () => {
@@ -56,9 +62,9 @@ export const ProjectsPage = () => {
           <Card key={project.name} className="p-2">
             <h2 className="text-xl font-bold">{project.name}</h2>
             <p className="text-sm text-gray-500">{project.description}</p>
-            <a href={project.url} className="text-sm text-blue-500">
+            <Link to={project.url} className="text-sm text-blue-500">
               View Project
-            </a>
+            </Link>
           </Card>
         ))}
       </div>
