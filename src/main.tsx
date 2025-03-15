@@ -5,17 +5,21 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { QueryClient } from '@tanstack/react-query';
 import { cn } from './cn.ts';
 import { RouterProvider, Routes } from './lib/router.tsx';
-import { HomePage } from './pages/Home.tsx';
 import { NotFoundPage } from './pages/NotFound.tsx';
-import { ContactPage } from './pages/Contact.tsx';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { BlogPage } from './pages/Blog.tsx';
-import { PhotosPage } from './pages/Photos.tsx';
-import { BlogEntryPage } from './pages/BlogEntry.tsx';
 import { Favicon } from './components/Favicon.tsx';
-import { ProjectsPage } from './pages/Projects.tsx';
+import React from 'react';
 
 const queryClient = new QueryClient();
+
+const HomePage = React.lazy(() => import('./pages/Home.tsx').then((module) => ({ default: module.HomePage })));
+const ProjectsPage = React.lazy(() => import('./pages/Projects.tsx').then((module) => ({ default: module.ProjectsPage })));
+const BlogPage = React.lazy(() => import('./pages/Blog.tsx').then((module) => ({ default: module.BlogPage })));
+const BlogEntryPage = React.lazy(() =>
+  import('./pages/BlogEntry.tsx').then((module) => ({ default: module.BlogEntryPage })),
+);
+const ContactPage = React.lazy(() => import('./pages/Contact.tsx').then((module) => ({ default: module.ContactPage })));
+const PhotosPage = React.lazy(() => import('./pages/Photos.tsx').then((module) => ({ default: module.PhotosPage })));
 
 const routes = [
   { path: '/', component: HomePage, exact: true },
