@@ -1,5 +1,6 @@
 import { NavBar } from '../components/NavBar';
 import { Page } from '../components/Page';
+import { RelativeTime } from '../components/RelativeTime';
 import { useBlogEntries } from '../hooks/use-blog-entries';
 import { Link } from '../lib/router';
 
@@ -7,7 +8,7 @@ export const BlogEntries = ({ count = 10 }: { count?: number }) => {
   const { data: blogEntries, isLoading } = useBlogEntries('did:plc:k6acu4chiwkixvdedcmdgmal');
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   if (!blogEntries) {
@@ -20,7 +21,7 @@ export const BlogEntries = ({ count = 10 }: { count?: number }) => {
         <div key={entry.value.createdAt}>
           <Link to={`/blog/${entry.uri.split('/').pop()}`}>
             <h2 className="text-2xl font-bold">{entry.value.title}</h2>
-            <p className="text-xs text-gray-500">{entry.value.createdAt}</p>
+            <RelativeTime date={new Date(entry.value.createdAt)} />
           </Link>
         </div>
       ))}

@@ -11,7 +11,7 @@ const NavLink = ({ children, to, className }: { children: React.ReactNode; to: s
 
 export const NavBar = () => {
   return (
-    <div className="border border-[#1a1a1a] border-b-1 bg-black max-w-screen-md mx-auto mb-2">
+    <div className="border border-[#1a1a1a] border-b-1 bg-black max-w-screen-md mx-auto mb-2 px-4">
       <div className="flex justify-between items-center p-2 h-12">
         <NavLink to="/">Home</NavLink>
         <NavLink to="/blog">Blog</NavLink>

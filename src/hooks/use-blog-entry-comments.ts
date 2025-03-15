@@ -3,7 +3,7 @@ import { simpleFetchHandler, XRPC } from '@atcute/client';
 
 const rpc = new XRPC({ handler: simpleFetchHandler({ service: 'https://public.api.bsky.app' }) });
 
-export const useBlogEntryComments = (uri: string | null | undefined) => {
+export const useBlogEntryComments = ({ uri }: { uri: string | null | undefined }) => {
   const query = useQuery({
     queryKey: ['comments', uri],
     queryFn: async () => {

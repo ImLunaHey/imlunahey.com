@@ -4,7 +4,7 @@ import { simpleFetchHandler, XRPC } from '@atcute/client';
 
 const rpc = new XRPC({ handler: simpleFetchHandler({ service: 'https://bsky.social' }) });
 
-export function useBlogEntry<T extends string>(author: T, rkey: string) {
+export function useBlogEntry<T extends string>({ author, rkey }: { author: T; rkey: string }) {
   const query = useQuery({
     queryKey: ['post', rkey],
     queryFn: async () => {

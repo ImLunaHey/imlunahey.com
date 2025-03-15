@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '../cn';
 
 type Route = {
   path: string;
@@ -151,7 +152,7 @@ export const Link = ({ to, children, className }: LinkProps) => {
   };
 
   return (
-    <a href={to} onClick={handleClick} className={className}>
+    <a href={to} onClick={handleClick} className={cn(className)}>
       {children}
     </a>
   );
