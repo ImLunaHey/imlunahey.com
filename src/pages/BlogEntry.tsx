@@ -62,13 +62,8 @@ const BlogEntry = ({ rkey }: { rkey: string }) => {
   const { data: readTime, isLoading: readTimeLoading } = useReadTime({ rkey });
   const { data: views, isLoading: viewsLoading } = useViewCount({ rkey });
 
-  if (profileLoading || blogEntryLoading || readTimeLoading || viewsLoading) {
-    return <Loading />;
-  }
-
-  if (!profile || !blogEntry) {
-    return <div>No profile or blog entry found</div>;
-  }
+  if (profileLoading || blogEntryLoading || readTimeLoading || viewsLoading) return <Loading />;
+  if (!profile || !blogEntry) return null;
 
   return (
     <div className="flex flex-col gap-2">
