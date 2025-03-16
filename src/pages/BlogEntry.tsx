@@ -78,7 +78,7 @@ const BlogEntry = ({ rkey }: { rkey: string }) => {
           <Seperator />
           <div>{readTime?.text}</div>
           <Seperator />
-          <div>{views} views</div>
+          {views && <div>{views} views</div>}
         </div>
         <div>{blogEntry.value.content}</div>
       </div>
