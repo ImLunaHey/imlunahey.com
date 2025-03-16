@@ -1,4 +1,6 @@
 import { AppBskyFeedDefs, AppBskyFeedPost } from '@atcute/client/lexicons';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useBlogEntry } from '../hooks/use-blog-entry';
 import { useBlogEntryComments } from '../hooks/use-blog-entry-comments';
 import { Link, useParams } from '../lib/router';
@@ -77,10 +79,36 @@ const BlogEntry = ({ rkey }: { rkey: string }) => {
           {blogEntry.value.createdAt ? <RelativeTime date={new Date(blogEntry.value.createdAt)} /> : null}
           <Seperator />
           <div>{readTime?.text}</div>
-          <Seperator />
-          {views && <div>{views} views</div>}
+          {views ? (
+            <>
+              <Seperator />
+              <div>{views} views</div>
+            </>
+          ) : null}
         </div>
-        <div>{blogEntry.value.content}</div>
+        <Markdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            a: ({ children, ...props }) => {
+              if (props.href) {
+                return (
+                  <Link to={props.href} className="text-blue-500 hover:underline">
+                    {children}
+                  </Link>
+                );
+              }
+              return <a {...props}>{children}</a>;
+            },
+            h1: ({ children }) => <h1 className="text-2xl font-bold">{children}</h1>,
+            h2: ({ children }) => <h2 className="text-xl font-bold">{children}</h2>,
+            h3: ({ children }) => <h3 className="text-lg font-bold">{children}</h3>,
+            h4: ({ children }) => <h4 className="text-base font-bold">{children}</h4>,
+            h5: ({ children }) => <h5 className="text-sm font-bold">{children}</h5>,
+            h6: ({ children }) => <h6 className="text-xs font-bold">{children}</h6>,
+          }}
+        >
+          {blogEntry.value.content}
+        </Markdown>
       </div>
       {blogEntry.value.comments ? <Comments uri={blogEntry.value.comments} /> : null}
     </div>

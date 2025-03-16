@@ -22,8 +22,12 @@ const Summary = ({ blogEntry }: { blogEntry: BlogEntry<'did:plc:k6acu4chiwkixvde
           {blogEntry.value.createdAt ? <RelativeTime date={new Date(blogEntry.value.createdAt)} /> : null}
           <Seperator />
           <div>{readTime?.text}</div>
-          <Seperator />
-          <div>{views} views</div>
+          {views ? (
+            <>
+              <Seperator />
+              <div>{views} views</div>
+            </>
+          ) : null}
         </div>
       </Link>
     </Card>
