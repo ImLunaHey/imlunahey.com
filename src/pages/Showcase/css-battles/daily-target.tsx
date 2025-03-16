@@ -10,6 +10,7 @@ import { DailyTargets_31102023 } from './daily-targets/31-10-2023';
 import { DailyTargets_21102023 } from './daily-targets/21-10-2023';
 import { DailyTargets_02072023 } from './daily-targets/02-07-2023';
 import { DailyTargets_01102023 } from './daily-targets/01-10-2023';
+import { DailyTargets_15032025 } from './daily-targets/15-03-2025';
 
 export const DailyTarget = ({ children, href }: { children: React.ReactNode; href: string }) => {
   const [expanded, setExpanded] = useState(true);
@@ -99,5 +100,10 @@ export const battles = [
     href: 'https://cssbattle.dev/play/2S2kJuGL3a15M9HieIQ4',
     component: DailyTargets_04112023,
     date: '04-11-2023',
+  },
+  {
+    href: 'https://cssbattle.dev/play/r3VAqE9bFgqKDzqcdl5K',
+    component: DailyTargets_15032025,
+    date: '15-03-2025',
   },
 ] satisfies Battle[];
