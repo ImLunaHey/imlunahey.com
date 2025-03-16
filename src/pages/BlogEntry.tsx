@@ -13,8 +13,9 @@ import { useViewCount } from '../hooks/use-view-count';
 import { Loading } from '../components/Loading';
 import { ProfileCard } from '../components/ProfileCard';
 import { Card } from '../components/Card';
+import { cn } from '../cn';
 
-const Comment = ({ comment }: { comment: AppBskyFeedDefs.ThreadViewPost }) => {
+const Comment = ({ comment, className }: { comment: AppBskyFeedDefs.ThreadViewPost; className?: string }) => {
   const record = comment.post.record as AppBskyFeedPost.Record;
   const images = comment.post.embed?.$type === 'app.bsky.embed.images#view' ? comment.post.embed.images : [];
   const replies =
@@ -29,7 +30,7 @@ const Comment = ({ comment }: { comment: AppBskyFeedDefs.ThreadViewPost }) => {
 
   return (
     <>
-      <Card key={comment.post.uri} className="p-2">
+      <Card key={comment.post.uri} className={cn('p-2', className)}>
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <Link to={`https://bsky.app/profile/${comment.post.author.did}`}>
@@ -59,8 +60,10 @@ const Comment = ({ comment }: { comment: AppBskyFeedDefs.ThreadViewPost }) => {
           if (!comment) return null;
 
           return (
-            <div className="border-l border-gray-200 pl-2">
-              <Comment key={comment.post.uri} comment={comment} />
+            <div className="pl-2">
+              <div className="border-l border-gray-200">
+                <Comment key={comment.post.uri} comment={comment} />
+              </div>
             </div>
           );
         })}
