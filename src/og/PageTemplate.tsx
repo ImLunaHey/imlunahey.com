@@ -13,14 +13,14 @@ const PageTemplate = ({ title, description }: PageMetaData) => {
         <meta property="og:description" content={description} />
         <meta property="og:url" content="https://imlunahey.com" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://imlunahey.com/og-image.png" />
+        <meta property="og:image" content="https://imlunahey.com/open-graph.png" />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta property="twitter:domain" content="imlunahey.com" />
         <meta property="twitter:url" content="https://imlunahey.com" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content="https://imlunahey.com/og-image.png" />
+        <meta name="twitter:image" content="https://imlunahey.com/open-graph.png" />
       </head>
       <body>
         <div id="root" />
