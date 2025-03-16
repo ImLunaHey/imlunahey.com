@@ -45,7 +45,7 @@ const Comment = ({ comment }: { comment: AppBskyFeedDefs.ThreadViewPost }) => {
           <div>{record.text}</div>
           {images.map((image) => (
             <div key={image.thumb}>
-              <img src={image.fullsize} loading="lazy" />
+              <img src={image.fullsize} loading="lazy" alt={image.alt} />
             </div>
           ))}
           <div className="text-xs text-gray-500">
@@ -53,11 +53,16 @@ const Comment = ({ comment }: { comment: AppBskyFeedDefs.ThreadViewPost }) => {
           </div>
         </div>
       </Card>
-      <div className="w-full border-l border-gray-200 pl-2 flex flex-col gap-1">
+      <div className="w-full flex flex-col gap-1">
         {replies.map((reply) => {
           const comment = reply.$type === 'app.bsky.feed.defs#threadViewPost' ? reply : null;
           if (!comment) return null;
-          return <Comment key={comment.post.uri} comment={comment} />;
+
+          return (
+            <div className="border-l border-gray-200 pl-2">
+              <Comment key={comment.post.uri} comment={comment} />
+            </div>
+          );
         })}
       </div>
     </>
