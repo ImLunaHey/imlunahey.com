@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { simpleFetchHandler, XRPC } from '@atcute/client';
+import { AppBskyFeedPost } from '@atcute/client/lexicons';
 
 const rpc = new XRPC({ handler: simpleFetchHandler({ service: 'https://public.api.bsky.app' }) });
 
@@ -20,7 +21,14 @@ export const useBlogEntryComments = ({ uri }: { uri: string | null | undefined }
         throw new Error('Invalid thread');
       }
 
-      return thread.replies?.filter((reply) => reply.$type === 'app.bsky.feed.defs#threadViewPost') ?? [];
+      const replies = thread.replies?.filter((reply) => reply.$type === 'app.bsky.feed.defs#threadViewPost') ?? [];
+
+      return replies.sort((a, b) => {
+        return (
+          new Date((a.post.record as AppBskyFeedPost.Record).createdAt).getTime() -
+          new Date((b.post.record as AppBskyFeedPost.Record).createdAt).getTime()
+        );
+      });
     },
   });
 
