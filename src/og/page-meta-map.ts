@@ -12,7 +12,7 @@ export const pages: PageMetaData[] = [
     url: 'index.html',
     bundleEntryPoint: '/src/main.tsx',
     title: 'luna',
-    description: `👋 hi, i'm luna`,
+    description: 'a website i made',
   },
   {
     url: 'projects.html',
