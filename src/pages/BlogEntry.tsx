@@ -138,6 +138,12 @@ const BlogEntry = ({ rkey }: { rkey: string }) => {
             h4: ({ children }) => <h4 className="text-base font-bold">{children}</h4>,
             h5: ({ children }) => <h5 className="text-sm font-bold">{children}</h5>,
             h6: ({ children }) => <h6 className="text-xs font-bold">{children}</h6>,
+            img: ({ ...props }) => (
+              <div className="flex flex-col gap-2 items-center justify-center">
+                <img {...props} className="w-full" />
+                <div className="text-xs text-gray-200">{props.alt}</div>
+              </div>
+            ),
           }}
         >
           {blogEntry.value.content}
