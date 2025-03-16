@@ -16,26 +16,51 @@ import { Card } from '../components/Card';
 
 const Comment = ({ comment }: { comment: AppBskyFeedDefs.ThreadViewPost }) => {
   const record = comment.post.record as AppBskyFeedPost.Record;
+  const images = comment.post.embed?.$type === 'app.bsky.embed.images#view' ? comment.post.embed.images : [];
+  const replies =
+    comment.replies
+      ?.filter((reply) => reply.$type === 'app.bsky.feed.defs#threadViewPost')
+      .sort((a, b) => {
+        return (
+          new Date((a.post.record as AppBskyFeedPost.Record).createdAt).getTime() -
+          new Date((b.post.record as AppBskyFeedPost.Record).createdAt).getTime()
+        );
+      }) ?? [];
+
   return (
-    <Card key={comment.post.uri} className="p-2">
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <Link to={`https://bsky.app/profile/${comment.post.author.did}`}>
-            <img src={comment.post.author.avatar} className="w-6 h-6 rounded-full" loading="lazy" />
-          </Link>
-          <Link to={`https://bsky.app/profile/${comment.post.author.did}`} className="hover:underline">
-            {comment.post.author.displayName}
-          </Link>
-          <Link to={`https://bsky.app/profile/${comment.post.author.did}`} className="text-gray-500">
-            <ProfileCard actor={comment.post.author.did} />
-          </Link>
+    <>
+      <Card key={comment.post.uri} className="p-2">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <Link to={`https://bsky.app/profile/${comment.post.author.did}`}>
+              <img src={comment.post.author.avatar} className="w-6 h-6 rounded-full" loading="lazy" />
+            </Link>
+            <Link to={`https://bsky.app/profile/${comment.post.author.did}`} className="hover:underline">
+              {comment.post.author.displayName}
+            </Link>
+            <Link to={`https://bsky.app/profile/${comment.post.author.did}`} className="text-gray-500">
+              <ProfileCard actor={comment.post.author.did} />
+            </Link>
+          </div>
+          <div>{record.text}</div>
+          {images.map((image) => (
+            <div key={image.thumb}>
+              <img src={image.fullsize} loading="lazy" />
+            </div>
+          ))}
+          <div className="text-xs text-gray-500">
+            <RelativeTime date={new Date(record.createdAt)} />
+          </div>
         </div>
-        <div>{record.text}</div>
-        <div className="text-xs text-gray-500">
-          <RelativeTime date={new Date(record.createdAt)} />
-        </div>
+      </Card>
+      <div className="w-full border-l border-gray-200 pl-2 flex flex-col gap-1">
+        {replies.map((reply) => {
+          const comment = reply.$type === 'app.bsky.feed.defs#threadViewPost' ? reply : null;
+          if (!comment) return null;
+          return <Comment key={comment.post.uri} comment={comment} />;
+        })}
       </div>
-    </Card>
+    </>
   );
 };
 
