@@ -2,7 +2,6 @@
 import React from 'react';
 import type { PageMetaData } from './page-meta-map';
 
-// must contain an element with id="root"
 const PageTemplate = ({ title, description }: PageMetaData) => {
   return (
     <html lang="en">
@@ -12,9 +11,19 @@ const PageTemplate = ({ title, description }: PageMetaData) => {
         <meta name="description" content={description} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
+        <meta property="og:url" content="https://imlunahey.com" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta property="twitter:domain" content="imlunahey.com" />
+        <meta property="twitter:url" content="https://imlunahey.com" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content="" />
       </head>
       <body>
-        <div id="root"></div>
+        <div id="root" />
       </body>
     </html>
   );

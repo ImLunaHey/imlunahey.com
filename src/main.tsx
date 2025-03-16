@@ -18,7 +18,7 @@ const BlogPage = React.lazy(() => import('./pages/Blog.tsx').then((module) => ({
 const BlogEntryPage = React.lazy(() =>
   import('./pages/BlogEntry.tsx').then((module) => ({ default: module.BlogEntryPage })),
 );
-const PhotosPage = React.lazy(() => import('./pages/Photos.tsx').then((module) => ({ default: module.PhotosPage })));
+const GalleryPage = React.lazy(() => import('./pages/Gallery.tsx').then((module) => ({ default: module.GalleryPage })));
 const ContactPage = React.lazy(() => import('./pages/Contact.tsx').then((module) => ({ default: module.ContactPage })));
 const ShowcasePage = React.lazy(() => import('./pages/Showcase.tsx').then((module) => ({ default: module.ShowcasePage })));
 
@@ -27,7 +27,7 @@ const routes = [
   { path: '/blog', component: BlogPage, exact: true },
   { path: '/blog/:id', component: BlogEntryPage },
   { path: '/projects', component: ProjectsPage },
-  { path: '/photos', component: PhotosPage },
+  { path: '/gallery', component: GalleryPage },
   { path: '/contact', component: ContactPage },
 
   // non-nav routes

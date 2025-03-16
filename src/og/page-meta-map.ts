@@ -14,4 +14,28 @@ export const pages: PageMetaData[] = [
     title: 'luna',
     description: `👋 hi, i'm luna`,
   },
+  {
+    url: 'projects.html',
+    bundleEntryPoint: '/src/main.tsx',
+    title: 'projects',
+    description: `some projects i've worked on`,
+  },
+  {
+    url: 'blog.html',
+    bundleEntryPoint: '/src/main.tsx',
+    title: 'blog',
+    description: `some blog posts i've written`,
+  },
+  {
+    url: 'gallery.html',
+    bundleEntryPoint: '/src/main.tsx',
+    title: 'gallery',
+    description: `some images i've made`,
+  },
+  {
+    url: 'contact.html',
+    bundleEntryPoint: '/src/main.tsx',
+    title: 'contact',
+    description: `contact me`,
+  },
 ];

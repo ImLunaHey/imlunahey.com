@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import images from '../assets/images.json' with { type: 'json' };
 import { cn } from '../cn';
+import { Link } from '../lib/router';
 
 const Corner = ({ position }: { position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' }) => {
   return (
@@ -19,7 +20,7 @@ const Corner = ({ position }: { position: 'top-left' | 'top-right' | 'bottom-lef
   );
 };
 
-export const PhotosPage = () => {
+export const GalleryPage = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const currentImage = images[currentImageIndex];
 
@@ -36,7 +37,7 @@ export const PhotosPage = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
       >
-        LUNA
+        <Link to="/">LUNA</Link>
       </motion.div>
 
       {/* Viewfinder */}
