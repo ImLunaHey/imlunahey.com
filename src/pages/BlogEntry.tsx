@@ -1,9 +1,8 @@
 import { AppBskyFeedDefs, AppBskyFeedPost } from '@atcute/client/lexicons';
-import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { useBlogEntry } from '../hooks/use-blog-entry';
 import { useBlogEntryComments } from '../hooks/use-blog-entry-comments';
-import { Link, useParams } from '../lib/router';
+import { Link } from '../lib/router/Link';
+import { useParams } from '../lib/router/use-params';
 import { NavBar } from '../components/NavBar';
 import { Page } from '../components/Page';
 import { RelativeTime } from '../components/RelativeTime';
@@ -14,6 +13,8 @@ import { Loading } from '../components/Loading';
 import { ProfileCard } from '../components/ProfileCard';
 import { Card } from '../components/Card';
 import { cn } from '../cn';
+import { Redirect } from '../lib/router/Redirect';
+import { MarkdownPreview } from '../components/MarkdownPreview';
 
 const Comment = ({ comment, className }: { comment: AppBskyFeedDefs.ThreadViewPost; className?: string }) => {
   const record = comment.post.record as AppBskyFeedPost.Record;
@@ -76,6 +77,7 @@ const Comments = ({ uri }: { uri: string }) => {
   const { data: comments, isLoading } = useBlogEntryComments({ uri });
 
   if (isLoading) return <Loading />;
+  if (!comments || comments.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-2">
@@ -90,14 +92,19 @@ const Comments = ({ uri }: { uri: string }) => {
 const Seperator = () => <div className="size-1 bg-gray-200 rounded-full" />;
 
 const BlogEntry = ({ rkey }: { rkey: string }) => {
-  const { data: profile, isLoading: profileLoading } = useProfile({ actor: 'did:plc:k6acu4chiwkixvdedcmdgmal' });
-  const { data: blogEntry, isLoading: blogEntryLoading } = useBlogEntry({
+  const {
+    data: blogEntry,
+    isLoading: blogEntryLoading,
+    isError: blogEntryError,
+  } = useBlogEntry({
     author: 'did:plc:k6acu4chiwkixvdedcmdgmal',
     rkey,
   });
+  const { data: profile, isLoading: profileLoading } = useProfile({ actor: 'did:plc:k6acu4chiwkixvdedcmdgmal' });
   const { data: readTime, isLoading: readTimeLoading } = useReadTime({ rkey });
   const { data: views, isLoading: viewsLoading } = useViewCount({ rkey });
 
+  if (blogEntryError) return <Redirect to="/not-found" />;
   if (profileLoading || blogEntryLoading || readTimeLoading || viewsLoading) return <Loading />;
   if (!profile || !blogEntry) return null;
 
@@ -119,42 +126,14 @@ const BlogEntry = ({ rkey }: { rkey: string }) => {
             </>
           ) : null}
         </div>
-        <Markdown
-          remarkPlugins={[remarkGfm]}
-          components={{
-            a: ({ children, ...props }) => {
-              if (props.href) {
-                return (
-                  <Link to={props.href} className="text-blue-500 hover:underline">
-                    {children}
-                  </Link>
-                );
-              }
-              return <a {...props}>{children}</a>;
-            },
-            h1: ({ children }) => <h1 className="text-2xl font-bold">{children}</h1>,
-            h2: ({ children }) => <h2 className="text-xl font-bold">{children}</h2>,
-            h3: ({ children }) => <h3 className="text-lg font-bold">{children}</h3>,
-            h4: ({ children }) => <h4 className="text-base font-bold">{children}</h4>,
-            h5: ({ children }) => <h5 className="text-sm font-bold">{children}</h5>,
-            h6: ({ children }) => <h6 className="text-xs font-bold">{children}</h6>,
-            img: ({ ...props }) => (
-              <div className="flex flex-col gap-2 items-center justify-center">
-                <img {...props} className="w-full" />
-                <div className="text-xs text-gray-200">{props.alt}</div>
-              </div>
-            ),
-          }}
-        >
-          {blogEntry.value.content}
-        </Markdown>
+        <MarkdownPreview content={blogEntry.value.content} />
       </div>
       {blogEntry.value.comments ? <Comments uri={blogEntry.value.comments} /> : null}
     </div>
   );
 };
 
-export const BlogEntryPage = () => {
+export default function BlogEntryPage() {
   const params = useParams();
   const rkey = params[1];
 
@@ -164,4 +143,4 @@ export const BlogEntryPage = () => {
       <BlogEntry rkey={rkey} />
     </Page>
   );
-};
+}

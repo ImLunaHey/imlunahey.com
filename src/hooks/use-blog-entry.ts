@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { BlogEntry } from '../types/blog-entry';
+import { BlogEntryResponse } from '../types/blog-entry';
 import { simpleFetchHandler, XRPC } from '@atcute/client';
 
 const rpc = new XRPC({ handler: simpleFetchHandler({ service: 'https://bsky.social' }) });
@@ -18,8 +18,12 @@ export function useBlogEntry<T extends string>({ author, rkey }: { author: T; rk
         },
       });
 
-      return response.data as BlogEntry<T>;
+      return response.data as BlogEntryResponse<T>;
     },
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchInterval: false,
+    retry: false,
   });
 
   return query;

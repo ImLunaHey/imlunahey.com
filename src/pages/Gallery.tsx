@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import images from '../assets/images.json' with { type: 'json' };
 import { cn } from '../cn';
-import { Link } from '../lib/router';
+import { Link } from '../lib/router/Link';
+import { useParams } from '../lib/router/use-params';
+import { useRouter } from '../lib/router/use-router';
 
 const Corner = ({ position }: { position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' }) => {
   return (
@@ -20,8 +22,11 @@ const Corner = ({ position }: { position: 'top-left' | 'top-right' | 'bottom-lef
   );
 };
 
-export const GalleryPage = () => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+export default function GalleryPage() {
+  const params = useParams();
+  const router = useRouter();
+  const paramsIndex = params[1] ? parseInt(params[1]) : 0;
+  const [currentImageIndex, setCurrentImageIndex] = useState(paramsIndex);
   const currentImage = images[currentImageIndex];
 
   return (
@@ -81,7 +86,7 @@ export const GalleryPage = () => {
 
       {/* Thumbnails */}
       <motion.div
-        className="fixed bottom-5 left-0 w-full overflow-x-auto z-10"
+        className="fixed bottom-5 left-0 w-screen overflow-x-auto z-10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1, delay: 6 }}
@@ -101,7 +106,10 @@ export const GalleryPage = () => {
                 ease: 'easeOut',
                 delay: 6 + (index * 0.1),
               }}
-              onClick={() => setCurrentImageIndex(index)}
+              onClick={() => {
+                setCurrentImageIndex(index);
+                router.replace(`/gallery/${index}`);
+              }}
               whileHover={{ scale: 1.05 }}
             >
               <img

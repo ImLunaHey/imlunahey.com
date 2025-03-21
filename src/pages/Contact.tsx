@@ -1,8 +1,8 @@
 import { NavBar } from '../components/NavBar';
 import { Page } from '../components/Page';
-import { Link } from '../lib/router';
+import { Link } from '../lib/router/Link';
 
-export const ContactPage = () => {
+export default function ContactPage() {
   return (
     <Page>
       <NavBar />
@@ -16,4 +16,4 @@ export const ContactPage = () => {
       </div>
     </Page>
   );
-};
+}

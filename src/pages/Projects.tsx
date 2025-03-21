@@ -1,7 +1,7 @@
 import { Page } from '../components/Page';
 import { NavBar } from '../components/NavBar';
 import { Card } from '../components/Card';
-import { Link } from '../lib/router';
+import { Link } from '../lib/router/Link';
 
 type Project = {
   name: string;
@@ -51,9 +51,24 @@ const projects: Project[] = [
     description: 'a showcase of random CSS projects.',
     url: '/showcase',
   },
+  {
+    name: 'bluesky tools',
+    description: 'a collection of tools for bluesky.',
+    url: '/bluesky/tools',
+  },
+  // {
+  //   name: 'whitewind',
+  //   description: 'a tool for creating whitewind posts.',
+  //   url: '/whitewind',
+  // },
+  // {
+  //   name: 'referral checker',
+  //   description: 'a way to check the referral header.',
+  //   url: '/referral-checker',
+  // },
 ];
 
-export const ProjectsPage = () => {
+export default function ProjectsPage() {
   return (
     <Page>
       <NavBar />
@@ -70,4 +85,4 @@ export const ProjectsPage = () => {
       </div>
     </Page>
   );
-};
+}

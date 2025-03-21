@@ -5,12 +5,12 @@ import { RelativeTime } from '../components/RelativeTime';
 import { useBlogEntries } from '../hooks/use-blog-entries';
 import { useReadTime } from '../hooks/use-read-time';
 import { useViewCount } from '../hooks/use-view-count';
-import { Link } from '../lib/router';
-import { BlogEntry } from '../types/blog-entry';
+import { Link } from '../lib/router/Link';
+import { BlogEntryResponse } from '../types/blog-entry';
 
 const Seperator = () => <div className="size-1 bg-gray-200 rounded-full" />;
 
-const Summary = ({ blogEntry }: { blogEntry: BlogEntry<'did:plc:k6acu4chiwkixvdedcmdgmal'> }) => {
+const Summary = ({ blogEntry }: { blogEntry: BlogEntryResponse<'did:plc:k6acu4chiwkixvdedcmdgmal'> }) => {
   const { data: readTime } = useReadTime({ rkey: blogEntry.uri.split('/').pop()! });
   const { data: views } = useViewCount({ rkey: blogEntry.uri.split('/').pop()! });
 
@@ -54,11 +54,11 @@ export const BlogEntries = ({ count = 10 }: { count?: number }) => {
   );
 };
 
-export const BlogPage = () => {
+export default function BlogPage() {
   return (
     <Page>
       <NavBar />
       <BlogEntries />
     </Page>
   );
-};
+}

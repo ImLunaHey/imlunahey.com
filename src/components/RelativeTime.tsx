@@ -1,4 +1,4 @@
-export const RelativeTime = ({ date }: { date: Date }) => {
+const getTime = (date: Date) => {
   const formatter = new Intl.RelativeTimeFormat(navigator.language, {
     numeric: 'auto',
     style: 'long',
@@ -21,4 +21,12 @@ export const RelativeTime = ({ date }: { date: Date }) => {
   } else {
     return formatter.format(-Math.floor(diffInSeconds / 31536000), 'year');
   }
+};
+
+export const RelativeTime = ({ date }: { date: Date }) => {
+  return (
+    <time title={date.toLocaleString()} dateTime={date.toISOString()}>
+      {getTime(date)}
+    </time>
+  );
 };

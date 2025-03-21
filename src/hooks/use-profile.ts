@@ -15,6 +15,9 @@ export const useProfile = ({ actor }: { actor: string }) => {
       });
       return response.data;
     },
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchInterval: false,
   });
 
   return query;

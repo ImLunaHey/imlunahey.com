@@ -1,4 +1,4 @@
-export type BlogEntry<did extends string> = {
+export type BlogEntryResponse<did extends string> = {
   uri: string;
   cid: string;
   value: {

@@ -1,5 +1,5 @@
 import { cn } from '../cn';
-import { Link } from '../lib/router';
+import { Link } from '../lib/router/Link';
 import { Card } from './Card';
 
 const NavLink = ({ children, to, className }: { children: React.ReactNode; to: string; className?: string }) => {

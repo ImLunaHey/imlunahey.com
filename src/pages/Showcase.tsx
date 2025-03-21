@@ -13,7 +13,7 @@ const showcase = [
   )),
 ];
 
-export const ShowcasePage = () => {
+export default function ShowcasePage() {
   return (
     <Page>
       <NavBar />
@@ -26,4 +26,4 @@ export const ShowcasePage = () => {
       </div>
     </Page>
   );
-};
+}
