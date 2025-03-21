@@ -26,7 +26,7 @@ const BlueskyToolsPage = React.lazy(() => import('./pages/BlueskyTools.tsx'));
 const BlueskyToolsFeedPage = React.lazy(() => import('./pages/BlueskyTools/Feed.tsx'));
 const PDFUploaderPage = React.lazy(() => import('./pages/BlueskyTools/PDFUploader.tsx'));
 const WhiteWindPage = React.lazy(() => import('./pages/WhiteWind.tsx'));
-const ReferralCheckerPage = React.lazy(() => import('./pages/ReferralChecker.tsx'));
+const ReferrerCheckerPage = React.lazy(() => import('./pages/ReferrerChecker.tsx'));
 
 const routes = [
   { path: '/', component: HomePage, exact: true },
@@ -42,7 +42,7 @@ const routes = [
   { path: '/bluesky/tools/pdf-uploader', component: PDFUploaderPage },
   { path: '/bluesky/tools/feed/:id?', component: BlueskyToolsFeedPage },
   { path: '/whitewind/:id?', component: WhiteWindPage },
-  { path: '/referral-checker', component: ReferralCheckerPage },
+  { path: '/referrer-checker', component: ReferrerCheckerPage },
   // not found
   { path: '*', component: NotFoundPage },
 ];

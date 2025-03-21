@@ -5,6 +5,9 @@ import { Link } from '../lib/router/Link';
 
 export const ProfileCard = ({ actor }: { actor: string }) => {
   const { data: profile, isLoading } = useProfile({ actor });
+  const profileHandleLength = profile?.handle?.length ?? 0;
+  const cutOff = 25;
+  const handle = profile?.handle?.slice(0, cutOff) + (profileHandleLength > cutOff ? '...' : '');
 
   if (!profile || isLoading) {
     return null;
@@ -12,7 +15,7 @@ export const ProfileCard = ({ actor }: { actor: string }) => {
 
   return (
     <HoverCard>
-      <HoverCardTrigger>@{profile?.handle}</HoverCardTrigger>
+      <HoverCardTrigger>@{handle}</HoverCardTrigger>
       <HoverCardPortal>
         <HoverCardContent
           className="w-[300px] border border-[#1a1a1a] rounded-md bg-black p-5 shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade data-[side=right]:animate-slideLeftAndFade data-[side=top]:animate-slideDownAndFade data-[state=open]:transition-all"
@@ -28,7 +31,7 @@ export const ProfileCard = ({ actor }: { actor: string }) => {
                   <div className="m-0 text-[15px] font-medium">{profile?.displayName}</div>
                 </Link>
                 <Link to={`https://bsky.app/profile/${actor}`} className="hover:no-underline">
-                  <div className="m-0 text-[15px]">@{profile?.handle}</div>
+                  <div className="m-0 text-[15px]">@{handle}</div>
                 </Link>
               </div>
               <div className="m-0 text-[15px]">{profile?.description}</div>
