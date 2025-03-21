@@ -18,6 +18,7 @@ export const useProfile = ({ actor }: { actor: string }) => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchInterval: false,
+    enabled: !!actor,
   });
 
   return query;
