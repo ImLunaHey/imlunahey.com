@@ -1,30 +1,13 @@
 import './App.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
-import { QueryClient } from '@tanstack/react-query';
 import { cn } from './cn.ts';
 import { Routes } from './lib/router/Routes.tsx';
 import { RouterProvider } from './lib/router/RouterProvider.tsx';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Favicon } from './components/Favicon.tsx';
 import React from 'react';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // mark the data as stale after 5 minutes
-      staleTime: 1_000 * 60 * 5,
-    },
-  },
-});
-
-const persister = createSyncStoragePersister({
-  storage: window.localStorage,
-  throttleTime: 1_000,
-  key: 'cache',
-});
+import { QueryProvider } from './components/QueryProvider.tsx';
 
 const HomePage = React.lazy(() => import('./pages/Home.tsx'));
 const ProjectsPage = React.lazy(() => import('./pages/Projects.tsx'));
@@ -33,14 +16,16 @@ const BlogEntryPage = React.lazy(() => import('./pages/BlogEntry.tsx'));
 const GalleryPage = React.lazy(() => import('./pages/Gallery.tsx'));
 const ContactPage = React.lazy(() => import('./pages/Contact.tsx'));
 
-const NotFoundPage = React.lazy(() => import('./pages/NotFound.tsx'));
-
 const ShowcasePage = React.lazy(() => import('./pages/Showcase.tsx'));
 const BlueskyToolsPage = React.lazy(() => import('./pages/BlueskyTools.tsx'));
 const BlueskyToolsFeedPage = React.lazy(() => import('./pages/BlueskyTools/Feed.tsx'));
 const PDFUploaderPage = React.lazy(() => import('./pages/BlueskyTools/PDFUploader.tsx'));
 const WhiteWindPage = React.lazy(() => import('./pages/WhiteWind.tsx'));
 const ReferrerCheckerPage = React.lazy(() => import('./pages/ReferrerChecker.tsx'));
+
+const MoviesPage = React.lazy(() => import('./pages/Movies.tsx'));
+const ShowsPage = React.lazy(() => import('./pages/Shows.tsx'));
+const NotFoundPage = React.lazy(() => import('./pages/NotFound.tsx'));
 
 const routes = [
   { path: '/', component: HomePage, exact: true },
@@ -57,23 +42,18 @@ const routes = [
   { path: '/bluesky/tools/feed/:id?', component: BlueskyToolsFeedPage },
   { path: '/whitewind/:id?', component: WhiteWindPage },
   { path: '/referrer-checker', component: ReferrerCheckerPage },
+
+  // temp pages
+  { path: '/movies', component: MoviesPage },
+  { path: '/shows', component: ShowsPage },
+
   // not found
   { path: '*', component: NotFoundPage },
 ];
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{
-        persister,
-        maxAge: 1_000 * 60 * 60 * 24,
-      }}
-      onSuccess={() => {
-        console.log('Cache successfully restored!');
-        queryClient.resumePausedMutations();
-      }}
-    >
+    <QueryProvider>
       <RouterProvider>
         <div
           className={cn(
@@ -88,6 +68,6 @@ createRoot(document.getElementById('root')!).render(
         <Routes routes={routes} />
       </RouterProvider>
       <ReactQueryDevtools />
-    </PersistQueryClientProvider>
+    </QueryProvider>
   </StrictMode>,
 );

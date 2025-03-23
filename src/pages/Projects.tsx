@@ -56,6 +56,16 @@ const projects: Project[] = [
     description: 'a collection of tools for bluesky.',
     url: '/bluesky/tools',
   },
+  {
+    name: 'popsky - movies',
+    description: 'all of my movie reviews on popsky.',
+    url: '/movies',
+  },
+  {
+    name: 'popsky - shows',
+    description: 'all of my show reviews on popsky.',
+    url: '/shows',
+  },
   // {
   //   name: 'whitewind',
   //   description: 'a tool for creating whitewind posts.',
