@@ -1,7 +1,8 @@
 import './App.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { QueryClient } from '@tanstack/react-query';
 import { cn } from './cn.ts';
 import { Routes } from './lib/router/Routes.tsx';
@@ -10,7 +11,20 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Favicon } from './components/Favicon.tsx';
 import React from 'react';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // mark the data as stale after 5 minutes
+      staleTime: 1_000 * 60 * 5,
+    },
+  },
+});
+
+const persister = createSyncStoragePersister({
+  storage: window.localStorage,
+  throttleTime: 1_000,
+  key: 'cache',
+});
 
 const HomePage = React.lazy(() => import('./pages/Home.tsx'));
 const ProjectsPage = React.lazy(() => import('./pages/Projects.tsx'));
@@ -49,7 +63,17 @@ const routes = [
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister,
+        maxAge: 1_000 * 60 * 60 * 24,
+      }}
+      onSuccess={() => {
+        console.log('Cache successfully restored!');
+        queryClient.resumePausedMutations();
+      }}
+    >
       <RouterProvider>
         <div
           className={cn(
@@ -64,6 +88,6 @@ createRoot(document.getElementById('root')!).render(
         <Routes routes={routes} />
       </RouterProvider>
       <ReactQueryDevtools />
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   </StrictMode>,
 );
