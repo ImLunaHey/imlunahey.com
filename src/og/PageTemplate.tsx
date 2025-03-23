@@ -21,6 +21,9 @@ const PageTemplate = ({ title, description }: PageMetaData) => {
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content="https://imlunahey.com/open-graph.png" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script defer data-domain="imlunahey.com" src="https://plausible.io/js/script.outbound-links.js"></script>
       </head>
       <body>
         <div id="root" />
