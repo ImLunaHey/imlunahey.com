@@ -37,13 +37,7 @@ const getListItems = async (pdsUri: string, cursor: string | undefined) => {
 
 export const useMovies = () => {
   const { data: pdsUri } = usePDSUrl();
-  return useInfiniteQuery<
-    { cursor: string | undefined; items: ListItem[] },
-    Error,
-    { pages: { cursor: string | undefined; items: ListItem[] }[]; pageParams: string[] },
-    string[],
-    string | undefined
-  >({
+  return useInfiniteQuery({
     queryKey: ['movies'],
     queryFn: async ({ pageParam }) => {
       if (!pdsUri) throw new Error('PDS URI not found');
@@ -54,7 +48,7 @@ export const useMovies = () => {
       };
     },
     getNextPageParam: (lastPage) => lastPage.cursor,
-    initialPageParam: undefined,
+    initialPageParam: undefined as string | undefined,
     enabled: !!pdsUri,
   });
 };

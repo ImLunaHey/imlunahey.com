@@ -1,6 +1,6 @@
 import { simpleFetchHandler, XRPC } from '@atcute/client';
-import { useInfiniteQuery } from '@tanstack/react-query';
 import { usePDSUrl } from './use-pds-url';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 type ListItem = {
   cid: string;
@@ -37,13 +37,7 @@ const getListItems = async (pdsUri: string, cursor: string | undefined) => {
 
 export const useShows = () => {
   const { data: pdsUri } = usePDSUrl();
-  return useInfiniteQuery<
-    { cursor: string | undefined; items: ListItem[] },
-    Error,
-    { pages: { cursor: string | undefined; items: ListItem[] }[]; pageParams: string[] },
-    string[],
-    string | undefined
-  >({
+  return useInfiniteQuery({
     queryKey: ['shows'],
     queryFn: async ({ pageParam }) => {
       if (!pdsUri) throw new Error('PDS URI not found');
@@ -62,7 +56,7 @@ export const useShows = () => {
       };
     },
     getNextPageParam: (lastPage) => lastPage.cursor,
-    initialPageParam: undefined,
+    initialPageParam: undefined as string | undefined,
     enabled: !!pdsUri,
   });
 };
