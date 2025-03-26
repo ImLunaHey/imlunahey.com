@@ -66,6 +66,11 @@ const projects: Project[] = [
     description: 'all of my show reviews on popsky.',
     url: '/shows',
   },
+  {
+    name: 'infinite canvas',
+    description: 'an infinite canvas of images.',
+    url: '/infinite-canvas',
+  },
   // {
   //   name: 'whitewind',
   //   description: 'a tool for creating whitewind posts.',
