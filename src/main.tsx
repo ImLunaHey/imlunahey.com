@@ -20,6 +20,8 @@ const ShowcasePage = React.lazy(() => import('./pages/Showcase.tsx'));
 const BlueskyToolsPage = React.lazy(() => import('./pages/BlueskyTools.tsx'));
 const BlueskyToolsFeedPage = React.lazy(() => import('./pages/BlueskyTools/Feed.tsx'));
 const PDFUploaderPage = React.lazy(() => import('./pages/BlueskyTools/PDFUploader.tsx'));
+const ListCleanerPage = React.lazy(() => import('./pages/BlueskyTools/ListCleaner.tsx'));
+
 const WhiteWindPage = React.lazy(() => import('./pages/WhiteWind.tsx'));
 const ReferrerCheckerPage = React.lazy(() => import('./pages/ReferrerChecker.tsx'));
 
@@ -42,6 +44,8 @@ const routes = [
   { path: '/bluesky/tools', component: BlueskyToolsPage },
   { path: '/bluesky/tools/pdf-uploader', component: PDFUploaderPage },
   { path: '/bluesky/tools/feed/:id?', component: BlueskyToolsFeedPage },
+  { path: '/bluesky/tools/list-cleaner', component: ListCleanerPage },
+
   { path: '/whitewind/:id?', component: WhiteWindPage },
   { path: '/referrer-checker', component: ReferrerCheckerPage },
 

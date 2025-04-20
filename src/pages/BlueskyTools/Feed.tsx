@@ -16,6 +16,7 @@ import { InfiniteList } from '../../components/InfiniteList';
 import { useParams } from '../../lib/router/use-params';
 import { useRouter } from '../../lib/router/use-router';
 import { useProfile } from '../../hooks/use-profile';
+
 const rpc = new XRPC({ handler: simpleFetchHandler({ service: 'https://public.api.bsky.app' }) });
 
 const useAuthorFeed = (handle: string, enabled: boolean = true) => {

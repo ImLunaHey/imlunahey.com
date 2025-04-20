@@ -14,6 +14,12 @@ const tools = [
     description: 'A tool to view the feed of a bluesky user.',
     url: '/bluesky/tools/feed',
   },
+  {
+    name: 'List Cleaner',
+    description:
+      'A tool to remove lists you are subscribed to that have been deleted or were made by accounts that are deleted/suspended.',
+    url: '/bluesky/tools/list-cleaner',
+  },
 ];
 
 export default function BlueskyToolsPage() {
