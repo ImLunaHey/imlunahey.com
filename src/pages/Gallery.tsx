@@ -2,9 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import images from '../assets/images.json' with { type: 'json' };
 import { cn } from '../cn';
-import { Link } from '../lib/router/Link';
-import { useParams } from '../lib/router/use-params';
-import { useRouter } from '../lib/router/use-router';
+import { Link, useNavigate, useParams } from 'react-router';
 
 const Corner = ({ position }: { position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' }) => {
   return (
@@ -24,7 +22,7 @@ const Corner = ({ position }: { position: 'top-left' | 'top-right' | 'bottom-lef
 
 export default function GalleryPage() {
   const params = useParams();
-  const router = useRouter();
+  const navigate = useNavigate();
   const paramsIndex = params[1] ? parseInt(params[1]) : 0;
   const [currentImageIndex, setCurrentImageIndex] = useState(paramsIndex);
   const currentImage = images[currentImageIndex];
@@ -108,7 +106,7 @@ export default function GalleryPage() {
               }}
               onClick={() => {
                 setCurrentImageIndex(index);
-                router.replace(`/gallery/${index}`);
+                navigate(`/gallery/${index}`, { replace: true });
               }}
               whileHover={{ scale: 1.05 }}
             >

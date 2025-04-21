@@ -1,6 +1,6 @@
 import { NavBar } from '../components/NavBar';
 import { Page } from '../components/Page';
-import { Link } from '../lib/router/Link';
+import { Link } from 'react-router';
 
 export default function HomePage() {
   return (

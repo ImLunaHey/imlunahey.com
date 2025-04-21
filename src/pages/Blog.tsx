@@ -5,9 +5,8 @@ import { RelativeTime } from '../components/RelativeTime';
 import { useBlogEntries } from '../hooks/use-blog-entries';
 import { useReadTime } from '../hooks/use-read-time';
 import { useViewCount } from '../hooks/use-view-count';
-import { Link } from '../lib/router/Link';
 import { BlogEntryResponse } from '../types/blog-entry';
-
+import { Link } from 'react-router';
 const Seperator = () => <div className="size-1 bg-gray-200 rounded-full" />;
 
 const Summary = ({ blogEntry }: { blogEntry: BlogEntryResponse<'did:plc:k6acu4chiwkixvdedcmdgmal'> }) => {

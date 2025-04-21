@@ -7,15 +7,13 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { AppBskyEmbedImages, AppBskyFeedPost } from '@atcute/client/lexicons';
 import { Loading } from '../../components/Loading';
 import { ProfileCard } from '../../components/ProfileCard';
-import { Link } from '../../lib/router/Link';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { RelativeTime } from '../../components/RelativeTime';
 import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { InfiniteList } from '../../components/InfiniteList';
-import { useParams } from '../../lib/router/use-params';
-import { useRouter } from '../../lib/router/use-router';
 import { useProfile } from '../../hooks/use-profile';
+import { Link, useNavigate, useParams } from 'react-router';
 
 const rpc = new XRPC({ handler: simpleFetchHandler({ service: 'https://public.api.bsky.app' }) });
 
@@ -119,8 +117,8 @@ const Results = ({ handle }: { handle: string }) => {
 };
 
 export default function BlueskyToolsFeedPage() {
-  const router = useRouter();
   const params = useParams();
+  const navigate = useNavigate();
   const id = params[3];
   const [handle, setHandle] = useState(id ?? '');
   const [input, setInput] = useState(id ?? '');
@@ -131,8 +129,8 @@ export default function BlueskyToolsFeedPage() {
 
   const onSubmit = useCallback(() => {
     setHandle(input);
-    router.navigate(`/bluesky/tools/feed/${input}`);
-  }, [input, router]);
+    navigate(`/bluesky/tools/feed/${input}`);
+  }, [input, navigate]);
 
   return (
     <Page>

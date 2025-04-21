@@ -13,6 +13,7 @@
   "dependencies": {
     "@atcute/bluesky": "^1.0.14",
     "@atcute/client": "^2.0.8",
+    "@atcute/identity-resolver": "^0.1.2",
     "@atcute/whitewind": "^1.0.4",
     "@atproto/api": "^0.14.9",
     "@codemirror/lang-markdown": "^6.3.2",
@@ -34,6 +35,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
+    "react-router": "^7.5.1",
     "reading-time-estimator": "^1.11.0",
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.0.2",

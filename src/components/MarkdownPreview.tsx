@@ -1,6 +1,6 @@
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Link } from '../lib/router/Link';
+import { Link } from 'react-router';
 import { cn } from '../cn';
 import { H1, H2, H3, H4, H5, H6 } from './Heading';
 

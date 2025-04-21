@@ -2,8 +2,7 @@ import './App.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { cn } from './cn.ts';
-import { Routes } from './lib/router/Routes.tsx';
-import { RouterProvider } from './lib/router/RouterProvider.tsx';
+import { BrowserRouter, Route, Routes } from 'react-router';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Favicon } from './components/Favicon.tsx';
 import React from 'react';
@@ -21,6 +20,7 @@ const BlueskyToolsPage = React.lazy(() => import('./pages/BlueskyTools.tsx'));
 const BlueskyToolsFeedPage = React.lazy(() => import('./pages/BlueskyTools/Feed.tsx'));
 const PDFUploaderPage = React.lazy(() => import('./pages/BlueskyTools/PDFUploader.tsx'));
 const ListCleanerPage = React.lazy(() => import('./pages/BlueskyTools/ListCleaner.tsx'));
+const StatsPage = React.lazy(() => import('./pages/BlueskyTools/Stats.tsx'));
 
 const WhiteWindPage = React.lazy(() => import('./pages/WhiteWind.tsx'));
 const ReferrerCheckerPage = React.lazy(() => import('./pages/ReferrerChecker.tsx'));
@@ -31,39 +31,10 @@ const MoviesPage = React.lazy(() => import('./pages/Movies.tsx'));
 const ShowsPage = React.lazy(() => import('./pages/Shows.tsx'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFound.tsx'));
 
-const routes = [
-  { path: '/', component: HomePage, exact: true },
-  { path: '/blog', component: BlogPage, exact: true },
-  { path: '/blog/:id', component: BlogEntryPage },
-  { path: '/projects', component: ProjectsPage },
-  { path: '/gallery/:id?', component: GalleryPage },
-  { path: '/contact', component: ContactPage },
-
-  // non-nav routes
-  { path: '/showcase', component: ShowcasePage },
-  { path: '/bluesky/tools', component: BlueskyToolsPage },
-  { path: '/bluesky/tools/pdf-uploader', component: PDFUploaderPage },
-  { path: '/bluesky/tools/feed/:id?', component: BlueskyToolsFeedPage },
-  { path: '/bluesky/tools/list-cleaner', component: ListCleanerPage },
-
-  { path: '/whitewind/:id?', component: WhiteWindPage },
-  { path: '/referrer-checker', component: ReferrerCheckerPage },
-
-  // canvas
-  { path: '/infinite-canvas', component: InfiniteCanvasPage },
-
-  // temp pages
-  { path: '/movies', component: MoviesPage },
-  { path: '/shows', component: ShowsPage },
-
-  // not found
-  { path: '*', component: NotFoundPage },
-];
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryProvider>
-      <RouterProvider>
+      <BrowserRouter>
         <div
           className={cn(
             'absolute -z-10 inset-0 size-full',
@@ -74,8 +45,35 @@ createRoot(document.getElementById('root')!).render(
           )}
         />
         <Favicon />
-        <Routes routes={routes} />
-      </RouterProvider>
+        <Routes>
+          <Route index element={<HomePage />} />
+
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/:rkey" element={<BlogEntryPage />} />
+
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/gallery/:id?" element={<GalleryPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+
+          <Route path="/showcase" element={<ShowcasePage />} />
+          <Route path="/bluesky/tools" element={<BlueskyToolsPage />} />
+          <Route path="/bluesky/tools/pdf-uploader" element={<PDFUploaderPage />} />
+          <Route path="/bluesky/tools/feed/:id?" element={<BlueskyToolsFeedPage />} />
+          <Route path="/bluesky/tools/list-cleaner" element={<ListCleanerPage />} />
+
+          <Route path="/bluesky/tools/stats" element={<StatsPage />} />
+
+          <Route path="/whitewind/:id?" element={<WhiteWindPage />} />
+          <Route path="/referrer-checker" element={<ReferrerCheckerPage />} />
+
+          <Route path="/infinite-canvas" element={<InfiniteCanvasPage />} />
+
+          <Route path="/movies" element={<MoviesPage />} />
+          <Route path="/shows" element={<ShowsPage />} />
+
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </BrowserRouter>
       <ReactQueryDevtools />
     </QueryProvider>
   </StrictMode>,

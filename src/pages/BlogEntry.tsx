@@ -1,8 +1,7 @@
 import { AppBskyFeedDefs, AppBskyFeedPost } from '@atcute/client/lexicons';
 import { useBlogEntry } from '../hooks/use-blog-entry';
 import { useBlogEntryComments } from '../hooks/use-blog-entry-comments';
-import { Link } from '../lib/router/Link';
-import { useParams } from '../lib/router/use-params';
+import { Link, Navigate, useParams } from 'react-router';
 import { NavBar } from '../components/NavBar';
 import { Page } from '../components/Page';
 import { RelativeTime } from '../components/RelativeTime';
@@ -13,7 +12,6 @@ import { Loading } from '../components/Loading';
 import { ProfileCard } from '../components/ProfileCard';
 import { Card } from '../components/Card';
 import { cn } from '../cn';
-import { Redirect } from '../lib/router/Redirect';
 import { MarkdownPreview } from '../components/MarkdownPreview';
 import { H1 } from '../components/Heading';
 
@@ -120,7 +118,7 @@ const BlogEntry = ({ rkey }: { rkey: string }) => {
   const { data: readTime, isLoading: readTimeLoading } = useReadTime({ rkey });
   const { data: views, isLoading: viewsLoading } = useViewCount({ rkey });
 
-  if (blogEntryError) return <Redirect to="/not-found" />;
+  if (blogEntryError) <Navigate replace to="/not-found" />;
   if (profileLoading || blogEntryLoading || readTimeLoading || viewsLoading) return <Loading />;
   if (!profile || !blogEntry) return null;
 
@@ -150,8 +148,10 @@ const BlogEntry = ({ rkey }: { rkey: string }) => {
 };
 
 export default function BlogEntryPage() {
-  const params = useParams();
-  const rkey = params[1];
+  const params = useParams<{ rkey: string }>();
+  const rkey = params.rkey;
+
+  if (!rkey) return <Navigate replace to="/not-found" />;
 
   return (
     <Page>

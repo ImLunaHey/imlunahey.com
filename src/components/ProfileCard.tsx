@@ -1,7 +1,7 @@
 import { HoverCard, HoverCardContent, HoverCardPortal, HoverCardTrigger } from '@radix-ui/react-hover-card';
 import { useProfile } from '../hooks/use-profile';
 import { formatNumber } from '../lib/format-number';
-import { Link } from '../lib/router/Link';
+import { Link } from 'react-router';
 
 export const ProfileCard = ({ actor }: { actor: string }) => {
   const { data: profile, isLoading } = useProfile({ actor });

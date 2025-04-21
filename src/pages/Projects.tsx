@@ -1,7 +1,7 @@
 import { Page } from '../components/Page';
 import { NavBar } from '../components/NavBar';
 import { Card } from '../components/Card';
-import { Link } from '../lib/router/Link';
+import { Link } from 'react-router';
 
 type Project = {
   name: string;
