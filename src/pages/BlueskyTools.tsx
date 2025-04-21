@@ -20,6 +20,11 @@ const tools = [
       'A tool to remove lists you are subscribed to that have been deleted or were made by accounts that are deleted/suspended.',
     url: '/bluesky/tools/list-cleaner',
   },
+  {
+    name: 'CAR Explorer',
+    description: 'A tool to explore the CAR file of a given at proto account.',
+    url: '/bluesky/tools/car-explorer',
+  },
 ];
 
 export default function BlueskyToolsPage() {

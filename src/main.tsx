@@ -20,7 +20,7 @@ const BlueskyToolsPage = React.lazy(() => import('./pages/BlueskyTools.tsx'));
 const BlueskyToolsFeedPage = React.lazy(() => import('./pages/BlueskyTools/Feed.tsx'));
 const PDFUploaderPage = React.lazy(() => import('./pages/BlueskyTools/PDFUploader.tsx'));
 const ListCleanerPage = React.lazy(() => import('./pages/BlueskyTools/ListCleaner.tsx'));
-const StatsPage = React.lazy(() => import('./pages/BlueskyTools/Stats.tsx'));
+const CARExplorerPage = React.lazy(() => import('./pages/BlueskyTools/CARExplorer.tsx'));
 
 const WhiteWindPage = React.lazy(() => import('./pages/WhiteWind.tsx'));
 const ReferrerCheckerPage = React.lazy(() => import('./pages/ReferrerChecker.tsx'));
@@ -61,7 +61,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/bluesky/tools/feed/:id?" element={<BlueskyToolsFeedPage />} />
           <Route path="/bluesky/tools/list-cleaner" element={<ListCleanerPage />} />
 
-          <Route path="/bluesky/tools/stats" element={<StatsPage />} />
+          <Route path="/bluesky/tools/car-explorer" element={<CARExplorerPage />} />
 
           <Route path="/whitewind/:id?" element={<WhiteWindPage />} />
           <Route path="/referrer-checker" element={<ReferrerCheckerPage />} />

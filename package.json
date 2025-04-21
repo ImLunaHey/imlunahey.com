@@ -11,7 +11,9 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@ariakit/react": "^0.4.17",
     "@atcute/bluesky": "^1.0.14",
+    "@atcute/car": "^3.0.2",
     "@atcute/client": "^2.0.8",
     "@atcute/identity-resolver": "^0.1.2",
     "@atcute/whitewind": "^1.0.4",
@@ -31,7 +33,6 @@
     "lucide-react": "^0.483.0",
     "motion": "^12.5.0",
     "pdfjs-serverless": "^0.7.0",
-    "radix-ui": "^1.1.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
