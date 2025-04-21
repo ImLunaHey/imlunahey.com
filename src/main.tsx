@@ -63,7 +63,7 @@ createRoot(document.getElementById('root')!).render(
 
           <Route path="/bluesky/tools/car-explorer" element={<CARExplorerPage />} />
 
-          <Route path="/whitewind/:id?" element={<WhiteWindPage />} />
+          <Route path="/whitewind/:rkey?" element={<WhiteWindPage />} />
           <Route path="/referrer-checker" element={<ReferrerCheckerPage />} />
 
           <Route path="/infinite-canvas" element={<InfiniteCanvasPage />} />

@@ -12,7 +12,7 @@ export const Input = function <T extends string = string>({
   accept,
   ref,
 }: {
-  value: T | null;
+  value?: T | null;
   onChangeValue?: (value: string) => void;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   disabled?: boolean;

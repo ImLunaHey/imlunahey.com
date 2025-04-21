@@ -7,11 +7,11 @@ import { okaidia } from '@uiw/codemirror-theme-okaidia';
 import { MarkdownPreview } from '../components/MarkdownPreview';
 import { useCallback, useState } from 'react';
 import { Card } from '../components/Card';
-import { useParams } from '../lib/router/use-params';
 import { useBlogEntry } from '../hooks/use-blog-entry';
 import { Loading } from '../components/Loading';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
+import { useParams } from 'react-router';
 
 const Editor = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
   return (
@@ -27,9 +27,9 @@ const Editor = ({ value, onChange }: { value: string; onChange: (value: string) 
 };
 
 export default function WhiteWindPage() {
-  const params = useParams();
-  const id = params[1];
-  const { data, isLoading } = useBlogEntry({ author: 'imlunahey.com', rkey: id });
+  const params = useParams<{ rkey: string }>();
+  const rkey = params.rkey;
+  const { data, isLoading } = useBlogEntry({ author: 'imlunahey.com', rkey });
   const [value, setValue] = useState(data?.value.content ?? '');
   const onChange = useCallback((value: string) => {
     setValue(value);
