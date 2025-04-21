@@ -114,7 +114,7 @@ export default function BlueskyToolsCARExplorerPage() {
       <NavBar />
       <div className="flex flex-col gap-4">
         <Card className="p-4 flex flex-col gap-4">
-          <h1>CARExplorer</h1>
+          <h1>CAR Explorer</h1>
           <form onSubmit={handleSubmit}>
             <Input
               placeholder="Enter a Handle or DID (e.g. imlunahey.com)"
