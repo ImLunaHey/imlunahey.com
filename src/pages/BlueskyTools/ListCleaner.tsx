@@ -22,6 +22,7 @@ export default function BlueskyToolsListCleanerPage() {
       uri: string;
       list: AppBskyGraphDefs.ListView | null;
       creator: AppBskyActorDefs.ProfileViewDetailed | AppBskyActorDefs.ProfileView | null;
+      rkey: string;
     }[]
   >([]);
 
@@ -51,7 +52,13 @@ export default function BlueskyToolsListCleanerPage() {
         })
         .then(
           (res) =>
-            res.data as { records: { value: { $type: 'app.bsky.graph.listblock'; subject: string; createdAt: string } }[] },
+            res.data as {
+              records: {
+                uri: string;
+                cid: string;
+                value: { $type: 'app.bsky.graph.listblock'; subject: string; createdAt: string };
+              }[];
+            },
         )
         .then((res) => res.records.sort((a, b) => b.value.createdAt.localeCompare(a.value.createdAt)))
         .then((lists) => {
@@ -67,6 +74,7 @@ export default function BlueskyToolsListCleanerPage() {
         uri: string;
         list: AppBskyGraphDefs.ListView | null;
         creator: AppBskyActorDefs.ProfileViewDetailed | AppBskyActorDefs.ProfileView | null;
+        rkey: string;
       }[] = [];
       for (const record of listRecords) {
         const list = await rpc
@@ -79,6 +87,7 @@ export default function BlueskyToolsListCleanerPage() {
             uri: record.value.subject,
             list: res.data.list,
             creator: res.data.list.creator,
+            rkey: record.uri.split('/').pop()!,
           }))
           .catch(async () => {
             const creator = await rpc
@@ -93,6 +102,7 @@ export default function BlueskyToolsListCleanerPage() {
               uri: record.value.subject,
               list: null,
               creator: creator?.data ?? null,
+              rkey: record.uri.split('/').pop()!,
             };
           });
 
@@ -107,7 +117,7 @@ export default function BlueskyToolsListCleanerPage() {
     void fetchLists().catch(console.error);
   }, [session]);
 
-  const handleRemoveList = async (listUri: string) => {
+  const handleRemoveList = async (rkey: string) => {
     const confirmed = confirm('Are you sure you want to unsubscribe from this list?');
     if (!confirmed) return;
 
@@ -115,11 +125,11 @@ export default function BlueskyToolsListCleanerPage() {
       data: {
         collection: 'app.bsky.graph.listblock',
         repo: handle,
-        rkey: listUri.split('/').pop()!,
+        rkey,
       },
     });
 
-    setLists(lists.filter((list) => list.uri !== listUri));
+    setLists(lists.filter((list) => list.rkey !== rkey));
   };
 
   return (
@@ -168,14 +178,16 @@ export default function BlueskyToolsListCleanerPage() {
         {profile && (
           <>
             {lists.length === 0 ? (
-              <Loading />
+              <Card className="p-4">
+                <Loading />
+              </Card>
             ) : (
-              lists.map(({ uri, list, creator }) => {
+              lists.map(({ uri, list, creator, rkey }) => {
                 return (
-                  <Card key={uri} className="p-4">
+                  <Card key={rkey} className="p-4">
                     <div className="flex flex-col gap-2 relative">
                       <button
-                        onClick={() => handleRemoveList(uri)}
+                        onClick={() => handleRemoveList(rkey)}
                         className="absolute top-0 right-0 text-red-500 cursor-pointer"
                         aria-label="Remove list"
                       >
