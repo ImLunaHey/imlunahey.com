@@ -17,7 +17,7 @@ import { useState } from 'react';
 import { Button } from '../../components/Button';
 import { useQuery } from '@tanstack/react-query';
 import { simpleFetchHandler, XRPC } from '@atcute/client';
-import { ArrowBigLeft } from 'lucide-react';
+import { ArrowBigLeft, Download } from 'lucide-react';
 
 const handleResolver = new CompositeHandleResolver({
   strategy: 'race',
@@ -109,12 +109,49 @@ export default function BlueskyToolsCARExplorerPage() {
     setHandle(input as Handle);
   };
 
+  const downloadCARFile = () => {
+    // First, validate data exists
+    if (!data) {
+      console.error('No data available to download');
+      return;
+    }
+
+    // Make sure handle exists or provide a fallback
+    const fileHandle = handle || 'export';
+
+    // Create the blob and URL
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    // Create and append the anchor to the DOM
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${fileHandle}-car-${new Date().toISOString()}.json`;
+    document.body.appendChild(a); // Append to DOM
+
+    // Trigger click and cleanup
+    a.click();
+
+    // Small timeout before revoking the URL
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a); // Clean up by removing the element
+    }, 100);
+  };
+
   return (
     <Page>
       <NavBar />
       <div className="flex flex-col gap-4">
         <Card className="p-4 flex flex-col gap-4">
-          <h1>CAR Explorer</h1>
+          <div className="flex justify-between">
+            <h1>CAR Explorer</h1>
+            {data && (
+              <Button onClick={downloadCARFile} className="w-fit" label="Download CAR as JSON">
+                <Download className="size-4" />
+              </Button>
+            )}
+          </div>
           <form onSubmit={handleSubmit}>
             <Input
               placeholder="Enter a Handle or DID (e.g. imlunahey.com)"
