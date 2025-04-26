@@ -20,6 +20,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { tokyoNight } from '@uiw/codemirror-theme-tokyo-night';
+import { Link, useParams } from 'react-router';
 
 const handleResolver = new CompositeHandleResolver({
   strategy: 'race',
@@ -203,9 +204,13 @@ const knownLexicons = {
 } as const;
 
 export default function BlueskyToolsCARExplorerPage() {
-  const [input, setInput] = useState<Handle | null>(null);
-  const [handle, setHandle] = useState<Handle | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null | undefined>('index');
+  const params = useParams<{
+    handle: Handle;
+    lexicon: string | undefined;
+  }>();
+  const [input, setInput] = useState<Handle | null>(params.handle ?? null);
+  const [handle, setHandle] = useState<Handle | null>(params?.handle ?? null);
+  const [selectedId, setSelectedId] = useState<string | null | undefined>(params?.lexicon ?? 'index');
   const { data, isLoading } = useCARExplorer(handle);
   const defaultSelectedId = 'index';
 
@@ -274,7 +279,12 @@ export default function BlueskyToolsCARExplorerPage() {
             <Ariakit.TabList className="flex gap-2 overflow-x-auto">
               {selectedId !== 'index' && (
                 <>
-                  <Ariakit.Tab key={`index-tab`} id="index" className="px-2 py-1 mb-4 border border-[#1a1a1a]">
+                  <Ariakit.Tab
+                    key={`index-tab`}
+                    id="index"
+                    className="px-2 py-1 mb-4 border border-[#1a1a1a]"
+                    render={<Link to={`/bluesky/tools/car-explorer/${handle}`} />}
+                  >
                     <ArrowBigLeft />
                   </Ariakit.Tab>
                   <Card className="px-2 py-1 mb-4">{selectedId}</Card>
@@ -286,7 +296,12 @@ export default function BlueskyToolsCARExplorerPage() {
                 <VirtualisedList
                   data={Object.keys(data)}
                   renderItem={(item) => (
-                    <Ariakit.Tab key={`${item}-tab`} id={item} className="w-full text-left">
+                    <Ariakit.Tab
+                      key={`${item}-tab`}
+                      id={item}
+                      className="w-full text-left"
+                      render={<Link to={`/bluesky/tools/car-explorer/${handle}/${item}`} />}
+                    >
                       <Card className="p-4">
                         <span>{item}</span>
                         <div className="flex flex-col gap-2 text-sm text-gray-500">

@@ -64,7 +64,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/bluesky/tools/feed/:id?" element={<BlueskyToolsFeedPage />} />
             <Route path="/bluesky/tools/list-cleaner" element={<ListCleanerPage />} />
 
-            <Route path="/bluesky/tools/car-explorer" element={<CARExplorerPage />} />
+            <Route path="/bluesky/tools/car-explorer/:handle?/:lexicon?" element={<CARExplorerPage />} />
 
             <Route path="/whitewind/:rkey?" element={<WhiteWindPage />} />
             <Route path="/referrer-checker" element={<ReferrerCheckerPage />} />
