@@ -17,6 +17,9 @@ import { useQuery } from '@tanstack/react-query';
 import { simpleFetchHandler, XRPC } from '@atcute/client';
 import { ArrowBigLeft, Download } from 'lucide-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import CodeMirror from '@uiw/react-codemirror';
+import { json } from '@codemirror/lang-json';
+import { tokyoNight } from '@uiw/codemirror-theme-tokyo-night';
 
 const handleResolver = new CompositeHandleResolver({
   strategy: 'race',
@@ -89,7 +92,7 @@ const AtProtoRecord = memo(({ rkey, record, open }: { rkey: string; record: unkn
       <details open={open}>
         <summary>{rkey}</summary>
         <div className="flex flex-col gap-2">
-          <pre>{JSON.stringify(record, null, 2)}</pre>
+          <CodeMirror value={JSON.stringify(record, null, 2)} extensions={[json()]} theme={tokyoNight} readOnly />
         </div>
       </details>
     </Card>
