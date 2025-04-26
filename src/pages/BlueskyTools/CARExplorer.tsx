@@ -132,7 +132,7 @@ const VirtualisedList = <T,>({ data, renderItem }: { data: T[]; renderItem: (ite
     <div
       ref={parentRef}
       style={{
-        height: `calc(100vh - ${parentRef.current?.getBoundingClientRect().top ?? 0}px - 32px)`,
+        height: `calc(100dvh - ${parentRef.current?.getBoundingClientRect().top ?? 0}px - 32px)`,
         overflow: 'auto',
       }}
     >
