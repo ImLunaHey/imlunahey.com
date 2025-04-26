@@ -1,8 +1,6 @@
 import { useEffect } from 'react';
 import { Button } from '../components/Button';
 import { Loading } from '../components/Loading';
-import { NavBar } from '../components/NavBar';
-import { Page } from '../components/Page';
 import { ShowPoster } from '../components/ShowPoster';
 import { useShows } from '../hooks/use-shows';
 
@@ -16,22 +14,15 @@ export default function ShowsPage() {
 
   if (isLoading) return <Loading />;
   return (
-    <Page>
-      <NavBar />
+    <div>
       <div>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
-              {shows?.map((show) => (
-                <ShowPoster key={show.identifiers.tmdbId} showId={show.identifiers.tmdbId} rating={show.rating} />
-              ))}
-            </div>
-            {hasNextPage && <Button onClick={() => fetchNextPage()}>Load More</Button>}
-          </div>
-        )}
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
+          {shows?.map((show) => (
+            <ShowPoster key={show.identifiers.tmdbId} showId={show.identifiers.tmdbId} rating={show.rating} />
+          ))}
+        </div>
+        {hasNextPage && <Button onClick={() => fetchNextPage()}>Load More</Button>}
       </div>
-    </Page>
+    </div>
   );
 }

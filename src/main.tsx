@@ -7,6 +7,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Favicon } from './components/Favicon.tsx';
 import React from 'react';
 import { QueryProvider } from './components/QueryProvider.tsx';
+import Layout from './components/Layout.tsx';
 
 const HomePage = React.lazy(() => import('./pages/Home.tsx'));
 const ProjectsPage = React.lazy(() => import('./pages/Projects.tsx'));
@@ -29,6 +30,7 @@ const InfiniteCanvasPage = React.lazy(() => import('./pages/InfiniteCanvas.tsx')
 
 const MoviesPage = React.lazy(() => import('./pages/Movies.tsx'));
 const ShowsPage = React.lazy(() => import('./pages/Shows.tsx'));
+
 const NotFoundPage = React.lazy(() => import('./pages/NotFound.tsx'));
 
 createRoot(document.getElementById('root')!).render(
@@ -37,41 +39,45 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <div
           className={cn(
-            'absolute -z-10 inset-0 size-full',
+            'absolute -z-20 inset-0 size-full',
             'bg-[radial-gradient(circle,#73737350_1px,transparent_1px)]',
             'bg-[size:10px_10px]',
             'after:absolute after:inset-0 after:bg-gradient-to-b after:from-transparent after:to-black after:opacity-40',
             'before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:to-black before:opacity-30',
           )}
         />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black opacity-40 -z-10" />
         <Favicon />
         <Routes>
-          <Route index element={<HomePage />} />
+          <Route element={<Layout />}>
+            <Route index element={<HomePage />} />
 
-          <Route path="/blog" element={<BlogPage />} />
-          <Route path="/blog/:rkey" element={<BlogEntryPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:rkey" element={<BlogEntryPage />} />
 
-          <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+
+            <Route path="/showcase" element={<ShowcasePage />} />
+            <Route path="/bluesky/tools" element={<BlueskyToolsPage />} />
+            <Route path="/bluesky/tools/pdf-uploader" element={<PDFUploaderPage />} />
+            <Route path="/bluesky/tools/feed/:id?" element={<BlueskyToolsFeedPage />} />
+            <Route path="/bluesky/tools/list-cleaner" element={<ListCleanerPage />} />
+
+            <Route path="/bluesky/tools/car-explorer" element={<CARExplorerPage />} />
+
+            <Route path="/whitewind/:rkey?" element={<WhiteWindPage />} />
+            <Route path="/referrer-checker" element={<ReferrerCheckerPage />} />
+
+            <Route path="/infinite-canvas" element={<InfiniteCanvasPage />} />
+
+            <Route path="/movies" element={<MoviesPage />} />
+            <Route path="/shows" element={<ShowsPage />} />
+
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+
           <Route path="/gallery/:id?" element={<GalleryPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-
-          <Route path="/showcase" element={<ShowcasePage />} />
-          <Route path="/bluesky/tools" element={<BlueskyToolsPage />} />
-          <Route path="/bluesky/tools/pdf-uploader" element={<PDFUploaderPage />} />
-          <Route path="/bluesky/tools/feed/:id?" element={<BlueskyToolsFeedPage />} />
-          <Route path="/bluesky/tools/list-cleaner" element={<ListCleanerPage />} />
-
-          <Route path="/bluesky/tools/car-explorer" element={<CARExplorerPage />} />
-
-          <Route path="/whitewind/:rkey?" element={<WhiteWindPage />} />
-          <Route path="/referrer-checker" element={<ReferrerCheckerPage />} />
-
-          <Route path="/infinite-canvas" element={<InfiniteCanvasPage />} />
-
-          <Route path="/movies" element={<MoviesPage />} />
-          <Route path="/shows" element={<ShowsPage />} />
-
-          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
       <ReactQueryDevtools />

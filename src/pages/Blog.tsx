@@ -1,6 +1,4 @@
 import { Card } from '../components/Card';
-import { NavBar } from '../components/NavBar';
-import { Page } from '../components/Page';
 import { RelativeTime } from '../components/RelativeTime';
 import { useBlogEntries } from '../hooks/use-blog-entries';
 import { useReadTime } from '../hooks/use-read-time';
@@ -33,7 +31,7 @@ const Summary = ({ blogEntry }: { blogEntry: BlogEntryResponse<'did:plc:k6acu4ch
   );
 };
 
-export const BlogEntries = ({ count = 10 }: { count?: number }) => {
+export default function BlogPage() {
   const { data: blogEntries, isLoading } = useBlogEntries('did:plc:k6acu4chiwkixvdedcmdgmal');
 
   if (isLoading) {
@@ -46,18 +44,9 @@ export const BlogEntries = ({ count = 10 }: { count?: number }) => {
 
   return (
     <div className="max-w-screen-md mx-auto">
-      {blogEntries.slice(0, count).map((blogEntry) => (
+      {blogEntries.slice(0, 10).map((blogEntry) => (
         <Summary key={blogEntry.value.createdAt} blogEntry={blogEntry} />
       ))}
     </div>
-  );
-};
-
-export default function BlogPage() {
-  return (
-    <Page>
-      <NavBar />
-      <BlogEntries />
-    </Page>
   );
 }

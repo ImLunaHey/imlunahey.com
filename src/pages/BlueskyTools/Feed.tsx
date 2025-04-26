@@ -1,5 +1,3 @@
-import { Page } from '../../components/Page';
-import { NavBar } from '../../components/NavBar';
 import { Card } from '../../components/Card';
 import { useState, useCallback } from 'react';
 import { XRPC, simpleFetchHandler } from '@atcute/client';
@@ -133,34 +131,31 @@ export default function BlueskyToolsFeedPage() {
   }, [input, navigate]);
 
   return (
-    <Page>
-      <NavBar />
-      <div className="flex flex-col gap-2">
-        <Card className="p-4 flex flex-col gap-2">
-          <Input
-            value={input}
-            onChangeValue={setInput}
-            onSubmit={onSubmit}
-            placeholder="Enter a handle (e.g. @imlunahey.bsky.social)"
-            disabled={isLoading || isProfileLoading}
-          />
-          <Button onClick={onSubmit} disabled={isLoading}>
-            Get Feed
-          </Button>
-        </Card>
-        {isProfileLoading ? (
-          <Loading />
-        ) : isPrivate && !showPrivate ? (
-          <div>
-            <Card className="p-4 flex flex-col gap-2">
-              <div>This profile is private, are you sure you want to continue?</div>
-              <Button onClick={() => setShowPrivate(true)}>Continue</Button>
-            </Card>
-          </div>
-        ) : (
-          <Results handle={handle} />
-        )}
-      </div>
-    </Page>
+    <div className="flex flex-col gap-2">
+      <Card className="p-4 flex flex-col gap-2">
+        <Input
+          value={input}
+          onChangeValue={setInput}
+          onSubmit={onSubmit}
+          placeholder="Enter a handle (e.g. @imlunahey.bsky.social)"
+          disabled={isLoading || isProfileLoading}
+        />
+        <Button onClick={onSubmit} disabled={isLoading}>
+          Get Feed
+        </Button>
+      </Card>
+      {isProfileLoading ? (
+        <Loading />
+      ) : isPrivate && !showPrivate ? (
+        <div>
+          <Card className="p-4 flex flex-col gap-2">
+            <div>This profile is private, are you sure you want to continue?</div>
+            <Button onClick={() => setShowPrivate(true)}>Continue</Button>
+          </Card>
+        </div>
+      ) : (
+        <Results handle={handle} />
+      )}
+    </div>
   );
 }

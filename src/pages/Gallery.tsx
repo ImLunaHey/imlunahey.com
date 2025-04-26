@@ -78,7 +78,6 @@ export default function GalleryPage() {
               transition={{ duration: 0.4 }}
             />
           </AnimatePresence>
-
         </motion.div>
       </motion.div>
 
@@ -102,7 +101,7 @@ export default function GalleryPage() {
               transition={{
                 duration: 1,
                 ease: 'easeOut',
-                delay: 6 + (index * 0.1),
+                delay: 6 + index * 0.1,
               }}
               onClick={() => {
                 setCurrentImageIndex(index);
@@ -124,4 +123,4 @@ export default function GalleryPage() {
       </motion.div>
     </div>
   );
-};
+}

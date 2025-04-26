@@ -2,8 +2,6 @@ import { AppBskyFeedDefs, AppBskyFeedPost } from '@atcute/client/lexicons';
 import { useBlogEntry } from '../hooks/use-blog-entry';
 import { useBlogEntryComments } from '../hooks/use-blog-entry-comments';
 import { Link, Navigate, useParams } from 'react-router';
-import { NavBar } from '../components/NavBar';
-import { Page } from '../components/Page';
 import { RelativeTime } from '../components/RelativeTime';
 import { useProfile } from '../hooks/use-profile';
 import { useReadTime } from '../hooks/use-read-time';
@@ -153,10 +151,5 @@ export default function BlogEntryPage() {
 
   if (!rkey) return <Navigate replace to="/not-found" />;
 
-  return (
-    <Page>
-      <NavBar />
-      <BlogEntry rkey={rkey} />
-    </Page>
-  );
+  return <BlogEntry rkey={rkey} />;
 }

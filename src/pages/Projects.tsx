@@ -1,5 +1,3 @@
-import { Page } from '../components/Page';
-import { NavBar } from '../components/NavBar';
 import { Card } from '../components/Card';
 import { Link } from 'react-router';
 
@@ -85,19 +83,16 @@ const projects: Project[] = [
 
 export default function ProjectsPage() {
   return (
-    <Page>
-      <NavBar />
-      <div className="flex flex-col gap-2">
-        {projects.map((project) => (
-          <Card key={project.name} className="p-2">
-            <h2 className="text-xl font-bold">{project.name}</h2>
-            <p className="text-sm text-gray-500">{project.description}</p>
-            <Link to={project.url} className="text-sm text-blue-500">
-              View Project
-            </Link>
-          </Card>
-        ))}
-      </div>
-    </Page>
+    <div className="flex flex-col gap-2">
+      {projects.map((project) => (
+        <Card key={project.name} className="p-2">
+          <h2 className="text-xl font-bold">{project.name}</h2>
+          <p className="text-sm text-gray-500">{project.description}</p>
+          <Link to={project.url} className="text-sm text-blue-500">
+            View Project
+          </Link>
+        </Card>
+      ))}
+    </div>
   );
 }

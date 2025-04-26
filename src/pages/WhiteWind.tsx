@@ -1,5 +1,3 @@
-import { NavBar } from '../components/NavBar';
-import { Page } from '../components/Page';
 import CodeMirror from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
@@ -35,15 +33,16 @@ export default function WhiteWindPage() {
     setValue(value);
   }, []);
 
+  if (isLoading) return <Loading />;
+
   return (
-    <Page>
-      <NavBar />
-      {isLoading ? <Loading /> : data ? <Editor value={value} onChange={onChange} /> : <div>Not found</div>}
+    <>
+      <Editor value={value} onChange={onChange} />
       <Card>
         <Input placeholder="Comments link" value={data?.value.comments} />
         <Button>Save</Button>
       </Card>
       <MarkdownPreview content={value} />
-    </Page>
+    </>
   );
 }
