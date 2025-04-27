@@ -20,7 +20,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { tokyoNight } from '@uiw/codemirror-theme-tokyo-night';
-import { Link, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 
 const handleResolver = new CompositeHandleResolver({
   strategy: 'race',
@@ -50,19 +50,108 @@ const useDid = (handle: Handle | null) => {
 };
 
 const useCARExplorer = (handle: Handle | null) => {
+  // Track progress state
+  const [progress, setProgress] = useState(0);
+  const [receivedBytes, setReceivedBytes] = useState(0);
+  const [totalBytes, setTotalBytes] = useState(0);
+  const [isIndeterminate, setIsIndeterminate] = useState(false);
+
+  // Use your existing did resolution
   const { data: did } = useDid(handle);
 
-  return useQuery({
+  // Create a fetch wrapper with progress tracking
+  const progressFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    // Reset progress state at the start of each fetch
+    setProgress(0);
+    setReceivedBytes(0);
+    setTotalBytes(0);
+
+    // Make the fetch request
+    const response = await fetch(input, init);
+
+    // If the request failed or has no body, return it as-is
+    if (!response.ok || !response.body) {
+      return response;
+    }
+
+    // Get total size if available
+    const contentLengthHeader = response.headers.get('Content-Length');
+    const contentLength = contentLengthHeader ? parseInt(contentLengthHeader, 10) : null;
+
+    // Only set totalBytes if we have a valid content length
+    if (contentLength && !isNaN(contentLength)) {
+      setTotalBytes(contentLength);
+      setIsIndeterminate(false);
+    } else {
+      // If content length is not available, we set totalBytes to 0 to indicate unknown size
+      setTotalBytes(0);
+      setIsIndeterminate(true);
+    }
+
+    // Create a stream reader
+    const reader = response.body.getReader();
+
+    // Create a new stream with progress tracking
+    const newStream = new ReadableStream({
+      async start(controller) {
+        let receivedLength = 0;
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+              controller.close();
+              break;
+            }
+
+            // Update progress
+            receivedLength += value.length;
+            setReceivedBytes(receivedLength);
+
+            if (contentLength && !isNaN(contentLength)) {
+              // If we know the total size, we can calculate a percentage
+              const percent = Math.min(Math.round((receivedLength / contentLength) * 100), 100);
+              setProgress(percent);
+            } else {
+              // For indeterminate progress, we use a simple counter pattern
+              // This increments progress but caps it at 90% since we don't know the total
+              setProgress(Math.min(Math.floor((receivedLength / 1000000) * 10), 90));
+            }
+
+            // Forward the chunk to the new stream
+            controller.enqueue(value);
+          }
+        } catch (error) {
+          controller.error(error);
+        }
+      },
+    });
+
+    // Create a new response with the tracked stream
+    return new Response(newStream, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    });
+  };
+
+  // Use TanStack Query with our tracked fetch
+  const queryResult = useQuery({
     queryKey: ['car', handle],
     queryFn: async () => {
       if (!did) throw new Error('No did provided');
-
       const doc = await docResolver.resolve(did);
-
       const pdsUrl = getPdsEndpoint(doc);
       if (!pdsUrl) throw new Error('No PDS URL found');
 
-      const rpc = new XRPC({ handler: simpleFetchHandler({ service: pdsUrl }) });
+      // Use our progress-tracking fetch with XRPC
+      const rpc = new XRPC({
+        handler: simpleFetchHandler({
+          service: pdsUrl,
+          fetch: progressFetch,
+        }),
+      });
 
       const { data } = await rpc.get('com.atproto.sync.getRepo', {
         params: {
@@ -82,6 +171,15 @@ const useCARExplorer = (handle: Handle | null) => {
     },
     enabled: !!did,
   });
+
+  // Return the query result plus progress info
+  return {
+    ...queryResult,
+    progress,
+    receivedBytes,
+    totalBytes,
+    isIndeterminate,
+  };
 };
 
 const AtProtoRecord = memo(({ rkey, record, open }: { rkey: string; record: unknown; open: boolean }) => {
@@ -208,17 +306,18 @@ export default function BlueskyToolsCARExplorerPage() {
     handle: Handle;
     lexicon: string | undefined;
   }>();
+  const navigate = useNavigate();
   const [input, setInput] = useState<Handle | null>(params.handle ?? null);
-  const [handle, setHandle] = useState<Handle | null>(params?.handle ?? null);
+  const handle = params.handle ?? null;
   const [selectedId, setSelectedId] = useState<string | null | undefined>(params?.lexicon ?? 'index');
-  const { data, isLoading } = useCARExplorer(handle);
+  const { data, isLoading, progress, receivedBytes, totalBytes, isIndeterminate } = useCARExplorer(handle);
   const defaultSelectedId = 'index';
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input) return;
 
-    setHandle(input as Handle);
+    navigate(`/bluesky/tools/car-explorer/${input}`);
   };
 
   const downloadCARFile = () => {
@@ -272,7 +371,32 @@ export default function BlueskyToolsCARExplorerPage() {
         </form>
       </Card>
 
-      {isLoading && <p>Loading...</p>}
+      {isLoading && (
+        <Card className="p-4">
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium">
+              {isIndeterminate ? 'Loading repository...' : `Loading repository: ${progress}%`}
+            </h3>
+
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              {isIndeterminate ? (
+                <div className="bg-blue-600 h-2 rounded-full animate-pulse w-full" />
+              ) : (
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              )}
+            </div>
+
+            <p className="text-sm text-gray-500">
+              {(receivedBytes / 1024 / 1024).toFixed(2)} MB
+              {!isIndeterminate && totalBytes > 0 && <> of {(totalBytes / 1024 / 1024).toFixed(2)} MB</>}
+            </p>
+          </div>
+        </Card>
+      )}
+
       {data && (
         <Card className="p-4 flex flex-col gap-2">
           <Ariakit.TabProvider defaultSelectedId={defaultSelectedId} setSelectedId={setSelectedId} selectedId={selectedId}>
