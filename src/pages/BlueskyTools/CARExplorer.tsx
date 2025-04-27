@@ -46,6 +46,10 @@ const useDid = (handle: Handle | null) => {
       return await handleResolver.resolve(handle);
     },
     enabled: !!handle,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchInterval: false,
   });
 };
 
@@ -57,7 +61,7 @@ const useCARExplorer = (handle: Handle | null) => {
   const [isIndeterminate, setIsIndeterminate] = useState(false);
 
   // Use your existing did resolution
-  const { data: did } = useDid(handle);
+  const { data: did, error: didError } = useDid(handle);
 
   // Create a fetch wrapper with progress tracking
   const progressFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -141,7 +145,11 @@ const useCARExplorer = (handle: Handle | null) => {
     queryKey: ['car', handle],
     queryFn: async () => {
       if (!did) throw new Error('No did provided');
+
       const doc = await docResolver.resolve(did);
+      if (!doc) throw new Error('No doc provided');
+
+      // Get the PDS URL
       const pdsUrl = getPdsEndpoint(doc);
       if (!pdsUrl) throw new Error('No PDS URL found');
 
@@ -153,12 +161,14 @@ const useCARExplorer = (handle: Handle | null) => {
         }),
       });
 
+      // Get the repository
       const { data } = await rpc.get('com.atproto.sync.getRepo', {
         params: {
           did,
         },
       });
 
+      // Parse the repository into a more usable format
       const records: Record<string, { rkey: string; record: unknown }[]> = {};
       for (const { collection, rkey, record } of iterateAtpRepo(data)) {
         if (!records[collection]) {
@@ -170,6 +180,10 @@ const useCARExplorer = (handle: Handle | null) => {
       return records;
     },
     enabled: !!did,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchInterval: false,
   });
 
   // Return the query result plus progress info
@@ -179,6 +193,7 @@ const useCARExplorer = (handle: Handle | null) => {
     receivedBytes,
     totalBytes,
     isIndeterminate,
+    error: didError || queryResult.error,
   };
 };
 
@@ -310,7 +325,7 @@ export default function BlueskyToolsCARExplorerPage() {
   const [input, setInput] = useState<Handle | null>(params.handle ?? null);
   const handle = params.handle ?? null;
   const [selectedId, setSelectedId] = useState<string | null | undefined>(params?.lexicon ?? 'index');
-  const { data, isLoading, progress, receivedBytes, totalBytes, isIndeterminate } = useCARExplorer(handle);
+  const { data, isLoading, progress, receivedBytes, totalBytes, isIndeterminate, error } = useCARExplorer(handle);
   const defaultSelectedId = 'index';
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -394,6 +409,13 @@ export default function BlueskyToolsCARExplorerPage() {
               {!isIndeterminate && totalBytes > 0 && <> of {(totalBytes / 1024 / 1024).toFixed(2)} MB</>}
             </p>
           </div>
+        </Card>
+      )}
+
+      {error && (
+        <Card className="p-4">
+          <h3 className="text-lg font-medium">Error loading repository</h3>
+          <p className="text-sm text-gray-500">{error.message}</p>
         </Card>
       )}
 
