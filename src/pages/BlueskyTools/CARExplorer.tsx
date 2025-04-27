@@ -328,6 +328,10 @@ export default function BlueskyToolsCARExplorerPage() {
   const { data, isLoading, progress, receivedBytes, totalBytes, isIndeterminate, error } = useCARExplorer(handle);
   const defaultSelectedId = 'index';
 
+  useEffect(() => {
+    setSelectedId(params.lexicon ?? 'index');
+  }, [params.lexicon]);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input) return;
