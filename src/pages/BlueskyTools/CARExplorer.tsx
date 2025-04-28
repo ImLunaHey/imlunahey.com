@@ -15,12 +15,17 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { Button } from '../../components/Button';
 import { useQuery } from '@tanstack/react-query';
 import { simpleFetchHandler, XRPC } from '@atcute/client';
-import { ArrowBigLeft, Download } from 'lucide-react';
+import { ArrowBigLeft, Download, SquarePen } from 'lucide-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
+import { jsonSchema } from 'codemirror-json-schema';
+import empty from '../../lib/json-schema-empty';
 import { tokyoNight } from '@uiw/codemirror-theme-tokyo-night';
 import { Link, useNavigate, useParams } from 'react-router';
+import { useLexiconSchema } from '../../hooks/use-lexicon-schema';
+import { Dialog } from '../../components/Dialog';
+import { BlueskyBar } from '../../components/BlueskyBar';
 
 const handleResolver = new CompositeHandleResolver({
   strategy: 'race',
@@ -198,6 +203,16 @@ const useCARExplorer = (handle: Handle | null) => {
 };
 
 const AtProtoRecord = memo(({ rkey, record, open }: { rkey: string; record: unknown; open: boolean }) => {
+  const { data } = useLexiconSchema(
+    record && typeof record === 'object' && record !== null && '$type' in record && typeof record.$type === 'string'
+      ? record.$type
+      : undefined,
+  );
+
+  const schema = data ?? {
+    type: 'object',
+  };
+
   if (!record) return null;
   if (typeof record !== 'object') return null;
 
@@ -206,7 +221,12 @@ const AtProtoRecord = memo(({ rkey, record, open }: { rkey: string; record: unkn
       <details open={open}>
         <summary>{rkey}</summary>
         <div className="flex flex-col gap-2">
-          <CodeMirror value={JSON.stringify(record, null, 2)} extensions={[json()]} theme={tokyoNight} readOnly />
+          <CodeMirror
+            value={JSON.stringify(record, null, 2)}
+            extensions={[json(), jsonSchema(schema)]}
+            theme={tokyoNight}
+            readOnly
+          />
         </div>
       </details>
     </Card>
@@ -316,7 +336,39 @@ const knownLexicons = {
   'sh.tangled.repo': 'Git repos on tangled.sh',
 } as const;
 
+const NewRecordModal = ({ $type }: { $type: string | null | undefined }) => {
+  const { data } = useLexiconSchema($type);
+  const schema = data ?? {
+    type: 'object',
+  };
+
+  const defaultValue = empty(schema);
+
+  return (
+    <Dialog
+      title="New Record"
+      trigger={<SquarePen />}
+      okButtonProps={{
+        label: 'Create',
+        children: 'Create',
+        onClick: () => {
+          // TODO: Create new record
+          // TODO: Optimistically update the list of records
+        },
+      }}
+    >
+      <CodeMirror
+        value={JSON.stringify(defaultValue, null, 2)}
+        extensions={[json(), jsonSchema(schema)]}
+        theme={tokyoNight}
+      />
+    </Dialog>
+  );
+};
+
 export default function BlueskyToolsCARExplorerPage() {
+  const [authenticated] = useState(false);
+
   const params = useParams<{
     handle: Handle;
     lexicon: string | undefined;
@@ -371,6 +423,8 @@ export default function BlueskyToolsCARExplorerPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <BlueskyBar />
+
       <Card className="p-4 flex flex-col gap-4">
         <div className="flex justify-between">
           <h1>CAR Explorer</h1>
@@ -432,12 +486,13 @@ export default function BlueskyToolsCARExplorerPage() {
                   <Ariakit.Tab
                     key={`index-tab`}
                     id="index"
-                    className="px-2 py-1 mb-4 border border-[#1a1a1a]"
+                    className="px-2 py-2 mb-4 border border-[#1a1a1a]"
                     render={<Link to={`/bluesky/tools/car-explorer/${handle}`} />}
                   >
                     <ArrowBigLeft />
                   </Ariakit.Tab>
-                  <Card className="px-2 py-1 mb-4">{selectedId}</Card>
+                  <Card className="px-2 py-2 mb-4">{selectedId}</Card>
+                  {authenticated && <NewRecordModal $type={selectedId} />}
                 </>
               )}
             </Ariakit.TabList>

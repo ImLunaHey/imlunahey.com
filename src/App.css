@@ -3,3 +3,25 @@
 html {
   @apply bg-black text-white;
 }
+
+:root {
+  .cm-tooltip-above {   
+    /* Make it look distinct */
+    background-color: #333 !important;
+    color: white !important;
+    border: 1px solid #555 !important;
+    border-radius: 4px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+    
+    /* Make sure it has good padding */
+    padding: 8px 12px !important;
+    
+    /* Set width constraints */
+    max-width: 90% !important;
+    width: auto !important;
+    
+    /* Improve text display */
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+  }
+}
