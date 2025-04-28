@@ -1,13 +1,18 @@
-// @ts-expect-error this is needed for the plugin
-import React from 'react';
-import type { PageMetaData } from './page-meta-map';
+import { reactRenderer } from '@hono/react-renderer';
+import { Link, Script } from 'hono-vite-react-stack/components';
 
-const PageTemplate = ({ title, description }: PageMetaData) => {
+export const renderer = reactRenderer(({ children }) => {
+  const title = 'luna';
+  const description = 'a website i made';
+
   return (
-    <html lang="en">
+    <html>
       <head>
+        <title>luna</title>
         <meta charSet="utf-8" />
-        <title>{title}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <Script />
+        <Link href="/src/style.css" rel="stylesheet" />
         <meta name="description" content={description} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
@@ -25,11 +30,7 @@ const PageTemplate = ({ title, description }: PageMetaData) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script defer data-domain="imlunahey.com" src="https://plausible.io/js/script.outbound-links.js"></script>
       </head>
-      <body>
-        <div id="root" />
-      </body>
+      <body>{children}</body>
     </html>
   );
-};
-
-export default PageTemplate;
+});

@@ -22,7 +22,13 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    "types": ["@atcute/bluesky/lexicons", "@atcute/whitewind/lexicons", "@vitest/browser/providers/playwright"]
+    "types": [
+      "@atcute/bluesky/lexicons",
+      "@atcute/whitewind/lexicons",
+      "@vitest/browser/providers/playwright",
+      "@cloudflare/workers-types",
+      "vite/client"
+    ]
   },
   "include": ["src"]
 }
