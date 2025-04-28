@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+dist-server
 *.local
 
 # Editor directories and files
@@ -25,3 +26,6 @@ dist-ssr
 
 # Million Lint
 .million
+
+# Cloudflare
+.wrangler

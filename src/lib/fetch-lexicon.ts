@@ -68,7 +68,7 @@ async function resolveDIDFromDNS(authorityDomain: string, nsid: string): Promise
       throw new LexiconResolutionError(`DNS resolution failed with status ${response.status}`, nsid, 'dns_query');
     }
 
-    const dnsResult = await response.json();
+    const dnsResult = (await response.json()) as { Answer: { data: string }[] };
 
     if (!dnsResult.Answer || dnsResult.Answer.length === 0) {
       throw new LexiconResolutionError(`No TXT records found for ${authorityDomain}`, nsid, 'dns_response');
@@ -108,7 +108,7 @@ async function resolvePDSFromDID(did: string, nsid: string): Promise<string> {
       throw new LexiconResolutionError(`DID resolution failed with status ${response.status}`, nsid, 'did_resolution');
     }
 
-    const didDoc = await response.json();
+    const didDoc = (await response.json()) as { service: { type: string; serviceEndpoint: string }[] };
 
     // Extract the PDS URL from the DID document
     if (!didDoc.service || !Array.isArray(didDoc.service)) {
@@ -151,7 +151,7 @@ async function fetchLexiconSchema(pdsUrl: string, did: string, nsid: string): Pr
       throw new LexiconResolutionError(`Schema fetch failed with status ${response.status}`, nsid, 'schema_fetch');
     }
 
-    const result = await response.json();
+    const result = (await response.json()) as { value: LexiconSchema };
 
     if (!result.value || result.value.$type !== 'com.atproto.lexicon.schema') {
       throw new LexiconResolutionError('Invalid schema record returned', nsid, 'schema_validation');

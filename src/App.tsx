@@ -1,13 +1,10 @@
-import './App.css';
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
 import { cn } from './cn.ts';
-import { BrowserRouter, Route, Routes } from 'react-router';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Route, Routes } from 'react-router';
 import { Favicon } from './components/Favicon.tsx';
-import React from 'react';
-import { QueryProvider } from './components/QueryProvider.tsx';
+import React, { StrictMode } from 'react';
 import Layout from './components/Layout.tsx';
+import { QueryProvider } from './components/QueryProvider.tsx';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 const HomePage = React.lazy(() => import('./pages/Home.tsx'));
 const ProjectsPage = React.lazy(() => import('./pages/Projects.tsx'));
@@ -33,10 +30,10 @@ const ShowsPage = React.lazy(() => import('./pages/Shows.tsx'));
 
 const NotFoundPage = React.lazy(() => import('./pages/NotFound.tsx'));
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryProvider>
-      <BrowserRouter>
+export default function App() {
+  return (
+    <StrictMode>
+      <QueryProvider>
         <div
           className={cn(
             'absolute -z-20 inset-0 size-full',
@@ -79,8 +76,8 @@ createRoot(document.getElementById('root')!).render(
 
           <Route path="/gallery/:id?" element={<GalleryPage />} />
         </Routes>
-      </BrowserRouter>
-      <ReactQueryDevtools />
-    </QueryProvider>
-  </StrictMode>,
-);
+        <ReactQueryDevtools />
+      </QueryProvider>
+    </StrictMode>
+  );
+}
