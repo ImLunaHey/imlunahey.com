@@ -22,7 +22,9 @@
 }
 
 html {
-  @apply bg-black font-mono text-white;
+  background-color: black;
+  font-family: 'JetBrains Mono Variable', monospace;
+  color: white;
 }
 
 :root {

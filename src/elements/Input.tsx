@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { cn } from '../cn';
 
 export const Input = function <T extends string = string>({
@@ -27,6 +27,7 @@ export const Input = function <T extends string = string>({
   ref?: React.Ref<HTMLInputElement>;
 }) {
   const id = useId();
+  const [localValue, setLocalValue] = useState(value ?? '');
 
   return (
     <div className="flex flex-col text-sm">
@@ -36,12 +37,14 @@ export const Input = function <T extends string = string>({
         type={type}
         id={id}
         placeholder={placeholder}
-        value={value ?? ''}
+        value={localValue}
         onChange={(e) => {
+          setLocalValue(e.target.value);
           onChangeValue?.(e.target.value);
           onChange?.(e);
         }}
         onKeyDown={(e) => {
+          if (disabled) return;
           if (e.key === 'Enter' && onSubmit) {
             e.preventDefault();
             onSubmit();
@@ -51,7 +54,7 @@ export const Input = function <T extends string = string>({
           'border-primary w-full border p-1',
           'focus:ring-primary focus:ring-2 focus:outline-none',
           disabled && 'opacity-50',
-          required && 'required:border-red-500',
+          required && 'border-red',
         )}
         accept={accept}
       />
