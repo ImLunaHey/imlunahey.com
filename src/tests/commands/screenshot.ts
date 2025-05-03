@@ -7,7 +7,7 @@ import { BrowserCommandContext } from 'vitest/node';
 // Export the type
 export type CompareOptions = {
   /** Name of the test for organizing snapshots */
-  testName: string;
+  testName?: string;
   /** Directory for baseline images */
   baselineDir?: string;
   /** Directory for diff images */
@@ -38,8 +38,13 @@ export const compareScreenshot = async (
   }
 
   const testDir = testPath.replace(/\/[^/]*$/, '');
+  const testName = options.testName ?? testPath.split('/').pop();
+
+  if (!testName) {
+    throw new Error('Could not determine test name from context.');
+  }
+
   const {
-    testName,
     baselineDir = `${testDir}/__image_snapshots__`,
     diffDir = `${testDir}/__image_diffs__`,
     threshold = 0.1, // recommended default in pixelmatch docs
