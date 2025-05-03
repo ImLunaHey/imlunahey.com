@@ -39,7 +39,7 @@ export default function WhiteWindPage() {
     <>
       <Editor value={value} onChange={onChange} />
       <Card>
-        <Input placeholder="Comments link" value={data?.value.comments} />
+        <Input label="Comments link" placeholder="Comments link" value={data?.value.comments} />
         <Button>Save</Button>
       </Card>
       <MarkdownPreview content={value} />

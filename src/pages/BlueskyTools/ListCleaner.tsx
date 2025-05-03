@@ -152,6 +152,7 @@ export default function BlueskyToolsListCleanerPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               type="text"
+              label="Handle"
               value={handle}
               onChangeValue={(value) => setHandle(value)}
               placeholder="Handle (e.g. user.bsky.social)"
@@ -160,6 +161,7 @@ export default function BlueskyToolsListCleanerPage() {
 
             <Input
               type="password"
+              label="App Password"
               value={appPassword}
               onChangeValue={(value) => setAppPassword(value)}
               placeholder="App Password"

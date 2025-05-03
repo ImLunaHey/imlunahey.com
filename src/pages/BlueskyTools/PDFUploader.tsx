@@ -149,6 +149,7 @@ export default function PDFUploaderPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           type="text"
+          label="Handle"
           value={handle}
           onChangeValue={(value) => setHandle(value)}
           placeholder="Handle (e.g. user.bsky.social)"
@@ -157,6 +158,7 @@ export default function PDFUploaderPage() {
 
         <Input
           type="password"
+          label="App Password"
           value={appPassword}
           onChangeValue={(value) => setAppPassword(value)}
           placeholder="App Password"
@@ -169,7 +171,15 @@ export default function PDFUploaderPage() {
           </Card>
         )}
 
-        <Input type="file" ref={fileInputRef} onChange={handleFileChange} accept="application/pdf" required />
+        <Input
+          type="file"
+          label="PDF File"
+          placeholder="Select a PDF file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="application/pdf"
+          required
+        />
 
         <Button type="submit" disabled={isLoading}>
           {isLoading ? 'Processing...' : 'Post to Bluesky'}

@@ -135,6 +135,7 @@ export default function BlueskyToolsFeedPage() {
       <Card className="flex flex-col gap-2 p-4">
         <Input
           value={input}
+          label="Handle"
           onChangeValue={setInput}
           onSubmit={onSubmit}
           placeholder="Enter a handle (e.g. @imlunahey.bsky.social)"
