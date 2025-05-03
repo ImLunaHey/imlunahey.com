@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 import 'vitest';
+import { CompareOptions } from './tests/commands/screenshot';
 
 interface CustomMatchers<R = unknown> {
   toMatchImageSnapshot: (options?: CompareOptions) => R;

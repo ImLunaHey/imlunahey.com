@@ -44,6 +44,7 @@ describe('Button', () => {
     });
 
     expect(screenshotPath).toMatchImageSnapshot({
+      testName: 'Button',
       maxDiffPercentage: 0,
     });
   });
