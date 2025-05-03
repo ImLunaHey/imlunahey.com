@@ -43,7 +43,7 @@ describe('Button', () => {
       scale: 'device',
     });
 
-    expect(screenshotPath).toMatchImageSnapshot({
+    await expect(screenshotPath).toMatchImageSnapshot({
       maxDiffPercentage: 0,
     });
   });

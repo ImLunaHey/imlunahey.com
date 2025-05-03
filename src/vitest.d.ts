@@ -3,7 +3,7 @@ import 'vitest';
 import { CompareOptions } from './tests/commands/screenshot';
 
 interface CustomMatchers<R = unknown> {
-  toMatchImageSnapshot: (options?: CompareOptions) => R;
+  toMatchImageSnapshot: (options?: CompareOptions) => Promise<R>;
 }
 
 declare module 'vitest' {
