@@ -1,25 +1,50 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@import '@fontsource-variable/doto';
+@import '@fontsource-variable/jetbrains-mono';
+
+@theme {
+  --font-doto: 'Doto Variable', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', monospace;
+
+  /* Base colors */
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-gray: #808080;
+  --color-red: #ff0000;
+
+  /* Colors */
+  --color-yellow: #ffd700;
+
+  /* Theme colors */
+  --color-primary: #cbcbcb;
+  --color-secondary: #333;
+}
 
 html {
-  @apply bg-black text-white;
+  @apply bg-black font-mono text-white;
 }
 
 :root {
-  .cm-tooltip-above {   
+  .debug * {
+    outline: 1px solid red;
+  }
+
+  .cm-tooltip-above {
     /* Make it look distinct */
     background-color: #333 !important;
     color: white !important;
     border: 1px solid #555 !important;
     border-radius: 4px !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
-    
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+
     /* Make sure it has good padding */
     padding: 8px 12px !important;
-    
+
     /* Set width constraints */
     max-width: 90% !important;
     width: auto !important;
-    
+
     /* Improve text display */
     font-size: 13px !important;
     line-height: 1.4 !important;

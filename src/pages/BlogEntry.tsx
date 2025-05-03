@@ -11,7 +11,7 @@ import { ProfileCard } from '../components/ProfileCard';
 import { Card } from '../components/Card';
 import { cn } from '../cn';
 import { MarkdownPreview } from '../components/MarkdownPreview';
-import { H1 } from '../components/Heading';
+import { H1 } from '../elements/Heading';
 
 const Comment = ({ comment, className }: { comment: AppBskyFeedDefs.ThreadViewPost; className?: string }) => {
   const record = comment.post.record as AppBskyFeedPost.Record;
@@ -32,7 +32,7 @@ const Comment = ({ comment, className }: { comment: AppBskyFeedDefs.ThreadViewPo
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <Link to={`https://bsky.app/profile/${comment.post.author.did}`}>
-              <img src={comment.post.author.avatar} className="w-6 h-6 rounded-full" loading="lazy" />
+              <img src={comment.post.author.avatar} className="h-6 w-6 rounded-full" loading="lazy" />
             </Link>
             <Link to={`https://bsky.app/profile/${comment.post.author.did}`} className="hover:underline">
               {comment.post.author.displayName}
@@ -58,7 +58,7 @@ const Comment = ({ comment, className }: { comment: AppBskyFeedDefs.ThreadViewPo
           </div>
         </div>
       </Card>
-      <div className="w-full flex flex-col gap-1">
+      <div className="flex w-full flex-col gap-1">
         {replies.map((reply) => {
           const comment = reply.$type === 'app.bsky.feed.defs#threadViewPost' ? reply : null;
           if (!comment) return null;
@@ -88,20 +88,18 @@ const Comments = ({ uri }: { uri: string }) => {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex justify-between items-center gap-2">
+      <div className="flex items-center justify-between gap-2">
         <h2 className="text-lg font-bold">Comments</h2>
         <Link to={postUrl} className="text-sm text-gray-500 hover:underline">
           join the conversation
         </Link>
       </div>
-      {comments?.map((comment) => (
-        <Comment key={comment.post.uri} comment={comment} />
-      ))}
+      {comments?.map((comment) => <Comment key={comment.post.uri} comment={comment} />)}
     </div>
   );
 };
 
-const Seperator = () => <div className="size-1 bg-gray-200 rounded-full" />;
+const Seperator = () => <div className="size-1 rounded-full bg-gray-200" />;
 
 const BlogEntry = ({ rkey }: { rkey: string }) => {
   const {
@@ -122,8 +120,8 @@ const BlogEntry = ({ rkey }: { rkey: string }) => {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-col gap-2 bg-black border border-[#1a1a1a] p-2">
-        <H1 className="text-3xl m-0">{blogEntry?.value.title}</H1>
+      <div className="flex flex-col gap-2 border border-[#1a1a1a] bg-black p-2">
+        <H1 className="m-0 text-3xl">{blogEntry?.value.title}</H1>
         <div className="flex items-center gap-2 text-sm">
           <img src={profile.avatar} className="size-6 rounded-full" loading="eager" />
           <div>{profile.displayName}</div>

@@ -3,5 +3,6 @@
   "useTabs": false,
   "singleQuote": true,
   "trailingComma": "all",
-  "printWidth": 125
+  "printWidth": 125,
+  "plugins": ["prettier-plugin-tailwindcss"]
 }

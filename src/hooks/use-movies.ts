@@ -41,10 +41,19 @@ export const useMovies = () => {
     queryKey: ['movies'],
     queryFn: async ({ pageParam }) => {
       if (!pdsUri) throw new Error('PDS URI not found');
-      const response = await getListItems(pdsUri, pageParam);
+
+      let response = await getListItems(pdsUri, pageParam);
+      let filteredItems = response.records.filter((r) => r.value.creativeWorkType === 'movie');
+
+      // Keep fetching until we get results or run out of pages
+      while (filteredItems.length === 0 && response.cursor) {
+        response = await getListItems(pdsUri, response.cursor);
+        filteredItems = response.records.filter((r) => r.value.creativeWorkType === 'movie');
+      }
+
       return {
         cursor: response.cursor,
-        items: response.records.filter((r) => r.value.creativeWorkType === 'movie'),
+        items: filteredItems,
       };
     },
     getNextPageParam: (lastPage) => lastPage.cursor,

@@ -7,7 +7,7 @@ export default function Layout() {
     <Page>
       <NavBar />
 
-      <div className="relative overflow-hidden">
+      <div className="relative h-full overflow-hidden">
         <Outlet />
       </div>
     </Page>

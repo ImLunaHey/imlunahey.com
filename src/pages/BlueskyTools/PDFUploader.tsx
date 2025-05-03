@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { AtpAgent } from '@atproto/api';
 import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { Input } from '../../components/Input';
+import { Button } from '../../elements/Button';
+import { Input } from '../../elements/Input';
 
 const generatePDFPreview = async (pdfFile: File) => {
   const { resolvePDFJS } = await import('pdfjs-serverless');
@@ -144,7 +144,7 @@ export default function PDFUploaderPage() {
 
   return (
     <Card className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Bluesky PDF Uploader</h1>
+      <h1 className="mb-6 text-2xl font-bold">Bluesky PDF Uploader</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
@@ -165,7 +165,7 @@ export default function PDFUploaderPage() {
 
         {previewUrl && (
           <Card>
-            <img src={previewUrl} alt="PDF preview" className="w-full h-auto rounded" />
+            <img src={previewUrl} alt="PDF preview" className="h-auto w-full rounded" />
           </Card>
         )}
 
@@ -177,12 +177,12 @@ export default function PDFUploaderPage() {
       </form>
 
       {status && (
-        <div className="mt-4 p-3 border rounded">
+        <div className="mt-4 rounded border p-3">
           <p>{status}</p>
           {viewLink && (
             <div className="mt-2">
               <p>PDF view link:</p>
-              <a href={viewLink} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline break-all">
+              <a href={viewLink} target="_blank" rel="noreferrer" className="break-all text-blue-500 hover:underline">
                 {viewLink}
               </a>
             </div>

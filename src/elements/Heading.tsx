@@ -6,7 +6,7 @@ const Heading = ({ children, level, className }: { children: React.ReactNode; le
     `h${level}`,
     {
       className: cn(
-        'font-bold mt-2',
+        'font-bold mt-2 uppercase font-mono',
         {
           'text-4xl': level === 1,
           'text-2xl': level === 2,

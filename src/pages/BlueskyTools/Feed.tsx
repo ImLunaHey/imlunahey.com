@@ -5,8 +5,8 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { AppBskyEmbedImages, AppBskyFeedPost } from '@atcute/client/lexicons';
 import { Loading } from '../../components/Loading';
 import { ProfileCard } from '../../components/ProfileCard';
-import { Button } from '../../components/Button';
-import { Input } from '../../components/Input';
+import { Button } from '../../elements/Button';
+import { Input } from '../../elements/Input';
 import { RelativeTime } from '../../components/RelativeTime';
 import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { InfiniteList } from '../../components/InfiniteList';
@@ -33,12 +33,12 @@ const useAuthorFeed = (handle: string, enabled: boolean = true) => {
 };
 
 const Images = ({ images }: { images: AppBskyEmbedImages.ViewImage[] }) => {
-  if (images.length === 1) return <img src={images[0].fullsize} className="w-full h-full object-cover" />;
+  if (images.length === 1) return <img src={images[0].fullsize} className="h-full w-full object-cover" />;
   if (images.length === 2) {
     return (
       <div className="grid grid-cols-2 gap-2">
         {images.map((image) => (
-          <img key={image.thumb} src={image.fullsize} className="w-full h-full object-cover" />
+          <img key={image.thumb} src={image.fullsize} className="h-full w-full object-cover" />
         ))}
       </div>
     );
@@ -47,7 +47,7 @@ const Images = ({ images }: { images: AppBskyEmbedImages.ViewImage[] }) => {
     return (
       <div className="grid grid-cols-3 gap-2">
         {images.map((image) => (
-          <img key={image.thumb} src={image.fullsize} className="w-full h-full object-cover" />
+          <img key={image.thumb} src={image.fullsize} className="h-full w-full object-cover" />
         ))}
       </div>
     );
@@ -57,7 +57,7 @@ const Images = ({ images }: { images: AppBskyEmbedImages.ViewImage[] }) => {
     return (
       <div className="grid grid-cols-2 gap-2">
         {images.map((image) => (
-          <img key={image.thumb} src={image.fullsize} className="w-full h-full object-cover" />
+          <img key={image.thumb} src={image.fullsize} className="h-full w-full object-cover" />
         ))}
       </div>
     );
@@ -71,7 +71,7 @@ const Results = ({ handle }: { handle: string }) => {
   const feed = data?.pages.flatMap((page) => page.feed) ?? [];
 
   if (isLoading) return <Loading />;
-  if (error) return <Card className="p-4 bg-red-500">Error: {error.message}</Card>;
+  if (error) return <Card className="bg-red-500 p-4">Error: {error.message}</Card>;
   if (!data) return null;
 
   return (
@@ -87,9 +87,9 @@ const Results = ({ handle }: { handle: string }) => {
         const images = post.post.embed?.$type === 'app.bsky.embed.images#view' ? post.post.embed.images : [];
         const rkey = post.post.uri.split('/').pop()!;
         return (
-          <Card key={post.post.uri} className="p-2 flex flex-col gap-1">
+          <Card key={post.post.uri} className="flex flex-col gap-1 p-2">
             <div className="flex items-center gap-2">
-              <img src={post.post.author.avatar} className="w-6 h-6 rounded-full" />
+              <img src={post.post.author.avatar} className="h-6 w-6 rounded-full" />
               <div>{post.post.author.displayName}</div>
               <Link to={`https://bsky.app/profile/${post.post.author.did}`} className="text-gray-500">
                 <ProfileCard actor={post.post.author.did} />
@@ -132,7 +132,7 @@ export default function BlueskyToolsFeedPage() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Card className="p-4 flex flex-col gap-2">
+      <Card className="flex flex-col gap-2 p-4">
         <Input
           value={input}
           onChangeValue={setInput}
@@ -148,7 +148,7 @@ export default function BlueskyToolsFeedPage() {
         <Loading />
       ) : isPrivate && !showPrivate ? (
         <div>
-          <Card className="p-4 flex flex-col gap-2">
+          <Card className="flex flex-col gap-2 p-4">
             <div>This profile is private, are you sure you want to continue?</div>
             <Button onClick={() => setShowPrivate(true)}>Continue</Button>
           </Card>

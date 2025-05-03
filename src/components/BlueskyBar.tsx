@@ -1,5 +1,5 @@
 import { LogIn, LogOut } from 'lucide-react';
-import { Button } from './Button';
+import { Button } from '../elements/Button';
 import { Card } from './Card';
 import { ProfileCard } from './ProfileCard';
 import { Link } from 'react-router';
@@ -15,7 +15,7 @@ const BlueskyAvatar = () => {
 
   return (
     <div className="flex items-center gap-2">
-      <img src={profile.avatar} className="w-6 h-6 rounded-full" />
+      <img src={profile.avatar} className="h-6 w-6 rounded-full" />
       <Link to={`https://bsky.app/profile/${profile.did}`} className="text-gray-500">
         <ProfileCard actor={profile.did} />
       </Link>
@@ -31,7 +31,7 @@ export const BlueskyBar = () => {
 
   if (!authenticated) {
     return (
-      <Card className="p-4 flex flex-col gap-4">
+      <Card className="flex flex-col gap-4 p-4">
         <div className="flex justify-end">
           <Button className="w-fit" label="Login" onClick={() => {}}>
             <LogIn className="size-4" />
@@ -42,7 +42,7 @@ export const BlueskyBar = () => {
   }
 
   return (
-    <Card className="p-4 flex flex-col gap-4">
+    <Card className="flex flex-col gap-4 p-4">
       <div className="flex justify-between">
         <BlueskyAvatar />
         <Button className="w-fit" label="Logout" onClick={() => {}}>

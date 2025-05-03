@@ -66,7 +66,13 @@ type Node =
       src: string;
     };
 
-const InfiniteCanvas = ({ nodes, onOffsetChange }: { nodes: Node[]; onOffsetChange: (offset: { x: number; y: number }, scale: number) => void }) => {
+const InfiniteCanvas = ({
+  nodes,
+  onOffsetChange,
+}: {
+  nodes: Node[];
+  onOffsetChange: (offset: { x: number; y: number }, scale: number) => void;
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasCache = useRef<CanvasCache>(new CanvasCache(50));
   const handleResize = useCallback(() => {
@@ -88,23 +94,29 @@ const InfiniteCanvas = ({ nodes, onOffsetChange }: { nodes: Node[]; onOffsetChan
   // Update spatial hash when nodes change
   useEffect(() => {
     spatialHash.current.clear();
-    nodes.forEach(node => {
-      const width = node.type === 'text' ? 100 : // Estimate text width
-        node.type === 'circle' ? node.radius * 2 : 
-        node.width;
-      
-      const height = node.type === 'text' ? 20 : // Estimate text height
-        node.type === 'circle' ? node.radius * 2 : 
-        node.height;
+    nodes.forEach((node) => {
+      const width =
+        node.type === 'text'
+          ? 100 // Estimate text width
+          : node.type === 'circle'
+            ? node.radius * 2
+            : node.width;
+
+      const height =
+        node.type === 'text'
+          ? 20 // Estimate text height
+          : node.type === 'circle'
+            ? node.radius * 2
+            : node.height;
 
       spatialHash.current.insert({
         bounds: {
           x: node.x,
           y: node.y,
           width,
-          height
+          height,
         },
-        data: node
+        data: node,
       });
     });
   }, [nodes]);
@@ -124,7 +136,7 @@ const InfiniteCanvas = ({ nodes, onOffsetChange }: { nodes: Node[]; onOffsetChan
         x: offset.x,
         y: offset.y,
         width: dimensions.width / scale,
-        height: dimensions.height / scale
+        height: dimensions.height / scale,
       };
 
       // Check if we have a cached version of this view
@@ -133,7 +145,7 @@ const InfiniteCanvas = ({ nodes, onOffsetChange }: { nodes: Node[]; onOffsetChan
         visibleArea.y,
         visibleArea.width,
         visibleArea.height,
-        scale
+        scale,
       );
 
       if (cachedCanvas) {
@@ -145,7 +157,7 @@ const InfiniteCanvas = ({ nodes, onOffsetChange }: { nodes: Node[]; onOffsetChan
 
       // Query spatial hash for visible nodes
       const visibleItems = spatialHash.current.query(visibleArea);
-      const nodesToRender = Array.from(visibleItems).map(item => item.data);
+      const nodesToRender = Array.from(visibleItems).map((item) => item.data);
 
       // Only proceed if we have nodes to render
       if (nodesToRender.length === 0) {
@@ -158,7 +170,7 @@ const InfiniteCanvas = ({ nodes, onOffsetChange }: { nodes: Node[]; onOffsetChan
       offscreenCanvas.width = dimensions.width;
       offscreenCanvas.height = dimensions.height;
       const offscreenCtx = offscreenCanvas.getContext('2d');
-      
+
       if (!offscreenCtx) {
         ctx.restore();
         return;
@@ -196,7 +208,7 @@ const InfiniteCanvas = ({ nodes, onOffsetChange }: { nodes: Node[]; onOffsetChan
             x - borderWidth,
             y - borderWidth,
             node.width * scale + borderWidth * 2,
-            node.height * scale + borderWidth * 2
+            node.height * scale + borderWidth * 2,
           );
 
           // Get or create cached image
@@ -205,7 +217,7 @@ const InfiniteCanvas = ({ nodes, onOffsetChange }: { nodes: Node[]; onOffsetChan
             image = new Image();
             image.src = node.src;
             imageCache.current.set(node.src, image);
-            
+
             // Wait for image to load if it hasn't
             if (!image.complete) {
               await new Promise((resolve) => {
@@ -229,13 +241,13 @@ const InfiniteCanvas = ({ nodes, onOffsetChange }: { nodes: Node[]; onOffsetChan
           visibleArea.width,
           visibleArea.height,
           scale,
-          offscreenCanvas
+          offscreenCanvas,
         );
 
         // Draw the offscreen canvas to the main canvas
         ctx.drawImage(offscreenCanvas, 0, 0);
       }
-      
+
       ctx.restore();
     };
 
@@ -251,17 +263,14 @@ const InfiniteCanvas = ({ nodes, onOffsetChange }: { nodes: Node[]; onOffsetChan
     let initialScale = 1;
 
     const getDistance = (touch1: Touch, touch2: Touch) => {
-      return Math.hypot(
-        touch2.clientX - touch1.clientX,
-        touch2.clientY - touch1.clientY
-      );
+      return Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
     };
 
     const getCenter = (touch1: Touch, touch2: Touch) => {
       const rect = canvas.getBoundingClientRect();
       return {
-        x: ((touch1.clientX + touch2.clientX) / 2) - rect.left,
-        y: ((touch1.clientY + touch2.clientY) / 2) - rect.top
+        x: (touch1.clientX + touch2.clientX) / 2 - rect.left,
+        y: (touch1.clientY + touch2.clientY) / 2 - rect.top,
       };
     };
 
@@ -278,7 +287,7 @@ const InfiniteCanvas = ({ nodes, onOffsetChange }: { nodes: Node[]; onOffsetChan
       const dx = e.clientX - lastMousePos.current.x;
       const dy = e.clientY - lastMousePos.current.y;
 
-      setOffset(prev => ({
+      setOffset((prev) => ({
         x: prev.x - dx / scale,
         y: prev.y - dy / scale,
       }));
@@ -299,7 +308,7 @@ const InfiniteCanvas = ({ nodes, onOffsetChange }: { nodes: Node[]; onOffsetChan
       if (e.touches.length === 2) {
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
-        
+
         initialDistance = getDistance(touch1, touch2);
         initialScale = scale;
       }
@@ -308,50 +317,50 @@ const InfiniteCanvas = ({ nodes, onOffsetChange }: { nodes: Node[]; onOffsetChan
         const touch = e.touches[0];
         lastMousePos.current = { x: touch.clientX, y: touch.clientY };
       }
-      
+
       // Update active touches for next move event
       activeTouches = Array.from(e.touches);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       e.preventDefault();
-      
+
       // Pinch to zoom with 2 fingers
       if (e.touches.length === 2 && activeTouches.length === 2) {
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
-        
+
         const currentDistance = getDistance(touch1, touch2);
         const touchCenter = getCenter(touch1, touch2);
-        
+
         // Simple ratio with very strong dampening
         const ratio = currentDistance / initialDistance;
         const dampening = ratio > 1 ? 0.1 : 0.2; // More responsive for zoom out
         const scaleFactor = 1 + (ratio - 1) * dampening;
         const newScale = Math.min(Math.max(initialScale * scaleFactor, 0.1), 10);
-        
-        setOffset(prev => ({
+
+        setOffset((prev) => ({
           x: prev.x + (touchCenter.x / scale - touchCenter.x / newScale),
-          y: prev.y + (touchCenter.y / scale - touchCenter.y / newScale)
+          y: prev.y + (touchCenter.y / scale - touchCenter.y / newScale),
         }));
-        
+
         setScale(newScale);
       }
       // Pan with 1 finger
       else if (e.touches.length === 1 && activeTouches.length >= 1) {
         const touch = e.touches[0];
-        
+
         const dx = touch.clientX - lastMousePos.current.x;
         const dy = touch.clientY - lastMousePos.current.y;
-        
-        setOffset(prev => ({
+
+        setOffset((prev) => ({
           x: prev.x - dx / scale,
           y: prev.y - dy / scale,
         }));
-        
+
         lastMousePos.current = { x: touch.clientX, y: touch.clientY };
       }
-      
+
       // Update active touches for next move event
       activeTouches = Array.from(e.touches);
     };
@@ -373,18 +382,18 @@ const InfiniteCanvas = ({ nodes, onOffsetChange }: { nodes: Node[]; onOffsetChan
         const mouseY = e.clientY - rect.top;
 
         const newScale = Math.min(Math.max(scale * zoomFactor, 0.1), 10);
-        
-        setOffset(prev => ({
+
+        setOffset((prev) => ({
           x: prev.x + (mouseX / scale - mouseX / newScale),
           y: prev.y + (mouseY / scale - mouseY / newScale),
         }));
-        
+
         setScale(newScale);
       } else {
         const dx = e.deltaX;
         const dy = e.deltaY;
 
-        setOffset(prev => ({
+        setOffset((prev) => ({
           x: prev.x + dx / scale,
           y: prev.y + dy / scale,
         }));
@@ -434,20 +443,18 @@ export default function InfiniteCanvasPage() {
     const positions = baseLayoutRef.current;
     const gap = 24;
     const borderWidth = 8;
-    const optimalColumns = Math.min(
-      6,
-      Math.max(
-        2,
-        Math.round(Math.sqrt(images.length))
-      )
-    );
-    
+    const optimalColumns = Math.min(6, Math.max(2, Math.round(Math.sqrt(images.length))));
+
     // Calculate base dimensions
-    const availableWidth = canvasWidth.current - (gap * (optimalColumns - 1));
-    const columnWidth = (availableWidth / optimalColumns) - (borderWidth * 2);
-    
+    const availableWidth = canvasWidth.current - gap * (optimalColumns - 1);
+    const columnWidth = availableWidth / optimalColumns - borderWidth * 2;
+
     // Get the positions grouped by columns
-    const columnPositions: Array<Array<{ x: number; y: number; width: number; height: number; index: number }>> = Array(optimalColumns).fill(null).map(() => []);
+    const columnPositions: Array<Array<{ x: number; y: number; width: number; height: number; index: number }>> = Array(
+      optimalColumns,
+    )
+      .fill(null)
+      .map(() => []);
     positions.forEach((pos, index) => {
       if (pos.width > 0) {
         const columnIndex = Math.floor(pos.x / (columnWidth + borderWidth * 2 + gap));
@@ -456,7 +463,7 @@ export default function InfiniteCanvasPage() {
     });
 
     // Calculate column heights (for vertical tiling)
-    const columnHeights = columnPositions.map(column => {
+    const columnHeights = columnPositions.map((column) => {
       if (column.length === 0) return 0;
       const lastPos = column[column.length - 1];
       return lastPos.y + lastPos.height + borderWidth * 2 + gap;
@@ -464,9 +471,9 @@ export default function InfiniteCanvasPage() {
 
     // Calculate visible area with padding
     const visibleLeft = offset.x - canvasWidth.current / scale;
-    const visibleRight = offset.x + canvasWidth.current * 2 / scale;
+    const visibleRight = offset.x + (canvasWidth.current * 2) / scale;
     const visibleTop = offset.y - canvasHeight.current / scale;
-    const visibleBottom = offset.y + canvasHeight.current * 2 / scale;
+    const visibleBottom = offset.y + (canvasHeight.current * 2) / scale;
 
     // Calculate column range to render
     const columnWidth_withGaps = columnWidth + borderWidth * 2 + gap;
@@ -480,7 +487,7 @@ export default function InfiniteCanvasPage() {
       const baseColumnIndex = ((col % optimalColumns) + optimalColumns) % optimalColumns;
       const columnOffset = col * columnWidth_withGaps;
       const columnHeight = columnHeights[baseColumnIndex];
-      
+
       if (columnHeight > 0) {
         // Calculate vertical tiles needed for this column
         const startTileY = Math.floor(visibleTop / columnHeight);
@@ -488,14 +495,14 @@ export default function InfiniteCanvasPage() {
 
         // Add all visible images in this column
         for (let tileY = startTileY; tileY <= endTileY; tileY++) {
-          columnPositions[baseColumnIndex].forEach(pos => {
+          columnPositions[baseColumnIndex].forEach((pos) => {
             visibleNodes.push({
               type: 'image' as const,
               src: images[pos.index].url,
               x: columnOffset,
-              y: pos.y + (tileY * columnHeight),
+              y: pos.y + tileY * columnHeight,
               width: pos.width,
-              height: pos.height
+              height: pos.height,
             });
           });
         }
@@ -506,16 +513,19 @@ export default function InfiniteCanvasPage() {
     return visibleNodes;
   }, []);
 
-  const handleOffsetChange = useCallback((offset: { x: number; y: number }, scale: number) => {
-    console.log('Offset changed:', { offset, scale });
-    const nodes = calculateVisibleTiles(offset, scale);
-    console.log('Setting nodes:', nodes.length);
-    setNodes(nodes);
-  }, [calculateVisibleTiles]);
+  const handleOffsetChange = useCallback(
+    (offset: { x: number; y: number }, scale: number) => {
+      console.log('Offset changed:', { offset, scale });
+      const nodes = calculateVisibleTiles(offset, scale);
+      console.log('Setting nodes:', nodes.length);
+      setNodes(nodes);
+    },
+    [calculateVisibleTiles],
+  );
 
   useEffect(() => {
     console.log('Loading images...');
-    imageElements.current = images.map(image => {
+    imageElements.current = images.map((image) => {
       const img = new Image();
       img.src = image.url;
       return img;
@@ -530,18 +540,12 @@ export default function InfiniteCanvasPage() {
       const imageCount = images.length;
       const minColumns = 2;
       const maxColumns = 6;
-      const optimalColumns = Math.min(
-        maxColumns,
-        Math.max(
-          minColumns,
-          Math.round(Math.sqrt(imageCount))
-        )
-      );
+      const optimalColumns = Math.min(maxColumns, Math.max(minColumns, Math.round(Math.sqrt(imageCount))));
 
       const gap = 24;
       const borderWidth = 8;
-      const availableWidth = canvasWidth.current - (gap * (optimalColumns - 1));
-      const columnWidth = (availableWidth / optimalColumns) - (borderWidth * 2);
+      const availableWidth = canvasWidth.current - gap * (optimalColumns - 1);
+      const columnWidth = availableWidth / optimalColumns - borderWidth * 2;
       const columns = Array(optimalColumns).fill(0);
       const positions: Array<{ x: number; y: number; width: number; height: number }> = [];
 
@@ -561,20 +565,20 @@ export default function InfiniteCanvasPage() {
         const aspectRatio = img.width / img.height;
         const width = columnWidth;
         const height = width / aspectRatio;
-        
+
         const shortestColumn = columns.indexOf(Math.min(...columns));
         const x = shortestColumn * (columnWidth + borderWidth * 2 + gap);
         const y = columns[shortestColumn];
-        
+
         positions[index] = { x, y, width, height };
         columns[shortestColumn] = y + height + borderWidth * 2 + gap;
       });
 
       console.log('Base layout positions:', positions);
       console.log('Has unloaded images:', hasUnloadedImages);
-      
+
       // Only update baseLayoutRef if we have valid positions
-      if (!hasUnloadedImages && positions.some(pos => pos.width > 0)) {
+      if (!hasUnloadedImages && positions.some((pos) => pos.width > 0)) {
         baseLayoutRef.current = positions;
         // Force an initial layout calculation
         const initialOffset = { x: 0, y: 0 };
@@ -610,9 +614,8 @@ export default function InfiniteCanvasPage() {
   }, [handleOffsetChange]);
 
   return (
-    <div className="w-[100dvw] h-[100dvh]">
+    <div className="relative h-[calc(100dvh-100px)]">
       <InfiniteCanvas nodes={nodes} onOffsetChange={handleOffsetChange} />
     </div>
   );
 }
-

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Button } from '../../components/Button';
+import { Button } from '../../elements/Button';
 import { Card } from '../../components/Card';
-import { Input } from '../../components/Input';
+import { Input } from '../../elements/Input';
 import { AtpSessionData, CredentialManager, XRPC } from '@atcute/client';
 import { AppBskyActorDefs, AppBskyGraphDefs } from '@atcute/client/lexicons';
 import { MarkdownPreview } from '../../components/MarkdownPreview';
@@ -181,10 +181,10 @@ export default function BlueskyToolsListCleanerPage() {
             lists.map(({ uri, list, creator, rkey }) => {
               return (
                 <Card key={rkey} className="p-4">
-                  <div className="flex flex-col gap-2 relative">
+                  <div className="relative flex flex-col gap-2">
                     <button
                       onClick={() => handleRemoveList(rkey)}
-                      className="absolute top-0 right-0 text-red-500 cursor-pointer"
+                      className="absolute top-0 right-0 cursor-pointer text-red-500"
                       aria-label="Remove list"
                     >
                       x
@@ -194,10 +194,10 @@ export default function BlueskyToolsListCleanerPage() {
                         <img
                           src={creator?.avatar ?? list?.creator.avatar}
                           alt={creator?.displayName ?? list?.creator.displayName}
-                          className="w-10 h-10 rounded-full"
+                          className="h-10 w-10 rounded-full"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-200" />
+                        <div className="h-10 w-10 rounded-full bg-gray-200" />
                       )}
                       <div className="flex flex-col">
                         <p>{list ? list.name : 'List Deleted'}</p>
@@ -207,8 +207,8 @@ export default function BlueskyToolsListCleanerPage() {
                             {creator
                               ? creator.displayName
                               : list?.creator
-                              ? list.creator.displayName
-                              : uri.split('//').pop()?.split('/')[0]}
+                                ? list.creator.displayName
+                                : uri.split('//').pop()?.split('/')[0]}
                           </span>
                         </p>
                       </div>

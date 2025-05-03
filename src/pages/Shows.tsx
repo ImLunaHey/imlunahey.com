@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Button } from '../components/Button';
+import { Button } from '../elements/Button';
 import { Loading } from '../components/Loading';
 import { ShowPoster } from '../components/ShowPoster';
 import { useShows } from '../hooks/use-shows';
@@ -16,7 +16,7 @@ export default function ShowsPage() {
   return (
     <div>
       <div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-5">
           {shows?.map((show) => (
             <ShowPoster key={show.identifiers.tmdbId} showId={show.identifiers.tmdbId} rating={show.rating} />
           ))}

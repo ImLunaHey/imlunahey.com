@@ -7,8 +7,8 @@ import { useCallback, useState } from 'react';
 import { Card } from '../components/Card';
 import { useBlogEntry } from '../hooks/use-blog-entry';
 import { Loading } from '../components/Loading';
-import { Input } from '../components/Input';
-import { Button } from '../components/Button';
+import { Input } from '../elements/Input';
+import { Button } from '../elements/Button';
 import { useParams } from 'react-router';
 
 const Editor = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {

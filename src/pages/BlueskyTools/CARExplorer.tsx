@@ -10,9 +10,9 @@ import { getPdsEndpoint, type Handle } from '@atcute/identity';
 import * as Ariakit from '@ariakit/react';
 import { iterateAtpRepo } from '@atcute/car';
 import { Card } from '../../components/Card';
-import { Input } from '../../components/Input';
+import { Input } from '../../elements/Input';
 import { memo, useEffect, useRef, useState } from 'react';
-import { Button } from '../../components/Button';
+import { Button } from '../../elements/Button';
 import { useQuery } from '@tanstack/react-query';
 import { simpleFetchHandler, XRPC } from '@atcute/client';
 import { ArrowBigLeft, Download, SquarePen } from 'lucide-react';
@@ -24,7 +24,7 @@ import empty from '../../lib/json-schema-empty';
 import { tokyoNight } from '@uiw/codemirror-theme-tokyo-night';
 import { Link, useNavigate, useParams } from 'react-router';
 import { useLexiconSchema } from '../../hooks/use-lexicon-schema';
-import { Dialog } from '../../components/Dialog';
+import { Dialog } from '../../elements/Dialog';
 import { BlueskyBar } from '../../components/BlueskyBar';
 
 const handleResolver = new CompositeHandleResolver({
@@ -425,7 +425,7 @@ export default function BlueskyToolsCARExplorerPage() {
     <div className="flex flex-col gap-4">
       <BlueskyBar />
 
-      <Card className="p-4 flex flex-col gap-4">
+      <Card className="flex flex-col gap-4 p-4">
         <div className="flex justify-between">
           <h1>CAR Explorer</h1>
           {data && (
@@ -436,6 +436,7 @@ export default function BlueskyToolsCARExplorerPage() {
         </div>
         <form onSubmit={handleSubmit}>
           <Input
+            label="Handle or DID"
             placeholder="Enter a Handle or DID (e.g. imlunahey.com)"
             value={input}
             onChange={(e) => setInput(e.target.value as Handle)}
@@ -451,12 +452,12 @@ export default function BlueskyToolsCARExplorerPage() {
               {isIndeterminate ? 'Loading repository...' : `Loading repository: ${progress}%`}
             </h3>
 
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="h-2 w-full rounded-full bg-gray-200">
               {isIndeterminate ? (
-                <div className="bg-blue-600 h-2 rounded-full animate-pulse w-full" />
+                <div className="h-2 w-full animate-pulse rounded-full bg-white" />
               ) : (
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="h-2 rounded-full bg-blue-600 transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               )}
@@ -478,7 +479,7 @@ export default function BlueskyToolsCARExplorerPage() {
       )}
 
       {data && (
-        <Card className="p-4 flex flex-col gap-2">
+        <Card className="flex flex-col gap-2 p-4">
           <Ariakit.TabProvider defaultSelectedId={defaultSelectedId} setSelectedId={setSelectedId} selectedId={selectedId}>
             <Ariakit.TabList className="flex gap-2 overflow-x-auto">
               {selectedId !== 'index' && (
@@ -486,12 +487,12 @@ export default function BlueskyToolsCARExplorerPage() {
                   <Ariakit.Tab
                     key={`index-tab`}
                     id="index"
-                    className="px-2 py-2 mb-4 border border-[#1a1a1a]"
+                    className="mb-4 border border-[#1a1a1a] px-2 py-2"
                     render={<Link to={`/bluesky/tools/car-explorer/${handle}`} />}
                   >
                     <ArrowBigLeft />
                   </Ariakit.Tab>
-                  <Card className="px-2 py-2 mb-4">{selectedId}</Card>
+                  <Card className="mb-4 px-2 py-2">{selectedId}</Card>
                   {authenticated && <NewRecordModal $type={selectedId} />}
                 </>
               )}

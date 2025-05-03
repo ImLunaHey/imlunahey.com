@@ -5,7 +5,7 @@ import { useReadTime } from '../hooks/use-read-time';
 import { useViewCount } from '../hooks/use-view-count';
 import { BlogEntryResponse } from '../types/blog-entry';
 import { Link } from 'react-router';
-const Seperator = () => <div className="size-1 bg-gray-200 rounded-full" />;
+const Seperator = () => <div className="size-1 rounded-full bg-gray-200" />;
 
 const Summary = ({ blogEntry }: { blogEntry: BlogEntryResponse<'did:plc:k6acu4chiwkixvdedcmdgmal'> }) => {
   const { data: readTime } = useReadTime({ rkey: blogEntry.uri.split('/').pop()! });
@@ -43,7 +43,7 @@ export default function BlogPage() {
   }
 
   return (
-    <div className="max-w-screen-md mx-auto">
+    <div className="mx-auto flex max-w-screen-md flex-col gap-2">
       {blogEntries.slice(0, 10).map((blogEntry) => (
         <Summary key={blogEntry.value.createdAt} blogEntry={blogEntry} />
       ))}

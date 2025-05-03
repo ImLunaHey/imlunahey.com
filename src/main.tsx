@@ -3,11 +3,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { cn } from './cn.ts';
 import { BrowserRouter, Route, Routes } from 'react-router';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Favicon } from './components/Favicon.tsx';
 import React from 'react';
 import { QueryProvider } from './components/QueryProvider.tsx';
 import Layout from './components/Layout.tsx';
+import { DevTools } from './components/DevTools.tsx';
 
 const HomePage = React.lazy(() => import('./pages/Home.tsx'));
 const ProjectsPage = React.lazy(() => import('./pages/Projects.tsx'));
@@ -31,6 +31,8 @@ const InfiniteCanvasPage = React.lazy(() => import('./pages/InfiniteCanvas.tsx')
 const MoviesPage = React.lazy(() => import('./pages/Movies.tsx'));
 const ShowsPage = React.lazy(() => import('./pages/Shows.tsx'));
 
+const DesignPage = React.lazy(() => import('./pages/Design.tsx'));
+
 const NotFoundPage = React.lazy(() => import('./pages/NotFound.tsx'));
 
 createRoot(document.getElementById('root')!).render(
@@ -39,14 +41,14 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <div
           className={cn(
-            'absolute -z-20 inset-0 size-full',
+            'absolute inset-0 -z-20 size-full',
             'bg-[radial-gradient(circle,#73737350_1px,transparent_1px)]',
             'bg-[size:10px_10px]',
             'after:absolute after:inset-0 after:bg-gradient-to-b after:from-transparent after:to-black after:opacity-40',
             'before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:to-black before:opacity-30',
           )}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black opacity-40 -z-10" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent to-black opacity-40" />
         <Favicon />
         <Routes>
           <Route element={<Layout />}>
@@ -74,13 +76,15 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/movies" element={<MoviesPage />} />
             <Route path="/shows" element={<ShowsPage />} />
 
+            <Route path="/design" element={<DesignPage />} />
+
             <Route path="*" element={<NotFoundPage />} />
           </Route>
 
           <Route path="/gallery/:id?" element={<GalleryPage />} />
         </Routes>
       </BrowserRouter>
-      <ReactQueryDevtools />
+      <DevTools />
     </QueryProvider>
   </StrictMode>,
 );

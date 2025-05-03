@@ -17,13 +17,21 @@ export const Button = ({
 }) => {
   return (
     <button
-      onClick={onClick}
+      onClick={(event) => {
+        if (disabled) {
+          event.preventDefault();
+          return;
+        }
+        onClick?.();
+      }}
       className={cn(
-        'w-full p-2 border border-[#1a1a1a] hover:bg-[#1a1a1a] cursor-pointer',
-        disabled && 'opacity-50',
+        'border-primary w-full cursor-pointer border p-1',
+        'focus:ring-primary focus:ring-2 focus:outline-none',
+        'hover:bg-secondary hover:text-white',
+        disabled && 'opacity-50 hover:cursor-not-allowed hover:bg-transparent',
         className,
       )}
-      disabled={disabled}
+      aria-disabled={disabled}
       type={type}
       aria-label={label}
     >

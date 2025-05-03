@@ -2,7 +2,8 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Link } from 'react-router';
 import { cn } from '../cn';
-import { H1, H2, H3, H4, H5, H6 } from './Heading';
+import { H1, H2, H3, H4, H5, H6 } from '../elements/Heading';
+import { Image } from '../elements/Image';
 
 export const MarkdownPreview = ({ content, className }: { content: string; className?: string }) => {
   return (
@@ -26,12 +27,7 @@ export const MarkdownPreview = ({ content, className }: { content: string; class
           h4: ({ children }) => <H4>{children}</H4>,
           h5: ({ children }) => <H5>{children}</H5>,
           h6: ({ children }) => <H6>{children}</H6>,
-          img: ({ ...props }) => (
-            <div className="flex flex-col gap-2 items-center justify-center">
-              <img {...props} className="w-full" />
-              <div className="text-xs text-gray-200">{props.alt}</div>
-            </div>
-          ),
+          img: ({ ...props }) => <Image src={props.src} alt={props.alt} />,
         }}
       >
         {content}
