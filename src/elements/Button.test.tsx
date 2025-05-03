@@ -1,7 +1,7 @@
 /// <reference types="@vitest/browser/providers/playwright" />
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import { Button } from '../elements/Button';
+import { Button } from './Button';
 import userEvent from '@testing-library/user-event';
 import { page } from '@vitest/browser/context';
 

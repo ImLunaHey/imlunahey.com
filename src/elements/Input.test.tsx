@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import { Input } from '../elements/Input';
+import { Input } from './Input';
 import userEvent from '@testing-library/user-event';
 
 describe('Input', () => {
