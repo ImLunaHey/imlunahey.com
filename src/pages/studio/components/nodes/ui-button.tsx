@@ -1,4 +1,4 @@
-import { Node, NodeParams } from '../node';
+import { NodeParams } from '../node';
 import { UIElement } from './ui-element';
 
 type UIButtonParams = NodeParams & {
@@ -15,7 +15,7 @@ export class UIButton extends UIElement {
     this.#label = params.label;
   }
 
-  public render(ctx: CanvasRenderingContext2D, translatePos: { x: number; y: number }, scale: number): void {
+  public render(ctx: CanvasRenderingContext2D): void {
     // Take scale and translation into account also the hovering state
     const width = this.#hovering ? this.width * 0.95 : this.width;
     const height = this.#hovering ? this.height * 0.95 : this.height;

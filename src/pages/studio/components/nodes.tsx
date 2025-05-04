@@ -5,7 +5,7 @@ type NodesProps = {
   onNodesReorder: (nodes: Node[]) => void;
 };
 
-export const Nodes = ({ nodes, onNodesReorder }: NodesProps) => {
+export const Nodes = ({ nodes }: NodesProps) => {
   // const pointerSensor = useSensor(PointerSensor, {
   //   activationConstraint: {
   //     distance: 0.01,
@@ -35,7 +35,7 @@ export const Nodes = ({ nodes, onNodesReorder }: NodesProps) => {
         return (
           <div key={node.id} className="flex flex-row gap-2">
             <div
-              className="w-4 h-4 rounded border"
+              className="h-4 w-4 rounded border"
               style={{
                 backgroundColor: node.colour,
               }}

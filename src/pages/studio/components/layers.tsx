@@ -73,7 +73,7 @@ export const Layers = ({
             {layers
               .slice()
               .reverse()
-              .map((layer, index) => {
+              .map((layer) => {
                 return (
                   <SortableLayer
                     key={layer.id}

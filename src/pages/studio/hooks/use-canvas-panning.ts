@@ -40,7 +40,7 @@ export const useCanvasPanning = (canvasRef: React.RefObject<HTMLCanvasElement>) 
       }
     };
 
-    const handleMouseUp = (event: MouseEvent) => {
+    const handleMouseUp = () => {
       isDraggingRef.current = false;
     };
 

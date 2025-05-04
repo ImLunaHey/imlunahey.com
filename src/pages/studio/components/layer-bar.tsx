@@ -15,7 +15,7 @@ type LayerBarProps = {
   onLayerDelete: (id: string | null) => void;
 };
 
-export const LayerBar = ({ layer, selectedLayer, onLayerUpdate, onLayerSelect, onLayerDelete }: LayerBarProps) => {
+export const LayerBar = ({ layer, selectedLayer, onLayerUpdate, onLayerSelect }: LayerBarProps) => {
   return (
     <div
       key={layer.id}

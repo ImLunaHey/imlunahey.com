@@ -5,7 +5,7 @@ export const useViewCount = ({ rkey }: { rkey: string }) => {
     queryKey: ['view-count', rkey],
     queryFn: async () => {
       return fetch(`https://stats.imlunahey.com/${rkey}`)
-        .then((res) => res.json())
+        .then((res) => res.json() as Promise<{ views: number }>)
         .then((data) => data.views);
     },
   });

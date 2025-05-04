@@ -1,10 +1,3 @@
-import { Node } from '../components/node';
-
-type Position = {
-  x: number;
-  y: number;
-};
-
 /**
  * This hook is used to seelct an node on a canvas.
  * @param nodes The nodes to select from.
@@ -12,12 +5,7 @@ type Position = {
  * @param scale The scale of the canvas.
  * @returns The mouse event handlers.
  */
-export const useSelectNode = (
-  canvasRef: React.RefObject<HTMLCanvasElement>,
-  nodes: Node[],
-  translatePos: Position,
-  scale: number,
-) => {
+export const useSelectNode = () => {
   return;
   // const currentItem = useRef<number | null>(null);
   // const mouseRef = useRef({ x: 0, y: 0 });

@@ -11,6 +11,7 @@ export const saveCanvasImageFile = async (canvas: HTMLCanvasElement) => {
   const imageData = await fetch(canvas.toDataURL('image/png')).then((res) => res.blob());
 
   try {
+    // @ts-expect-error - showSaveFilePicker is not supported in Safari
     const imgFileHandle = await window.showSaveFilePicker({
       types: [
         {

@@ -10,7 +10,7 @@ export class UIMetadata extends UIElement {
     super(params);
   }
 
-  public render(ctx: CanvasRenderingContext2D, translatePos: { x: number; y: number }, scale: number): void {
+  public render(ctx: CanvasRenderingContext2D): void {
     if (!this.#metadata) return;
 
     // Render the metadata
@@ -41,6 +41,7 @@ export class UIMetadata extends UIElement {
   public onClick(): void {}
   public onHoverStart(): void {}
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public setMetadata(metadata: any): void {
     this.#metadata = metadata;
   }

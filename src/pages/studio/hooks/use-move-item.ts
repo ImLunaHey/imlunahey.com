@@ -1,6 +1,3 @@
-import { Position } from '../common/position';
-import { Node } from '../components/node';
-
 /**
  * This hook is used to move an node on a canvas.
  * @param nodes The items to move.
@@ -8,12 +5,7 @@ import { Node } from '../components/node';
  * @param scale The scale of the canvas.
  * @returns The mouse event handlers.
  */
-export const useMoveNode = (
-  canvasRef: React.RefObject<HTMLCanvasElement>,
-  nodes: Node[],
-  translatePos: Position,
-  scale: number,
-) => {
+export const useMoveNode = () => {
   return;
   // const currentItem = useRef<number | null>(null);
   // const mouseRef = useRef({ x: 0, y: 0 });
