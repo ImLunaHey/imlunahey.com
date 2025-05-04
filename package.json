@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "postinstall": "patch-package",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -43,6 +44,7 @@
     "lucide-react": "^0.483.0",
     "markdown-it": "^14.1.0",
     "motion": "^12.5.0",
+    "patch-package": "^8.0.0",
     "pdfjs-serverless": "^0.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

@@ -3,6 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { Button } from './Button';
 import userEvent from '@testing-library/user-event';
 import { page } from '@vitest/browser/context';
+import { fullViewport } from '../tests/utils/viewport';
 
 describe('Button', () => {
   afterEach(cleanup);
@@ -38,12 +39,14 @@ describe('Button', () => {
   it('should match the screenshot', async () => {
     render(<Button>Test</Button>);
 
+    await fullViewport();
+
     const screenshotPath = await page.screenshot({
-      scale: 'device',
+      omitBackground: true,
       path: './__screenshots__/Button.test.tsx/Button-should-match-the-screenshot.png',
     });
 
-    await expect(screenshotPath).toMatchImageSnapshot({
+    await expect(screenshotPath).toMatchScreenshot({
       maxDiffPercentage: 0,
     });
   });

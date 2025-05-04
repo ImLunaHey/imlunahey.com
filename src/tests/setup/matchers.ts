@@ -16,7 +16,7 @@ declare module '@vitest/browser/context' {
 }
 
 expect.extend({
-  async toMatchImageSnapshot(screenshotPath: string, options = {}) {
+  async toMatchScreenshot(screenshotPath: string, options = {}) {
     // Get the current test name from Vitest's context
     const testPath = this.testPath?.split('/');
     const testName = testPath?.at(-1);

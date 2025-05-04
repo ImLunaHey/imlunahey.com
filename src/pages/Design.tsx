@@ -177,7 +177,7 @@ const components = [
 
 export default function DesignPage() {
   return (
-    <>
+    <div className="mx-auto max-w-screen-lg">
       <div className="flex flex-col">
         <H2>HTML Elements</H2>
         {htmlElements.map((element) => (
@@ -191,6 +191,6 @@ export default function DesignPage() {
           <Component key={component.title} title={component.title} children={component.children} />
         ))}
       </div>
-    </>
+    </div>
   );
 }

@@ -2,6 +2,7 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { App } from './App';
 import { page } from '@vitest/browser/context';
+import { fullViewport } from './tests/utils/viewport';
 
 describe('App', () => {
   afterEach(cleanup);
@@ -13,12 +14,14 @@ describe('App', () => {
   it('should match the screenshot', async () => {
     render(<App />);
 
+    await fullViewport();
+
     const screenshotPath = await page.screenshot({
-      scale: 'device',
+      omitBackground: true,
       path: './__screenshots__/App.test.tsx/App-should-match-the-screenshot.png',
     });
 
-    await expect(screenshotPath).toMatchImageSnapshot({
+    await expect(screenshotPath).toMatchScreenshot({
       maxDiffPercentage: 0,
     });
   });

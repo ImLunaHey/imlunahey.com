@@ -49,7 +49,7 @@ export const compareScreenshot = async (
     diffDir = `${testDir}/__image_diffs__`,
     threshold = 0.1, // recommended default in pixelmatch docs
     maxDiffPercentage = 1.0,
-    updateBaseline = process.env.UPDATE_SNAPSHOTS === 'true',
+    updateBaseline = process.env.UPDATE_SCREENSHOTS === 'true',
   } = options;
 
   const testBaselineDir = path.join(baselineDir, testName);
