@@ -175,22 +175,66 @@ const components = [
   },
 ];
 
+const sections = [
+  {
+    title: 'Fonts',
+    children: [
+      {
+        title: 'Doto',
+        children: <div className="font-doto">This is used for the title of the page.</div>,
+      },
+      {
+        title: 'Mono',
+        children: <div className="font-mono">This is used for everything else.</div>,
+      },
+    ],
+  },
+  {
+    title: 'Colours',
+    children: [
+      {
+        title: 'Main',
+        children: (
+          <div className="flex gap-2">
+            <div className="size-8 border border-white bg-white" title="white" />
+            <div className="bg-gray size-8 border border-white" title="gray" />
+            <div className="size-8 border border-white bg-black" title="black" />
+            <div className="bg-red size-8 border border-white" title="red" />
+          </div>
+        ),
+      },
+      {
+        title: 'Theme',
+        children: (
+          <div className="flex gap-2">
+            <div className="bg-primary size-8 border border-white" title="primary" />
+            <div className="bg-secondary size-8 border border-white" title="secondary" />
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    title: 'HTML Elements',
+    children: htmlElements,
+  },
+  {
+    title: 'Components',
+    children: components,
+  },
+];
+
 export default function DesignPage() {
   return (
     <div className="mx-auto max-w-screen-lg">
-      <div className="flex flex-col">
-        <H2>HTML Elements</H2>
-        {htmlElements.map((element) => (
-          <Component key={element.title} title={element.title} children={element.children} />
-        ))}
-      </div>
-
-      <div className="flex flex-col">
-        <H2>Components</H2>
-        {components.map((component) => (
-          <Component key={component.title} title={component.title} children={component.children} />
-        ))}
-      </div>
+      {sections.map((section) => (
+        <div key={section.title}>
+          <H2>{section.title}</H2>
+          {section.children.map((child) => (
+            <Component key={child.title} title={child.title} children={child.children} />
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
