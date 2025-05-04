@@ -41,6 +41,7 @@
     "@uiw/codemirror-theme-okaidia": "^4.23.10",
     "@uiw/codemirror-theme-tokyo-night": "^4.23.10",
     "@uiw/react-codemirror": "^4.23.10",
+    "buffer": "^6.0.3",
     "clsx": "^2.1.1",
     "codemirror-json-schema": "^0.8.1",
     "focus-trap-react": "^11.0.3",
