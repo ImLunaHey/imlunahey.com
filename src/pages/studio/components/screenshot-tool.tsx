@@ -654,7 +654,7 @@ export const ScreenshotTool = () => {
       ref={canvasRef}
       width={canvasWidth}
       height={canvasHeight}
-      className="max-w-full border border-black dark:border-white"
+      className="h-full w-full object-contain"
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -1094,7 +1094,7 @@ export const ScreenshotTool = () => {
       <div>
         <div className="relative flex items-center justify-center p-2">
           {canShowDropzone && dropzone}
-          {mainCanvas}
+          <div className="h-[calc(100dvh-3rem)] w-full">{mainCanvas}</div>
         </div>
       </div>
     </div>
