@@ -31,6 +31,8 @@ const ShowsPage = React.lazy(() => import('./pages/Shows.tsx'));
 
 const DesignPage = React.lazy(() => import('./pages/Design.tsx'));
 
+const StudioPage = React.lazy(() => import('./pages/Studio.tsx'));
+
 const NotFoundPage = React.lazy(() => import('./pages/NotFound.tsx'));
 
 export const App = () => (
@@ -81,6 +83,8 @@ export const App = () => (
         </Route>
 
         <Route path="/gallery/:id?" element={<GalleryPage />} />
+
+        <Route path="/studio" element={<StudioPage />} />
       </Routes>
     </BrowserRouter>
     <DevTools />

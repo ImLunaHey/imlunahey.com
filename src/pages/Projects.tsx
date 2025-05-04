@@ -69,6 +69,11 @@ const projects: Project[] = [
     description: 'an infinite canvas of images.',
     url: '/infinite-canvas',
   },
+  {
+    name: 'studio',
+    description: 'an image editor.',
+    url: '/studio',
+  },
   // {
   //   name: 'whitewind',
   //   description: 'a tool for creating whitewind posts.',
