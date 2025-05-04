@@ -35,7 +35,9 @@ const NotFoundPage = React.lazy(() => import('./pages/NotFound.tsx'));
 
 export const App = () => (
   <QueryProvider>
-    <BrowserRouter>
+    <BrowserRouter
+      basename={window.location.pathname.startsWith('/__vitest_test__/__test__/') ? '/__vitest_test__/__test__/' : ''}
+    >
       <div
         className={cn(
           'absolute inset-0 -z-20 size-full',
