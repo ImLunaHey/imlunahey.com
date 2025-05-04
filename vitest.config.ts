@@ -14,6 +14,10 @@ export default defineConfig({
       commands: {
         compareScreenshot,
       },
+      viewport: {
+        width: 1920,
+        height: 1080,
+      },
     },
     css: true,
   },

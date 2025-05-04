@@ -20,9 +20,9 @@ const DebugModeToggle = () => {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
           <path d="m8 2 1.88 1.88" />
           <path d="M14.12 3.88 16 2" />
@@ -44,9 +44,9 @@ const DebugModeToggle = () => {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
           <path d="M15 7.13V6a3 3 0 0 0-5.14-2.1L8 2" />
           <path d="M14.12 3.88 16 2" />
