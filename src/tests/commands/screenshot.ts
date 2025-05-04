@@ -116,7 +116,6 @@ export const compareScreenshot = async (
         message: `Created new baseline image: ${baselinePath}`,
       };
     }
-    console.info({ error });
     throw error;
   }
 };

@@ -1,9 +1,11 @@
-import { render } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { cleanup, render } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 import { App } from './App';
 import { page } from '@vitest/browser/context';
 
 describe('App', () => {
+  afterEach(cleanup);
+
   it('should render', () => {
     render(<App />);
   });
