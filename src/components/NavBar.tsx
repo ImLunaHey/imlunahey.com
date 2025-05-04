@@ -19,7 +19,7 @@ export const NavBar = () => {
         // LUNA
       </Link>
       <div className="mx-auto mb-2 max-w-screen-md border-b border-white pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between">
           <NavLink to="/">Home</NavLink>
           <NavLink to="/blog">Blog</NavLink>
           <NavLink to="/projects">Projects</NavLink>
