@@ -15,6 +15,7 @@ describe('App', () => {
 
     const screenshotPath = await page.screenshot({
       scale: 'device',
+      path: './__screenshots__/App.test.tsx/App-should-match-the-screenshot.png',
     });
 
     await expect(screenshotPath).toMatchImageSnapshot({

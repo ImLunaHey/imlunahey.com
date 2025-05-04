@@ -1,4 +1,3 @@
-/// <reference types="@vitest/browser/providers/playwright" />
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { Button } from './Button';
@@ -41,6 +40,7 @@ describe('Button', () => {
 
     const screenshotPath = await page.screenshot({
       scale: 'device',
+      path: './__screenshots__/Button.test.tsx/Button-should-match-the-screenshot.png',
     });
 
     await expect(screenshotPath).toMatchImageSnapshot({
