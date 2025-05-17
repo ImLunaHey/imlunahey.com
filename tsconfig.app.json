@@ -24,9 +24,9 @@
 
     "types": [
       "@atcute/bluesky/lexicons",
-      "@atcute/whitewind/lexicons",
-      "@vitest/browser/providers/playwright",
-      "@vitest/browser/matchers"
+      "@atcute/whitewind/lexicons"
+      // "@vitest/browser/providers/playwright",
+      // "@vitest/browser/matchers"
     ]
   },
   "include": ["src"]
