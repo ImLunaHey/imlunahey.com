@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 const getIcon = () => {
   const now = new Date();
   const month = now.getMonth();
@@ -16,7 +18,22 @@ const getIcon = () => {
 };
 
 export const Favicon = () => {
-  const icon = getIcon();
+  const [icon, setIcon] = useState(getIcon());
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIcon('👀');
+      } else {
+        setIcon(getIcon());
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   return (
     <link
