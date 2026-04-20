@@ -11,20 +11,22 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StudioRouteImport } from './routes/studio'
 import { Route as MainRouteImport } from './routes/_main'
-import { Route as GalleryIndexRouteImport } from './routes/gallery/index'
 import { Route as MainIndexRouteImport } from './routes/_main/index'
-import { Route as GalleryIdRouteImport } from './routes/gallery/$id'
+import { Route as MainUsesRouteImport } from './routes/_main/uses'
 import { Route as MainShowsRouteImport } from './routes/_main/shows'
 import { Route as MainShowcaseRouteImport } from './routes/_main/showcase'
 import { Route as MainReferrerCheckerRouteImport } from './routes/_main/referrer-checker'
-import { Route as MainProjectsRouteImport } from './routes/_main/projects'
 import { Route as MainMoviesRouteImport } from './routes/_main/movies'
 import { Route as MainInfiniteCanvasRouteImport } from './routes/_main/infinite-canvas'
+import { Route as MainGalleryRouteImport } from './routes/_main/gallery'
+import { Route as MainDesignSystemRouteImport } from './routes/_main/design-system'
 import { Route as MainDesignRouteImport } from './routes/_main/design'
 import { Route as MainContactRouteImport } from './routes/_main/contact'
 import { Route as MainWhitewindIndexRouteImport } from './routes/_main/whitewind/index'
+import { Route as MainProjectsIndexRouteImport } from './routes/_main/projects/index'
 import { Route as MainBlogIndexRouteImport } from './routes/_main/blog/index'
 import { Route as MainWhitewindRkeyRouteImport } from './routes/_main/whitewind/$rkey'
+import { Route as MainProjectsNameRouteImport } from './routes/_main/projects/$name'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
 import { Route as MainBlueskyToolsIndexRouteImport } from './routes/_main/bluesky/tools/index'
 import { Route as MainBlueskyToolsPdfUploaderRouteImport } from './routes/_main/bluesky/tools/pdf-uploader'
@@ -43,20 +45,15 @@ const MainRoute = MainRouteImport.update({
   id: '/_main',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GalleryIndexRoute = GalleryIndexRouteImport.update({
-  id: '/gallery/',
-  path: '/gallery/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const MainIndexRoute = MainIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainRoute,
 } as any)
-const GalleryIdRoute = GalleryIdRouteImport.update({
-  id: '/gallery/$id',
-  path: '/gallery/$id',
-  getParentRoute: () => rootRouteImport,
+const MainUsesRoute = MainUsesRouteImport.update({
+  id: '/uses',
+  path: '/uses',
+  getParentRoute: () => MainRoute,
 } as any)
 const MainShowsRoute = MainShowsRouteImport.update({
   id: '/shows',
@@ -73,11 +70,6 @@ const MainReferrerCheckerRoute = MainReferrerCheckerRouteImport.update({
   path: '/referrer-checker',
   getParentRoute: () => MainRoute,
 } as any)
-const MainProjectsRoute = MainProjectsRouteImport.update({
-  id: '/projects',
-  path: '/projects',
-  getParentRoute: () => MainRoute,
-} as any)
 const MainMoviesRoute = MainMoviesRouteImport.update({
   id: '/movies',
   path: '/movies',
@@ -86,6 +78,16 @@ const MainMoviesRoute = MainMoviesRouteImport.update({
 const MainInfiniteCanvasRoute = MainInfiniteCanvasRouteImport.update({
   id: '/infinite-canvas',
   path: '/infinite-canvas',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainGalleryRoute = MainGalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainDesignSystemRoute = MainDesignSystemRouteImport.update({
+  id: '/design-system',
+  path: '/design-system',
   getParentRoute: () => MainRoute,
 } as any)
 const MainDesignRoute = MainDesignRouteImport.update({
@@ -103,6 +105,11 @@ const MainWhitewindIndexRoute = MainWhitewindIndexRouteImport.update({
   path: '/whitewind/',
   getParentRoute: () => MainRoute,
 } as any)
+const MainProjectsIndexRoute = MainProjectsIndexRouteImport.update({
+  id: '/projects/',
+  path: '/projects/',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainBlogIndexRoute = MainBlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
@@ -111,6 +118,11 @@ const MainBlogIndexRoute = MainBlogIndexRouteImport.update({
 const MainWhitewindRkeyRoute = MainWhitewindRkeyRouteImport.update({
   id: '/whitewind/$rkey',
   path: '/whitewind/$rkey',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainProjectsNameRoute = MainProjectsNameRouteImport.update({
+  id: '/projects/$name',
+  path: '/projects/$name',
   getParentRoute: () => MainRoute,
 } as any)
 const MainBlogRkeyRoute = MainBlogRkeyRouteImport.update({
@@ -164,17 +176,19 @@ export interface FileRoutesByFullPath {
   '/studio': typeof StudioRoute
   '/contact': typeof MainContactRoute
   '/design': typeof MainDesignRoute
+  '/design-system': typeof MainDesignSystemRoute
+  '/gallery': typeof MainGalleryRoute
   '/infinite-canvas': typeof MainInfiniteCanvasRoute
   '/movies': typeof MainMoviesRoute
-  '/projects': typeof MainProjectsRoute
   '/referrer-checker': typeof MainReferrerCheckerRoute
   '/showcase': typeof MainShowcaseRoute
   '/shows': typeof MainShowsRoute
-  '/gallery/$id': typeof GalleryIdRoute
-  '/gallery/': typeof GalleryIndexRoute
+  '/uses': typeof MainUsesRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
+  '/projects/$name': typeof MainProjectsNameRoute
   '/whitewind/$rkey': typeof MainWhitewindRkeyRoute
   '/blog/': typeof MainBlogIndexRoute
+  '/projects/': typeof MainProjectsIndexRoute
   '/whitewind/': typeof MainWhitewindIndexRoute
   '/bluesky/tools/list-cleaner': typeof MainBlueskyToolsListCleanerRoute
   '/bluesky/tools/pdf-uploader': typeof MainBlueskyToolsPdfUploaderRoute
@@ -188,18 +202,20 @@ export interface FileRoutesByTo {
   '/studio': typeof StudioRoute
   '/contact': typeof MainContactRoute
   '/design': typeof MainDesignRoute
+  '/design-system': typeof MainDesignSystemRoute
+  '/gallery': typeof MainGalleryRoute
   '/infinite-canvas': typeof MainInfiniteCanvasRoute
   '/movies': typeof MainMoviesRoute
-  '/projects': typeof MainProjectsRoute
   '/referrer-checker': typeof MainReferrerCheckerRoute
   '/showcase': typeof MainShowcaseRoute
   '/shows': typeof MainShowsRoute
-  '/gallery/$id': typeof GalleryIdRoute
+  '/uses': typeof MainUsesRoute
   '/': typeof MainIndexRoute
-  '/gallery': typeof GalleryIndexRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
+  '/projects/$name': typeof MainProjectsNameRoute
   '/whitewind/$rkey': typeof MainWhitewindRkeyRoute
   '/blog': typeof MainBlogIndexRoute
+  '/projects': typeof MainProjectsIndexRoute
   '/whitewind': typeof MainWhitewindIndexRoute
   '/bluesky/tools/list-cleaner': typeof MainBlueskyToolsListCleanerRoute
   '/bluesky/tools/pdf-uploader': typeof MainBlueskyToolsPdfUploaderRoute
@@ -215,18 +231,20 @@ export interface FileRoutesById {
   '/studio': typeof StudioRoute
   '/_main/contact': typeof MainContactRoute
   '/_main/design': typeof MainDesignRoute
+  '/_main/design-system': typeof MainDesignSystemRoute
+  '/_main/gallery': typeof MainGalleryRoute
   '/_main/infinite-canvas': typeof MainInfiniteCanvasRoute
   '/_main/movies': typeof MainMoviesRoute
-  '/_main/projects': typeof MainProjectsRoute
   '/_main/referrer-checker': typeof MainReferrerCheckerRoute
   '/_main/showcase': typeof MainShowcaseRoute
   '/_main/shows': typeof MainShowsRoute
-  '/gallery/$id': typeof GalleryIdRoute
+  '/_main/uses': typeof MainUsesRoute
   '/_main/': typeof MainIndexRoute
-  '/gallery/': typeof GalleryIndexRoute
   '/_main/blog/$rkey': typeof MainBlogRkeyRoute
+  '/_main/projects/$name': typeof MainProjectsNameRoute
   '/_main/whitewind/$rkey': typeof MainWhitewindRkeyRoute
   '/_main/blog/': typeof MainBlogIndexRoute
+  '/_main/projects/': typeof MainProjectsIndexRoute
   '/_main/whitewind/': typeof MainWhitewindIndexRoute
   '/_main/bluesky/tools/list-cleaner': typeof MainBlueskyToolsListCleanerRoute
   '/_main/bluesky/tools/pdf-uploader': typeof MainBlueskyToolsPdfUploaderRoute
@@ -243,17 +261,19 @@ export interface FileRouteTypes {
     | '/studio'
     | '/contact'
     | '/design'
+    | '/design-system'
+    | '/gallery'
     | '/infinite-canvas'
     | '/movies'
-    | '/projects'
     | '/referrer-checker'
     | '/showcase'
     | '/shows'
-    | '/gallery/$id'
-    | '/gallery/'
+    | '/uses'
     | '/blog/$rkey'
+    | '/projects/$name'
     | '/whitewind/$rkey'
     | '/blog/'
+    | '/projects/'
     | '/whitewind/'
     | '/bluesky/tools/list-cleaner'
     | '/bluesky/tools/pdf-uploader'
@@ -267,18 +287,20 @@ export interface FileRouteTypes {
     | '/studio'
     | '/contact'
     | '/design'
+    | '/design-system'
+    | '/gallery'
     | '/infinite-canvas'
     | '/movies'
-    | '/projects'
     | '/referrer-checker'
     | '/showcase'
     | '/shows'
-    | '/gallery/$id'
+    | '/uses'
     | '/'
-    | '/gallery'
     | '/blog/$rkey'
+    | '/projects/$name'
     | '/whitewind/$rkey'
     | '/blog'
+    | '/projects'
     | '/whitewind'
     | '/bluesky/tools/list-cleaner'
     | '/bluesky/tools/pdf-uploader'
@@ -293,18 +315,20 @@ export interface FileRouteTypes {
     | '/studio'
     | '/_main/contact'
     | '/_main/design'
+    | '/_main/design-system'
+    | '/_main/gallery'
     | '/_main/infinite-canvas'
     | '/_main/movies'
-    | '/_main/projects'
     | '/_main/referrer-checker'
     | '/_main/showcase'
     | '/_main/shows'
-    | '/gallery/$id'
+    | '/_main/uses'
     | '/_main/'
-    | '/gallery/'
     | '/_main/blog/$rkey'
+    | '/_main/projects/$name'
     | '/_main/whitewind/$rkey'
     | '/_main/blog/'
+    | '/_main/projects/'
     | '/_main/whitewind/'
     | '/_main/bluesky/tools/list-cleaner'
     | '/_main/bluesky/tools/pdf-uploader'
@@ -318,8 +342,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   MainRoute: typeof MainRouteWithChildren
   StudioRoute: typeof StudioRoute
-  GalleryIdRoute: typeof GalleryIdRoute
-  GalleryIndexRoute: typeof GalleryIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -338,13 +360,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/gallery/': {
-      id: '/gallery/'
-      path: '/gallery'
-      fullPath: '/gallery/'
-      preLoaderRoute: typeof GalleryIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_main/': {
       id: '/_main/'
       path: '/'
@@ -352,12 +367,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainIndexRouteImport
       parentRoute: typeof MainRoute
     }
-    '/gallery/$id': {
-      id: '/gallery/$id'
-      path: '/gallery/$id'
-      fullPath: '/gallery/$id'
-      preLoaderRoute: typeof GalleryIdRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_main/uses': {
+      id: '/_main/uses'
+      path: '/uses'
+      fullPath: '/uses'
+      preLoaderRoute: typeof MainUsesRouteImport
+      parentRoute: typeof MainRoute
     }
     '/_main/shows': {
       id: '/_main/shows'
@@ -380,13 +395,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainReferrerCheckerRouteImport
       parentRoute: typeof MainRoute
     }
-    '/_main/projects': {
-      id: '/_main/projects'
-      path: '/projects'
-      fullPath: '/projects'
-      preLoaderRoute: typeof MainProjectsRouteImport
-      parentRoute: typeof MainRoute
-    }
     '/_main/movies': {
       id: '/_main/movies'
       path: '/movies'
@@ -399,6 +407,20 @@ declare module '@tanstack/react-router' {
       path: '/infinite-canvas'
       fullPath: '/infinite-canvas'
       preLoaderRoute: typeof MainInfiniteCanvasRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/gallery': {
+      id: '/_main/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof MainGalleryRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/design-system': {
+      id: '/_main/design-system'
+      path: '/design-system'
+      fullPath: '/design-system'
+      preLoaderRoute: typeof MainDesignSystemRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/design': {
@@ -422,6 +444,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainWhitewindIndexRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/projects/': {
+      id: '/_main/projects/'
+      path: '/projects'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof MainProjectsIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/blog/': {
       id: '/_main/blog/'
       path: '/blog'
@@ -434,6 +463,13 @@ declare module '@tanstack/react-router' {
       path: '/whitewind/$rkey'
       fullPath: '/whitewind/$rkey'
       preLoaderRoute: typeof MainWhitewindRkeyRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/projects/$name': {
+      id: '/_main/projects/$name'
+      path: '/projects/$name'
+      fullPath: '/projects/$name'
+      preLoaderRoute: typeof MainProjectsNameRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/blog/$rkey': {
@@ -498,16 +534,20 @@ declare module '@tanstack/react-router' {
 interface MainRouteChildren {
   MainContactRoute: typeof MainContactRoute
   MainDesignRoute: typeof MainDesignRoute
+  MainDesignSystemRoute: typeof MainDesignSystemRoute
+  MainGalleryRoute: typeof MainGalleryRoute
   MainInfiniteCanvasRoute: typeof MainInfiniteCanvasRoute
   MainMoviesRoute: typeof MainMoviesRoute
-  MainProjectsRoute: typeof MainProjectsRoute
   MainReferrerCheckerRoute: typeof MainReferrerCheckerRoute
   MainShowcaseRoute: typeof MainShowcaseRoute
   MainShowsRoute: typeof MainShowsRoute
+  MainUsesRoute: typeof MainUsesRoute
   MainIndexRoute: typeof MainIndexRoute
   MainBlogRkeyRoute: typeof MainBlogRkeyRoute
+  MainProjectsNameRoute: typeof MainProjectsNameRoute
   MainWhitewindRkeyRoute: typeof MainWhitewindRkeyRoute
   MainBlogIndexRoute: typeof MainBlogIndexRoute
+  MainProjectsIndexRoute: typeof MainProjectsIndexRoute
   MainWhitewindIndexRoute: typeof MainWhitewindIndexRoute
   MainBlueskyToolsListCleanerRoute: typeof MainBlueskyToolsListCleanerRoute
   MainBlueskyToolsPdfUploaderRoute: typeof MainBlueskyToolsPdfUploaderRoute
@@ -521,16 +561,20 @@ interface MainRouteChildren {
 const MainRouteChildren: MainRouteChildren = {
   MainContactRoute: MainContactRoute,
   MainDesignRoute: MainDesignRoute,
+  MainDesignSystemRoute: MainDesignSystemRoute,
+  MainGalleryRoute: MainGalleryRoute,
   MainInfiniteCanvasRoute: MainInfiniteCanvasRoute,
   MainMoviesRoute: MainMoviesRoute,
-  MainProjectsRoute: MainProjectsRoute,
   MainReferrerCheckerRoute: MainReferrerCheckerRoute,
   MainShowcaseRoute: MainShowcaseRoute,
   MainShowsRoute: MainShowsRoute,
+  MainUsesRoute: MainUsesRoute,
   MainIndexRoute: MainIndexRoute,
   MainBlogRkeyRoute: MainBlogRkeyRoute,
+  MainProjectsNameRoute: MainProjectsNameRoute,
   MainWhitewindRkeyRoute: MainWhitewindRkeyRoute,
   MainBlogIndexRoute: MainBlogIndexRoute,
+  MainProjectsIndexRoute: MainProjectsIndexRoute,
   MainWhitewindIndexRoute: MainWhitewindIndexRoute,
   MainBlueskyToolsListCleanerRoute: MainBlueskyToolsListCleanerRoute,
   MainBlueskyToolsPdfUploaderRoute: MainBlueskyToolsPdfUploaderRoute,
@@ -546,8 +590,6 @@ const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   MainRoute: MainRouteWithChildren,
   StudioRoute: StudioRoute,
-  GalleryIdRoute: GalleryIdRoute,
-  GalleryIndexRoute: GalleryIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
