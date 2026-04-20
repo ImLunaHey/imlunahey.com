@@ -5,6 +5,6 @@ import { TTL } from '../../../server/cache';
 
 export const Route = createFileRoute('/_main/watching/$rkey')({
   component: () => <ReviewDetailPage kind="watch" backTo="/watching" />,
-  loader: () => getPopfeedWatches(),
+  loader: () => ({ data: getPopfeedWatches() }),
   staleTime: TTL.short,
 });

@@ -42,16 +42,48 @@ function rewriteReadmeUrl(owner: string, name: string) {
 export default function ProjectDetailPage() {
   const params = useParams({ strict: false }) as { name?: string };
   const name = params.name;
-  const { repos, readme, commits } = detailRoute.useLoaderData();
-  const repo = name ? repos.find((r) => r.name === name) : undefined;
-
-  if (!repo) return <Navigate to={'/not-found' as never} replace />;
-
-  const related = repos.filter((r) => r.lang === repo.lang && r.name !== repo.name).slice(0, 3);
+  const { repoData, readme, commits } = detailRoute.useLoaderData();
 
   return (
     <>
       <style>{CSS}</style>
+      <Await promise={repoData} fallback={<HeaderSkel />}>
+        {(d) => {
+          const repo = name ? d.repos.find((r) => r.name === name) : undefined;
+          if (!repo) return <Navigate to={'/not-found' as never} replace />;
+          const related = d.repos.filter((r) => r.lang === repo.lang && r.name !== repo.name).slice(0, 3);
+          return <Content repo={repo} related={related} readme={readme} commits={commits} />;
+        }}
+      </Await>
+    </>
+  );
+}
+
+function HeaderSkel() {
+  return (
+    <main className="shell-project">
+      <header className="proj-hd">
+        <div className="skel" style={{ width: 120, height: 12, marginBottom: 16 }} />
+        <div className="skel" style={{ width: '50%', height: 56, marginBottom: 12 }} />
+        <div className="skel" style={{ width: '80%', height: 14 }} />
+      </header>
+    </main>
+  );
+}
+
+function Content({
+  repo,
+  related,
+  readme,
+  commits,
+}: {
+  repo: Repo;
+  related: Repo[];
+  readme: Promise<string | null>;
+  commits: Promise<{ sha: string; msg: string; date: string }[]>;
+}) {
+  return (
+    <>
       <main className="shell-project">
         <header className="proj-hd">
           <div className="crumbs">

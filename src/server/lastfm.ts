@@ -57,7 +57,7 @@ export const getRecentTrack = createServerFn({ method: 'GET' }).handler((): Prom
     const key = process.env.LASTFM_API_KEY;
     if (!key) return null;
     const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${LASTFM_USER}&api_key=${key}&format=json&limit=1&extended=1`;
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: { 'User-Agent': 'imlunahey.com' } });
     if (!res.ok) return null;
     const data = (await res.json()) as LastFmResp;
     const track = data.recenttracks?.track?.[0];
@@ -73,16 +73,31 @@ export type MusicData = {
 export const getRecentTracks = createServerFn({ method: 'GET' }).handler((): Promise<MusicData> =>
   cached('lastfm:tracks', TTL.short, async (): Promise<MusicData> => {
     const key = process.env.LASTFM_API_KEY;
-    if (!key) return { tracks: [], total: 0 };
+    if (!key) {
+      console.error('lastfm: LASTFM_API_KEY not set');
+      return { tracks: [], total: 0 };
+    }
     const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${LASTFM_USER}&api_key=${key}&format=json&limit=100&extended=1`;
-    const res = await fetch(url);
-    if (!res.ok) return { tracks: [], total: 0 };
+    const res = await fetch(url, { headers: { 'User-Agent': 'imlunahey.com' } });
+    if (!res.ok) {
+      console.error(`lastfm http: ${res.status}`);
+      return { tracks: [], total: 0 };
+    }
     const data = (await res.json()) as LastFmResp & {
       recenttracks?: { '@attr'?: { total?: string } };
+      error?: number;
+      message?: string;
     };
+    if (data.error) {
+      console.error(`lastfm api error ${data.error}: ${data.message}`);
+      return { tracks: [], total: 0 };
+    }
     const raw = data.recenttracks?.track ?? [];
     const tracks = raw.map(normalizeTrack).filter((t): t is LastFmTrack => t != null);
     const total = Number(data.recenttracks?.['@attr']?.total ?? tracks.length);
     return { tracks, total };
-  }).catch(() => ({ tracks: [], total: 0 })),
+  }).catch((err) => {
+    console.error('lastfm:tracks error:', err);
+    return { tracks: [], total: 0 };
+  }),
 );

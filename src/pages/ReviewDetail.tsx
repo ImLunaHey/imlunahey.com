@@ -1,4 +1,5 @@
-import { getRouteApi, Link, Navigate, useParams } from '@tanstack/react-router';
+import { Await, getRouteApi, Link, Navigate, useParams } from '@tanstack/react-router';
+import type { Watch } from '../server/popfeed';
 
 type Kind = 'watch' | 'game';
 
@@ -17,15 +18,26 @@ function kindLabel(kind: string): string {
 
 export default function ReviewDetailPage({ kind, backTo }: { kind: Kind; backTo: string }) {
   const route = getRouteApi(KIND_ROUTE[kind]);
-  const { items } = route.useLoaderData();
+  const { data } = route.useLoaderData();
   const params = useParams({ strict: false }) as { rkey?: string };
-  const item = items.find((i) => i.rkey === params.rkey);
-
-  if (!item) return <Navigate to={'/not-found' as never} replace />;
 
   return (
     <>
       <style>{CSS}</style>
+      <Await promise={data} fallback={<ReviewSkel backTo={backTo} />}>
+        {(d) => {
+          const item = d.items.find((i) => i.rkey === params.rkey);
+          if (!item) return <Navigate to={'/not-found' as never} replace />;
+          return <ReviewContent item={item} backTo={backTo} />;
+        }}
+      </Await>
+    </>
+  );
+}
+
+function ReviewContent({ item, backTo }: { item: Watch; backTo: string }) {
+  return (
+    <>
       {item.backdrop ? (
         <div className="hero-bg" style={{ backgroundImage: `url(${item.backdrop})` }} />
       ) : null}
@@ -92,6 +104,27 @@ export default function ReviewDetailPage({ kind, backTo }: { kind: Kind; backTo:
         </footer>
       </main>
     </>
+  );
+}
+
+function ReviewSkel({ backTo }: { backTo: string }) {
+  return (
+    <main className="shell-review">
+      <div className="crumbs">
+        <Link to={backTo as never} className="t-accent">
+          ← {backTo.replace(/^\//, '/')}
+        </Link>
+      </div>
+      <article className="review">
+        <div className="poster skel" />
+        <div className="meta">
+          <div className="skel" style={{ width: 80, height: 18 }} />
+          <div className="skel" style={{ width: '80%', height: 40 }} />
+          <div className="skel" style={{ width: '60%', height: 14 }} />
+          <div className="skel" style={{ width: '40%', height: 14 }} />
+        </div>
+      </article>
+    </main>
   );
 }
 
