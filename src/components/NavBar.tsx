@@ -1,28 +1,52 @@
-import { Link } from '../elements/Link';
+import { Link, useLocation } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
+
+const LINKS: { to: string; label: string; match?: (path: string) => boolean }[] = [
+  { to: '/', label: '~/', match: (p) => p === '/' },
+  { to: '/blog', label: '/writing', match: (p) => p.startsWith('/blog') },
+  { to: '/projects', label: '/projects', match: (p) => p.startsWith('/projects') },
+  { to: '/gallery', label: '/gallery', match: (p) => p.startsWith('/gallery') },
+  { to: '/uses', label: '/uses', match: (p) => p.startsWith('/uses') },
+];
+
+const Clock = () => {
+  const [time, setTime] = useState(() => fmt(new Date()));
+
+  useEffect(() => {
+    const tick = () => setTime(fmt(new Date()));
+    tick();
+    const id = window.setInterval(tick, 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  return <span className="t-faint">london · {time}</span>;
+};
+
+function fmt(d: Date) {
+  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
 
 export const NavBar = () => {
+  const { pathname } = useLocation();
+
   return (
-    <>
-      <Link
-        to="/"
-        classNames={{
-          link: 'font-doto text-left text-4xl font-bold justify-start',
-          text: 'text-left text-4xl font-bold',
-        }}
-        wrapper={false}
-      >
-        // LUNA
+    <nav className="nav">
+      <span className="brand">
+        luna<span className="t-accent">.</span>
+      </span>
+      {LINKS.map((link) => {
+        const active = link.match ? link.match(pathname) : pathname === link.to;
+        return (
+          <Link key={link.to} to={link.to as never} className={active ? 'active' : ''}>
+            {link.label}
+          </Link>
+        );
+      })}
+      <span className="sp" />
+      <Clock />
+      <Link to={'/design-system' as never} className={'chip accent' + (pathname.startsWith('/design-system') ? ' active' : '')}>
+        design.sys ↗
       </Link>
-      <div className="mx-auto mb-2 max-w-screen-md border-b border-white pb-2">
-        <div className="flex flex-wrap items-center justify-between">
-          <Link to="/">Home</Link>
-          <Link to="/blog">Blog</Link>
-          <Link to="/projects">Projects</Link>
-          <Link to="/gallery">Gallery</Link>
-          <Link to="/design">Design</Link>
-          <Link to="/contact">Contact</Link>
-        </div>
-      </div>
-    </>
+    </nav>
   );
 };
