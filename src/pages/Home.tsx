@@ -648,17 +648,20 @@ export default function HomePage() {
           <div className="panel c-projects">
             <div className="panel-head">
               <span className="dot" />
-              <span className="ttl">./projects --pinned</span>
+              <span className="ttl">./projects --recent</span>
               <span className="src-tag">// users/imlunahey/repos</span>
             </div>
             <div className="panel-body tight">
               <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>projects unavailable.</div>}>
                 <Await promise={repoData} fallback={<PinnedSkel />}>
                   {(d) => {
-                    const pinned = d.repos.filter((r) => r.pinned).slice(0, 6);
+                    const recent = [...d.repos]
+                      .filter((r) => r.status === 'active')
+                      .sort((a, b) => a.updated - b.updated)
+                      .slice(0, 6);
                     return (
                       <>
-                        {pinned.map((r) => (
+                        {recent.map((r) => (
                           <div key={`${r.owner}/${r.name}`} className="proj-row">
                             <div>
                               <div className="pn">{r.name}</div>
