@@ -1,5 +1,3 @@
-import { useParams } from 'react-router';
-
 type Params = Record<string, boolean | number | string | null>;
 
 let timeout: ReturnType<typeof setTimeout>;
@@ -12,7 +10,9 @@ const debounce = <T extends (...args: any[]) => any>(fn: T, delay: number) => {
 };
 
 export const useSearchParams = <T extends Params>() => {
-  const searchParams = useParams();
+  // Previously read path params (always empty for this route); preserve that
+  // by returning an empty stringy bag. The setter below still updates the URL.
+  const searchParams = {} as { [K in keyof T]?: string };
 
   const setSearchParams = debounce((newParams: T) => {
     const search = window ? window.location.search : '';

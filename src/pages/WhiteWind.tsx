@@ -9,7 +9,7 @@ import { useBlogEntry } from '../hooks/use-blog-entry';
 import { Loading } from '../components/Loading';
 import { Input } from '../elements/Input';
 import { Button } from '../elements/Button';
-import { useParams } from 'react-router';
+import { useParams } from '@tanstack/react-router';
 
 const Editor = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
   return (
@@ -25,7 +25,7 @@ const Editor = ({ value, onChange }: { value: string; onChange: (value: string) 
 };
 
 export default function WhiteWindPage() {
-  const params = useParams<{ rkey: string }>();
+  const params = useParams({ strict: false }) as { rkey?: string };
   const rkey = params.rkey;
   const { data, isLoading } = useBlogEntry({ author: 'imlunahey.com', rkey });
   const [value, setValue] = useState(data?.value.content ?? '');

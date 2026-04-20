@@ -11,7 +11,7 @@ import { RelativeTime } from '../../components/RelativeTime';
 import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { InfiniteList } from '../../components/InfiniteList';
 import { useProfile } from '../../hooks/use-profile';
-import { Link, useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams } from '@tanstack/react-router';
 
 const rpc = new XRPC({ handler: simpleFetchHandler({ service: 'https://public.api.bsky.app' }) });
 
@@ -91,9 +91,9 @@ const Results = ({ handle }: { handle: string }) => {
             <div className="flex items-center gap-2">
               <img src={post.post.author.avatar} className="h-6 w-6 rounded-full" />
               <div>{post.post.author.displayName}</div>
-              <Link to={`https://bsky.app/profile/${post.post.author.did}`} className="text-gray-500">
+              <a href={`https://bsky.app/profile/${post.post.author.did}`} className="text-gray-500">
                 <ProfileCard actor={post.post.author.did} />
-              </Link>
+              </a>
               {post.reason ? (
                 <div className="text-gray-500">{post.reason.$type === 'app.bsky.feed.defs#reasonPin' ? '📌' : '🔁'}</div>
               ) : null}
@@ -102,9 +102,9 @@ const Results = ({ handle }: { handle: string }) => {
             <Images images={images} />
             <ErrorBoundary fallback={<div>Error loading time</div>}>
               <div className="text-xs text-gray-500">
-                <Link to={`https://bsky.app/profile/${post.post.author.did}/post/${rkey}`} className="hover:underline">
+                <a href={`https://bsky.app/profile/${post.post.author.did}/post/${rkey}`} className="hover:underline">
                   <RelativeTime date={new Date(record.createdAt)} />
-                </Link>
+                </a>
               </div>
             </ErrorBoundary>
           </Card>
@@ -115,9 +115,9 @@ const Results = ({ handle }: { handle: string }) => {
 };
 
 export default function BlueskyToolsFeedPage() {
-  const params = useParams();
+  const params = useParams({ strict: false }) as Record<string, string | undefined>;
   const navigate = useNavigate();
-  const id = params[3];
+  const id = params.id;
   const [handle, setHandle] = useState(id ?? '');
   const [input, setInput] = useState(id ?? '');
   const { data: profile, isLoading: isProfileLoading } = useProfile({ actor: handle });
@@ -127,7 +127,7 @@ export default function BlueskyToolsFeedPage() {
 
   const onSubmit = useCallback(() => {
     setHandle(input);
-    navigate(`/bluesky/tools/feed/${input}`);
+    navigate({ to: `/bluesky/tools/feed/${input}` as never });
   }, [input, navigate]);
 
   return (

@@ -1,6 +1,6 @@
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Link } from 'react-router';
+import { Link } from '@tanstack/react-router';
 import { cn } from '../cn';
 import { H1, H2, H3, H4, H5, H6 } from '../elements/Heading';
 import { Image } from '../elements/Image';
@@ -13,8 +13,15 @@ export const MarkdownPreview = ({ content, className }: { content: string; class
         components={{
           a: ({ children, ...props }) => {
             if (props.href) {
+              if (props.href.startsWith('http') || props.href.startsWith('mailto:')) {
+                return (
+                  <a href={props.href} className="text-blue-500 hover:underline">
+                    {children}
+                  </a>
+                );
+              }
               return (
-                <Link to={props.href} className="text-blue-500 hover:underline">
+                <Link to={props.href as never} className="text-blue-500 hover:underline">
                   {children}
                 </Link>
               );

@@ -29,5 +29,6 @@
       // "@vitest/browser/matchers"
     ]
   },
-  "include": ["src"]
+  "include": ["src", "src/routeTree.gen.ts"],
+  "exclude": ["src/tests/setup/matchers.ts", "src/tests/commands/screenshot.ts", "src/pages/Design.test.tsx"]
 }

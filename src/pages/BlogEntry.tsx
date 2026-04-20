@@ -1,7 +1,7 @@
 import { AppBskyFeedDefs, AppBskyFeedPost } from '@atcute/client/lexicons';
 import { useBlogEntry } from '../hooks/use-blog-entry';
 import { useBlogEntryComments } from '../hooks/use-blog-entry-comments';
-import { Link, Navigate, useParams } from 'react-router';
+import { Navigate, useParams } from '@tanstack/react-router';
 import { RelativeTime } from '../components/RelativeTime';
 import { useProfile } from '../hooks/use-profile';
 import { useReadTime } from '../hooks/use-read-time';
@@ -31,15 +31,15 @@ const Comment = ({ comment, className }: { comment: AppBskyFeedDefs.ThreadViewPo
       <Card key={comment.post.uri} className={cn('p-2', className)}>
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <Link to={`https://bsky.app/profile/${comment.post.author.did}`}>
+            <a href={`https://bsky.app/profile/${comment.post.author.did}`}>
               <img src={comment.post.author.avatar} className="h-6 w-6 rounded-full" loading="lazy" />
-            </Link>
-            <Link to={`https://bsky.app/profile/${comment.post.author.did}`} className="hover:underline">
+            </a>
+            <a href={`https://bsky.app/profile/${comment.post.author.did}`} className="hover:underline">
               {comment.post.author.displayName}
-            </Link>
-            <Link to={`https://bsky.app/profile/${comment.post.author.did}`} className="text-gray-500">
+            </a>
+            <a href={`https://bsky.app/profile/${comment.post.author.did}`} className="text-gray-500">
               <ProfileCard actor={comment.post.author.did} />
-            </Link>
+            </a>
           </div>
           <div>{record.text}</div>
           {images.map((image) => (
@@ -90,9 +90,9 @@ const Comments = ({ uri }: { uri: string }) => {
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-lg font-bold">Comments</h2>
-        <Link to={postUrl} className="text-sm text-gray-500 hover:underline">
+        <a href={postUrl} className="text-sm text-gray-500 hover:underline">
           join the conversation
-        </Link>
+        </a>
       </div>
       {comments?.map((comment) => <Comment key={comment.post.uri} comment={comment} />)}
     </div>
@@ -114,7 +114,7 @@ const BlogEntry = ({ rkey }: { rkey: string }) => {
   const { data: readTime, isLoading: readTimeLoading } = useReadTime({ rkey });
   const { data: views, isLoading: viewsLoading } = useViewCount({ rkey });
 
-  if (blogEntryError) <Navigate replace to="/not-found" />;
+  if (blogEntryError) <Navigate replace to={'/not-found' as never} />;
   if (profileLoading || blogEntryLoading || readTimeLoading || viewsLoading) return <Loading />;
   if (!profile || !blogEntry) return null;
 
@@ -144,10 +144,10 @@ const BlogEntry = ({ rkey }: { rkey: string }) => {
 };
 
 export default function BlogEntryPage() {
-  const params = useParams<{ rkey: string }>();
+  const params = useParams({ strict: false }) as { rkey?: string };
   const rkey = params.rkey;
 
-  if (!rkey) return <Navigate replace to="/not-found" />;
+  if (!rkey) return <Navigate replace to={'/not-found' as never} />;
 
   return <BlogEntry rkey={rkey} />;
 }

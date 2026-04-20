@@ -1,5 +1,5 @@
 import { Card } from '../components/Card';
-import { Link } from 'react-router';
+import { Link } from '@tanstack/react-router';
 
 type Project = {
   name: string;
@@ -93,9 +93,15 @@ export default function ProjectsPage() {
         <Card key={project.name} className="p-2">
           <h2 className="text-xl font-bold">{project.name}</h2>
           <p className="text-sm text-gray-500">{project.description}</p>
-          <Link to={project.url} className="text-sm text-blue-500">
-            View Project
-          </Link>
+          {project.url.startsWith('http') ? (
+            <a href={project.url} className="text-sm text-blue-500">
+              View Project
+            </a>
+          ) : (
+            <Link to={project.url as never} className="text-sm text-blue-500">
+              View Project
+            </Link>
+          )}
         </Card>
       ))}
     </div>

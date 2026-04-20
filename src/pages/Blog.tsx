@@ -4,7 +4,7 @@ import { useBlogEntries } from '../hooks/use-blog-entries';
 import { useReadTime } from '../hooks/use-read-time';
 import { useViewCount } from '../hooks/use-view-count';
 import { BlogEntryResponse } from '../types/blog-entry';
-import { Link } from 'react-router';
+import { Link } from '@tanstack/react-router';
 const Seperator = () => <div className="size-1 rounded-full bg-gray-200" />;
 
 const Summary = ({ blogEntry }: { blogEntry: BlogEntryResponse<'did:plc:k6acu4chiwkixvdedcmdgmal'> }) => {
@@ -13,7 +13,7 @@ const Summary = ({ blogEntry }: { blogEntry: BlogEntryResponse<'did:plc:k6acu4ch
 
   return (
     <Card key={blogEntry.value.createdAt} className="p-2">
-      <Link to={`/blog/${blogEntry.uri.split('/').pop()}`}>
+      <Link to={`/blog/${blogEntry.uri.split('/').pop()}` as never}>
         <h2 className="text-2xl font-bold">{blogEntry.value.title}</h2>
         <div className="flex items-center gap-2 text-sm">
           {blogEntry.value.createdAt ? <RelativeTime date={new Date(blogEntry.value.createdAt)} /> : null}

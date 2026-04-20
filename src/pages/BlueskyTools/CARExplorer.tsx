@@ -6,7 +6,8 @@ import {
   WebDidDocumentResolver,
   WellKnownHandleResolver,
 } from '@atcute/identity-resolver';
-import { getPdsEndpoint, type Handle } from '@atcute/identity';
+import { getPdsEndpoint } from '@atcute/identity';
+type Handle = `${string}.${string}`;
 import * as Ariakit from '@ariakit/react';
 import { iterateAtpRepo } from '@atcute/car';
 import { Card } from '../../components/Card';
@@ -22,7 +23,7 @@ import { json } from '@codemirror/lang-json';
 import { jsonSchema } from 'codemirror-json-schema';
 import empty from '../../lib/json-schema-empty';
 import { tokyoNight } from '@uiw/codemirror-theme-tokyo-night';
-import { Link, useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import { useLexiconSchema } from '../../hooks/use-lexicon-schema';
 import { Dialog } from '../../elements/Dialog';
 import { BlueskyBar } from '../../components/BlueskyBar';
@@ -369,10 +370,12 @@ const NewRecordModal = ({ $type }: { $type: string | null | undefined }) => {
 export default function BlueskyToolsCARExplorerPage() {
   const [authenticated] = useState(false);
 
-  const params = useParams<{
-    handle: Handle;
-    lexicon: string | undefined;
-  }>();
+  const rawParams = useParams({ strict: false }) as { _splat?: string };
+  const [splatHandle, splatLexicon] = (rawParams._splat ?? '').split('/');
+  const params = {
+    handle: (splatHandle || undefined) as Handle | undefined,
+    lexicon: splatLexicon || undefined,
+  };
   const navigate = useNavigate();
   const [input, setInput] = useState<Handle | null>(params.handle ?? null);
   const handle = params.handle ?? null;
@@ -388,7 +391,7 @@ export default function BlueskyToolsCARExplorerPage() {
     e.preventDefault();
     if (!input) return;
 
-    navigate(`/bluesky/tools/car-explorer/${input}`);
+    navigate({ to: `/bluesky/tools/car-explorer/${input}` as never });
   };
 
   const downloadCARFile = () => {
@@ -488,7 +491,7 @@ export default function BlueskyToolsCARExplorerPage() {
                     key={`index-tab`}
                     id="index"
                     className="mb-4 border border-[#1a1a1a] px-2 py-2"
-                    render={<Link to={`/bluesky/tools/car-explorer/${handle}`} />}
+                    render={<Link to={`/bluesky/tools/car-explorer/${handle}` as never} />}
                   >
                     <ArrowBigLeft />
                   </Ariakit.Tab>
@@ -506,7 +509,7 @@ export default function BlueskyToolsCARExplorerPage() {
                       key={`${item}-tab`}
                       id={item}
                       className="w-full text-left"
-                      render={<Link to={`/bluesky/tools/car-explorer/${handle}/${item}`} />}
+                      render={<Link to={`/bluesky/tools/car-explorer/${handle}/${item}` as never} />}
                     >
                       <Card className="p-4">
                         <span>{item}</span>

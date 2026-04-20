@@ -11,16 +11,19 @@ const queryClient = new QueryClient({
   },
 });
 
-const persister = createSyncStoragePersister({
-  storage: window.localStorage,
-  throttleTime: 1_000,
-  key: 'cache',
-});
+const persister =
+  typeof window === 'undefined'
+    ? null
+    : createSyncStoragePersister({
+        storage: window.localStorage,
+        throttleTime: 1_000,
+        key: 'cache',
+      });
 
 export const QueryProvider = ({ children }: { children: React.ReactNode }) => {
-  const isLocalhost = window.location.hostname === 'localhost';
+  const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
 
-  if (isLocalhost) {
+  if (isLocalhost || !persister) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   }
 

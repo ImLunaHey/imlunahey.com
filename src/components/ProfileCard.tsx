@@ -1,7 +1,6 @@
 import { HoverCard, HoverCardContent, HoverCardPortal, HoverCardTrigger } from '@radix-ui/react-hover-card';
 import { useProfile } from '../hooks/use-profile';
 import { formatNumber } from '../lib/format-number';
-import { Link } from 'react-router';
 
 export const ProfileCard = ({ actor }: { actor: string }) => {
   const { data: profile, isLoading } = useProfile({ actor });
@@ -22,17 +21,17 @@ export const ProfileCard = ({ actor }: { actor: string }) => {
           sideOffset={5}
         >
           <div className="flex flex-col gap-[7px]">
-            <Link to={`https://bsky.app/profile/${actor}`}>
+            <a href={`https://bsky.app/profile/${actor}`}>
               <img className="block size-[60px] rounded-full" src={profile?.avatar} alt={profile?.displayName} />
-            </Link>
+            </a>
             <div className="flex flex-col gap-[15px]">
               <div>
-                <Link to={`https://bsky.app/profile/${actor}`} className="hover:no-underline">
+                <a href={`https://bsky.app/profile/${actor}`} className="hover:no-underline">
                   <div className="m-0 text-[15px] font-medium">{profile?.displayName}</div>
-                </Link>
-                <Link to={`https://bsky.app/profile/${actor}`} className="hover:no-underline">
+                </a>
+                <a href={`https://bsky.app/profile/${actor}`} className="hover:no-underline">
                   <div className="m-0 text-[15px]">@{handle}</div>
-                </Link>
+                </a>
               </div>
               <div className="m-0 text-[15px]">{profile?.description}</div>
               <div className="flex gap-[15px]">

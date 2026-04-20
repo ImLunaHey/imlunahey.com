@@ -1,4 +1,4 @@
-import { Link as RouterLink } from 'react-router';
+import { Link as RouterLink } from '@tanstack/react-router';
 import { cn } from '../cn';
 
 export const Link = ({
@@ -15,12 +15,14 @@ export const Link = ({
     link?: string;
     text?: string;
   };
-} & Omit<React.ComponentProps<typeof RouterLink>, 'className'>) => {
+} & Omit<React.ComponentProps<'a'>, 'className' | 'href' | 'ref'>) => {
   return (
+    // TanStack Router's Link has strict typed paths; we keep the existing
+    // callsites working (including absolute URLs) by widening the prop here.
     <RouterLink
-      to={to}
+      to={to as never}
       className={cn('lg:text-md flex flex-row items-center justify-center font-bold text-white', classNames?.link)}
-      {...props}
+      {...(props as Record<string, unknown>)}
     >
       {wrapper && '['}
       <div className={cn('flex items-center justify-center text-sm text-white hover:text-white/80', classNames?.text)}>
