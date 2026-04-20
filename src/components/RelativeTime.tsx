@@ -1,5 +1,6 @@
 const getTime = (date: Date) => {
-  const formatter = new Intl.RelativeTimeFormat(navigator.language, {
+  const lang = typeof navigator !== 'undefined' ? navigator.language : 'en';
+  const formatter = new Intl.RelativeTimeFormat(lang, {
     numeric: 'auto',
     style: 'long',
   });
@@ -25,7 +26,7 @@ const getTime = (date: Date) => {
 
 export const RelativeTime = ({ date }: { date: Date }) => {
   return (
-    <time title={date.toLocaleString()} dateTime={date.toISOString()}>
+    <time title={date.toLocaleString()} dateTime={date.toISOString()} suppressHydrationWarning>
       {getTime(date)}
     </time>
   );

@@ -449,7 +449,7 @@ export default function HomePage() {
                           <div className="txt">{p.text}</div>
                           <div className="meta">
                             <span className="t-faint">@{p.handle}</span>
-                            <span>{fmtDate(p.ts)}</span>
+                            <span suppressHydrationWarning>{fmtDate(p.ts)}</span>
                             <span>
                               <b>♥</b> {p.likes}
                             </span>

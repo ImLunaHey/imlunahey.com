@@ -13,7 +13,7 @@ const LINKS: { to: string; label: string; match?: (path: string) => boolean }[] 
 ];
 
 const Clock = () => {
-  const [time, setTime] = useState(() => fmt(new Date()));
+  const [time, setTime] = useState<string | null>(null);
 
   useEffect(() => {
     const tick = () => setTime(fmt(new Date()));
@@ -22,7 +22,11 @@ const Clock = () => {
     return () => window.clearInterval(id);
   }, []);
 
-  return <span className="t-faint">london · {time}</span>;
+  return (
+    <span className="t-faint" suppressHydrationWarning>
+      london · {time ?? '—:—'}
+    </span>
+  );
 };
 
 function fmt(d: Date) {

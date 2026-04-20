@@ -135,7 +135,7 @@ function Body({ data }: { data: MusicData }) {
               <div className="r-artist">{t.artist}</div>
             </div>
             <div className="r-album">{t.album}</div>
-            <div className="r-when">{fmtRel(t.ts)}</div>
+            <div className="r-when" suppressHydrationWarning>{fmtRel(t.ts)}</div>
           </a>
         ))}
       </section>

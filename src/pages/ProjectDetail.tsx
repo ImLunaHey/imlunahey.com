@@ -221,7 +221,7 @@ export default function ProjectDetailPage() {
                           >
                             <span className="sha">{c.sha}</span>
                             <span className="msg">{c.msg}</span>
-                            <span className="when">{commitRelative(c.date)}</span>
+                            <span className="when" suppressHydrationWarning>{commitRelative(c.date)}</span>
                           </a>
                         ))}
                       </div>
