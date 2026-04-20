@@ -1,21 +1,24 @@
-import { Link } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
-import { BLOG, BLOG_STATS, type BlogKind, type BlogPost } from '../data';
+import { Await, getRouteApi, Link } from '@tanstack/react-router';
+import { useMemo } from 'react';
+import type { BlogData, BlogEntry } from '../server/whitewind';
 
-type Filter = BlogKind | 'all';
+const blogRoute = getRouteApi('/_main/blog/');
+
+function fmtDate(iso: string): string {
+  return iso.slice(0, 10);
+}
+
+function groupByYear(posts: BlogEntry[]) {
+  const out: Record<string, BlogEntry[]> = {};
+  for (const p of posts) {
+    const y = p.createdAt.slice(0, 4);
+    (out[y] ||= []).push(p);
+  }
+  return out;
+}
 
 export default function BlogPage() {
-  const [filter, setFilter] = useState<Filter>('all');
-
-  const counts = useMemo(() => {
-    const c: Record<Filter, number> = { all: BLOG.length, essay: 0, devlog: 0, short: 0 };
-    for (const p of BLOG) c[p.kind]++;
-    return c;
-  }, []);
-
-  const shown = filter === 'all' ? BLOG : BLOG.filter((p) => p.kind === filter);
-  const byYear = useMemo(() => groupByYear(shown), [shown]);
-  const latest = BLOG[0];
+  const { blog } = blogRoute.useLoaderData();
 
   return (
     <>
@@ -30,68 +33,22 @@ export default function BlogPage() {
               writing<span className="dot">.</span>
             </h1>
             <p className="sub">
-              essays, devlogs, and the occasional half-sentence. i write when something hasn't been said the way i'd say
-              it. ~one post a month. subscribe to the{' '}
-              <a href="#" className="glow-link">
-                rss
-              </a>
-              .
+              essays, devlogs, and the occasional half-sentence. i write when something hasn&rsquo;t been said the way
+              i&rsquo;d say it. stored on atproto via whitewind.
             </p>
           </div>
-          <div className="counts">
-            <div>
-              posts · <b>{BLOG.length}</b>
-            </div>
-            <div>
-              words · <b>{BLOG_STATS.words.toLocaleString()}</b>
-            </div>
-            <div>
-              since · <b>{BLOG_STATS.since}</b>
-            </div>
-            <div>
-              last · <b>{latest?.date ?? '—'}</b>
-            </div>
-          </div>
+          <Await promise={blog} fallback={<HeaderCountsSkel />}>
+            {(data) => <HeaderCounts data={data} />}
+          </Await>
         </header>
 
-        <nav className="tabs">
-          {(['all', 'essay', 'devlog', 'short'] as const).map((k) => (
-            <button
-              key={k}
-              className={'tab' + (filter === k ? ' on' : '')}
-              onClick={() => setFilter(k)}
-              type="button"
-            >
-              {k === 'all' ? 'all' : k + 's'}
-              <span className="n">{counts[k]}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div>
-          {Object.entries(byYear).map(([year, items]) => (
-            <div key={year}>
-              <div className="year-head">
-                {year} ─ {items.length} {items.length === 1 ? 'post' : 'posts'}
-              </div>
-              {items.map((p) => (
-                <Link key={p.slug} to={`/blog/${p.slug}` as never} className="post">
-                  <span className="date">{p.date}</span>
-                  <span className="title">{p.title}</span>
-                  <span className="meta">
-                    <span className={`kind-chip ${p.kind}`}>{p.kind}</span>
-                    <span>{p.readMin}m read</span>
-                  </span>
-                  <div className="excerpt">// {p.excerpt}</div>
-                </Link>
-              ))}
-            </div>
-          ))}
-        </div>
+        <Await promise={blog} fallback={<ListSkel />}>
+          {(data) => <List entries={data.entries} />}
+        </Await>
 
         <footer className="writing-footer">
           <span>
-            src: <span className="t-accent">lunahey.com/xrpc/com.whtwnd.blog.getEntries</span> · refresh 600s
+            src: <span className="t-accent">com.whtwnd.blog.entry</span>
           </span>
           <span>
             ←{' '}
@@ -105,13 +62,85 @@ export default function BlogPage() {
   );
 }
 
-function groupByYear(posts: BlogPost[]) {
-  const out: Record<string, BlogPost[]> = {};
-  for (const p of posts) {
-    const y = p.date.slice(0, 4);
-    (out[y] ||= []).push(p);
-  }
-  return out;
+function HeaderCounts({ data }: { data: BlogData }) {
+  const latest = data.entries[0];
+  return (
+    <div className="counts">
+      <div>
+        posts · <b>{data.entries.length}</b>
+      </div>
+      <div>
+        words · <b>{data.totalWords.toLocaleString()}</b>
+      </div>
+      <div>
+        since · <b>{data.since || '—'}</b>
+      </div>
+      <div>
+        last · <b>{latest ? fmtDate(latest.createdAt) : '—'}</b>
+      </div>
+    </div>
+  );
+}
+
+function HeaderCountsSkel() {
+  return (
+    <div className="counts">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i}>
+          <span className="skel" style={{ display: 'inline-block', width: 100, height: 10 }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function List({ entries }: { entries: BlogEntry[] }) {
+  const byYear = useMemo(() => groupByYear(entries), [entries]);
+  if (entries.length === 0) return <div className="empty">no posts yet.</div>;
+  return (
+    <div>
+      {Object.entries(byYear).map(([year, items]) => (
+        <div key={year}>
+          <div className="year-head">
+            {year} ─ {items.length} {items.length === 1 ? 'post' : 'posts'}
+          </div>
+          {items.map((p) => (
+            <Link key={p.rkey} to={`/blog/${p.rkey}` as never} className="post">
+              <span className="date">{fmtDate(p.createdAt)}</span>
+              <span className="title">{p.title}</span>
+              <span className="meta">
+                <span>{p.readMin}m read</span>
+              </span>
+              <div className="excerpt">// {p.excerpt}</div>
+            </Link>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ListSkel() {
+  return (
+    <div>
+      <div className="year-head">
+        <span className="skel" style={{ display: 'inline-block', width: 120, height: 10 }} />
+      </div>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="post">
+          <span className="date">
+            <span className="skel" style={{ display: 'inline-block', width: 70, height: 10 }} />
+          </span>
+          <span className="title">
+            <span className="skel" style={{ display: 'inline-block', width: '70%', height: 14 }} />
+          </span>
+          <span className="meta">
+            <span className="skel" style={{ display: 'inline-block', width: 50, height: 10 }} />
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 const BLOG_CSS = `
@@ -138,110 +167,57 @@ const BLOG_CSS = `
   .page-hd .counts { color: var(--color-fg-faint); font-size: var(--fs-xs); text-align: right; line-height: 1.8; }
   .page-hd .counts b { color: var(--color-accent); font-weight: 400; }
 
-  .tabs {
-    display: flex;
-    gap: 2px;
-    padding: var(--sp-5) 0 var(--sp-3);
-    font-size: var(--fs-sm);
-    border-bottom: 1px solid var(--color-border);
-    overflow-x: auto;
-  }
-  .tab {
-    padding: 6px 14px;
-    border: 1px solid var(--color-border);
-    color: var(--color-fg-dim);
-    background: var(--color-bg-panel);
-    cursor: pointer;
-    text-transform: lowercase;
-    white-space: nowrap;
-    transition: all 0.12s;
-    font-family: var(--font-mono);
-    font-size: var(--fs-sm);
-  }
-  .tab:hover { border-color: var(--color-border-bright); color: var(--color-fg); }
-  .tab.on { border-color: var(--color-accent-dim); color: var(--color-accent); background: var(--color-bg-raised); }
-  .tab .n { color: var(--color-fg-faint); margin-left: 6px; font-size: var(--fs-xs); }
-  .tab.on .n { color: var(--color-accent-faint); }
-
   .year-head {
     font-family: var(--font-mono);
-    font-size: var(--fs-xs);
     color: var(--color-fg-faint);
-    padding: var(--sp-8) 0 var(--sp-3);
+    font-size: var(--fs-xs);
     letter-spacing: 0.1em;
-    display: flex; align-items: center; gap: var(--sp-4);
-  }
-  .year-head::after {
-    content: ""; flex: 1; height: 1px; background: var(--color-border);
+    text-transform: uppercase;
+    padding: var(--sp-6) 0 var(--sp-3);
+    border-bottom: 1px solid var(--color-border);
   }
 
   .post {
     display: grid;
-    grid-template-columns: 120px 1fr auto;
-    gap: var(--sp-5);
+    grid-template-columns: 100px minmax(0, 1fr) auto;
+    gap: var(--sp-4);
     padding: var(--sp-4) 0;
     border-bottom: 1px dashed var(--color-border);
-    align-items: baseline;
-    cursor: pointer;
-    position: relative;
-    text-decoration: none;
     color: inherit;
+    text-decoration: none;
+    align-items: baseline;
   }
   .post:hover { background: var(--color-bg-raised); text-decoration: none; }
-  .post:hover .title { color: var(--color-accent); text-shadow: 0 0 8px var(--accent-glow); }
-  .post .date { color: var(--color-fg-faint); font-size: var(--fs-xs); font-family: var(--font-mono); }
-  .post .title {
-    color: var(--color-fg);
-    font-size: var(--fs-lg);
-    line-height: 1.3;
-    transition: color 0.12s;
-  }
-  .post .meta {
-    display: flex; gap: var(--sp-3);
-    align-items: baseline;
-    font-size: var(--fs-xs);
-    color: var(--color-fg-faint);
-  }
+  .post:hover .title { color: var(--color-accent); }
+  .post .date { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--color-fg-faint); }
+  .post .title { font-size: var(--fs-lg); color: var(--color-fg); }
+  .post .meta { font-size: var(--fs-xs); color: var(--color-fg-faint); font-family: var(--font-mono); }
   .post .excerpt {
-    grid-column: 2 / 3;
+    grid-column: 2 / -1;
     font-size: var(--fs-sm);
     color: var(--color-fg-dim);
     line-height: 1.5;
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.25s ease, margin-top 0.25s ease, opacity 0.2s ease;
     opacity: 0;
+    transition: max-height 0.25s ease, margin-top 0.25s ease, opacity 0.2s ease;
   }
   .post:hover .excerpt {
-    max-height: 60px;
+    max-height: 80px;
     margin-top: var(--sp-2);
     opacity: 1;
   }
-  .kind-chip {
-    padding: 1px 7px;
-    border: 1px solid var(--color-border-bright);
-    font-size: 10px;
-    color: var(--color-fg-faint);
-    text-transform: lowercase;
-  }
-  .kind-chip.essay  { border-color: oklch(0.55 0.13 270); color: oklch(0.8 0.14 270); }
-  .kind-chip.devlog { border-color: var(--color-accent-dim); color: var(--color-accent); }
-  .kind-chip.short  { border-color: oklch(0.55 0.13 60); color: oklch(0.85 0.14 60); }
+
+  .empty { color: var(--color-fg-faint); font-size: var(--fs-sm); padding: var(--sp-10) 0; text-align: center; }
 
   .writing-footer {
-    border-top: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    padding: var(--sp-8) 0 var(--sp-10);
     margin-top: var(--sp-10);
-    padding: var(--sp-6) 0 var(--sp-10);
+    border-top: 1px solid var(--color-border);
     font-size: var(--fs-xs);
     color: var(--color-fg-faint);
-    display: flex; justify-content: space-between; gap: var(--sp-4);
-  }
-
-  @media (max-width: 640px) {
-    .page-hd { grid-template-columns: 1fr; }
-    .page-hd .counts { text-align: left; }
-    .post { grid-template-columns: 1fr auto; }
-    .post .date { grid-column: 1 / -1; }
-    .post .excerpt { grid-column: 1 / -1; }
+    font-family: var(--font-mono);
   }
 `;

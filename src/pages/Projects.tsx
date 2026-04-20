@@ -1,9 +1,10 @@
-import { Link, useNavigate } from '@tanstack/react-router';
+import { getRouteApi, Link, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
-import { ALL_REPOS, PINNED_REPOS, PROJECT_STATS, type Repo, type RepoLang, type RepoStatus } from '../data';
+import type { Repo } from '../data';
+import { formatUpdated } from '../lib/format';
 
-type Filter = 'all' | RepoStatus | RepoLang;
-type SortKey = 'name' | 'lang' | 'stars' | 'commits' | 'updated' | 'status';
+type Filter = string;
+type SortKey = 'name' | 'lang' | 'stars' | 'forks' | 'commits' | 'updated' | 'status';
 
 const LANG_CLS: Record<string, string> = {
   typescript: 'lang-ts',
@@ -20,16 +21,30 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: 'go', label: 'go' },
 ];
 
+const DEFAULT_DIR: Record<SortKey, 1 | -1> = {
+  name: 1,
+  lang: 1,
+  status: 1,
+  updated: 1,
+  stars: -1,
+  forks: -1,
+  commits: -1,
+};
+
+const projectsRoute = getRouteApi('/_main/projects/');
+
 export default function ProjectsPage() {
   const navigate = useNavigate();
+  const { repos, stats } = projectsRoute.useLoaderData();
+  const pinned = useMemo(() => repos.filter((r) => r.pinned), [repos]);
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('updated');
-  const [sortDir, setSortDir] = useState<1 | -1>(-1);
+  const [sortDir, setSortDir] = useState<1 | -1>(DEFAULT_DIR.updated);
 
   const rows = useMemo(() => {
     const q = search.toLowerCase();
-    const filtered = ALL_REPOS.filter((r) => {
+    const filtered = repos.filter((r) => {
       if (q && !r.name.includes(q)) return false;
       if (filter === 'all') return true;
       if (filter === 'active' || filter === 'archived' || filter === 'wip') return r.status === filter;
@@ -39,17 +54,17 @@ export default function ProjectsPage() {
       const av = a[sortKey];
       const bv = b[sortKey];
       if (typeof av === 'string' && typeof bv === 'string') return sortDir * av.localeCompare(bv);
-      return sortDir * (((av as number) ?? 0) - ((bv as number) ?? 0));
+      return sortDir * (((av as number | null) ?? 0) - ((bv as number | null) ?? 0));
     });
     return sorted;
-  }, [filter, search, sortKey, sortDir]);
+  }, [repos, filter, search, sortKey, sortDir]);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortDir((d) => (d === 1 ? -1 : 1));
     } else {
       setSortKey(key);
-      setSortDir(key === 'name' ? 1 : -1);
+      setSortDir(DEFAULT_DIR[key]);
     }
   };
 
@@ -71,44 +86,56 @@ export default function ProjectsPage() {
           <div className="counts">
             <div>
               repos
-              <b>{PROJECT_STATS.repos}</b>
+              <b>{stats.repos}</b>
             </div>
             <div>
               stars
-              <b>{PROJECT_STATS.stars.toLocaleString()}</b>
+              <b>{stats.stars.toLocaleString()}</b>
+            </div>
+            <div>
+              forks
+              <b>{stats.forks.toLocaleString()}</b>
+            </div>
+            <div>
+              commits
+              <b>{stats.commits.toLocaleString()}</b>
             </div>
             <div>
               active
-              <b>{PROJECT_STATS.active}</b>
+              <b>{stats.active}</b>
             </div>
             <div>
               languages
-              <b>{PROJECT_STATS.languages}</b>
+              <b>{stats.languages}</b>
             </div>
           </div>
         </header>
 
-        <div className="section-hd">
-          <h2>
-            <span className="num">01 //</span>pinned.
-          </h2>
-          <span className="meta">
-            {PINNED_REPOS.length} of {PROJECT_STATS.repos} · hand-picked
-          </span>
-        </div>
+        {pinned.length > 0 ? (
+          <>
+            <div className="section-hd">
+              <h2>
+                <span className="num">01 //</span>pinned.
+              </h2>
+              <span className="meta">
+                {pinned.length} of {stats.repos} · hand-picked
+              </span>
+            </div>
 
-        <section className="pinned">
-          {PINNED_REPOS.slice(0, 6).map((r) => (
-            <PinnedCard key={r.name} repo={r} />
-          ))}
-        </section>
+            <section className="pinned">
+              {pinned.slice(0, 6).map((r) => (
+                <PinnedCard key={`${r.owner}/${r.name}`} repo={r} />
+              ))}
+            </section>
+          </>
+        ) : null}
 
         <div className="section-hd">
           <h2>
             <span className="num">02 //</span>all repos.
           </h2>
           <span className="meta">
-            src: <span className="t-accent">api.github.com/users/imlunahey/repos</span>
+            src: <span className="t-accent">live · cached 30m</span>
           </span>
         </div>
 
@@ -138,7 +165,8 @@ export default function ProjectsPage() {
                 [
                   ['name', 'repo'],
                   ['lang', 'lang'],
-                  ['stars', '★ stars'],
+                  ['stars', 'stars'],
+                  ['forks', 'forks'],
                   ['commits', 'commits'],
                   ['updated', 'updated'],
                   ['status', 'status'],
@@ -154,17 +182,21 @@ export default function ProjectsPage() {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.name} onClick={() => navigate({ to: `/projects/${r.name}` as never })}>
+              <tr
+                key={`${r.owner}/${r.name}`}
+                onClick={() => navigate({ to: `/projects/${r.name}` as never })}
+              >
                 <td className="nm">
-                  {r.name}
-                  <div className="desc">// {r.desc}</div>
+                  <div className="n" title={r.name}>{r.name}</div>
+                  <div className="desc" title={r.desc}>// {r.desc}</div>
                 </td>
                 <td>
                   <span className={LANG_CLS[r.lang] || ''}>●</span> <span className="dim">{r.lang}</span>
                 </td>
                 <td>{r.stars}</td>
-                <td className="dim">{r.commits}</td>
-                <td className="dim">{r.updated}d ago</td>
+                <td className="dim">{r.forks}</td>
+                <td className="dim">{r.commits ?? '—'}</td>
+                <td className="dim">{formatUpdated(r.updated)}</td>
                 <td>
                   <span className={'status-' + r.status}>● {r.status}</span>
                 </td>
@@ -187,7 +219,7 @@ export default function ProjectsPage() {
 
         <footer className="projects-footer">
           <span>
-            src: <span className="t-accent">api.github.com/users/imlunahey/repos</span> · refresh 3600s
+            src: <span className="t-accent">api.github.com/users/{'{imlunahey,lucid-softworks,omgimalexis}'}/repos</span> · refresh 1800s
           </span>
         </footer>
       </main>
@@ -196,33 +228,40 @@ export default function ProjectsPage() {
 }
 
 function PinnedCard({ repo: r }: { repo: Repo }) {
+  const navigate = useNavigate();
   const links: React.ReactNode[] = [];
   if (r.launch)
     links.push(
-      <a key="launch" className="primary" href={r.launch} target="_blank" rel="noopener noreferrer">
+      <a key="launch" className="primary" href={r.launch} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
         launch ↗
       </a>,
     );
   if (r.source)
     links.push(
-      <a key="source" href={r.source} target="_blank" rel="noopener noreferrer">
+      <a key="source" href={r.source} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
         source ↗
       </a>,
     );
-  links.push(
-    <Link key="details" to={`/projects/${r.name}` as never}>
-      details →
-    </Link>,
-  );
   if (r.writeup)
     links.push(
-      <Link key="writeup" to={`/blog/${r.writeup}` as never}>
+      <Link key="writeup" to={`/blog/${r.writeup}` as never} onClick={(e) => e.stopPropagation()}>
         writeup →
       </Link>,
     );
 
   return (
-    <div className="pin-card">
+    <div
+      className="pin-card"
+      role="link"
+      tabIndex={0}
+      onClick={() => navigate({ to: `/projects/${r.name}` as never })}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          navigate({ to: `/projects/${r.name}` as never });
+        }
+      }}
+    >
       <div className="pin-head">
         <span className={LANG_CLS[r.lang] || ''}>● {r.lang}</span>
         {r.kind ? <span className="kind-pill">{r.kind}</span> : null}
@@ -232,13 +271,13 @@ function PinnedCard({ repo: r }: { repo: Repo }) {
       <div className="desc">{r.desc}</div>
       <div className="ft">
         <span>
-          <b>commits</b> {r.commits}
+          <b>owner</b> {r.owner}
         </span>
         <span>
-          <b>updated</b> {r.updated}d ago
+          <b>updated</b> {formatUpdated(r.updated)}
         </span>
       </div>
-      <div className="links">{links}</div>
+      {links.length > 0 ? <div className="links">{links}</div> : null}
     </div>
   );
 }
@@ -284,6 +323,7 @@ const PROJECTS_CSS = `
     grid-template-columns: repeat(3, 1fr);
     gap: var(--sp-3);
   }
+  .pin-card { cursor: pointer; }
   .pin-card {
     border: 1px solid var(--color-border);
     background: var(--color-bg-panel);
@@ -298,12 +338,12 @@ const PROJECTS_CSS = `
     font-size: var(--fs-xs); color: var(--color-fg-faint);
     gap: var(--sp-2);
   }
-  .pin-card .name {
+  .pin-card .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     font-family: var(--font-display); font-size: 24px; color: var(--color-fg);
     line-height: 1; letter-spacing: -0.02em;
   }
   .pin-card:hover .name { color: var(--color-accent); }
-  .pin-card .desc { font-size: var(--fs-sm); color: var(--color-fg-dim); line-height: 1.5; flex: 1; }
+  .pin-card .desc { font-size: var(--fs-sm); color: var(--color-fg-dim); line-height: 1.5; flex: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .pin-card .ft { display: flex; gap: var(--sp-4); font-size: var(--fs-xs); color: var(--color-fg-faint); flex-wrap: wrap; }
   .pin-card .ft b { color: var(--color-fg-dim); font-weight: 400; }
   .pin-card .links { display: flex; gap: var(--sp-2); margin-top: var(--sp-1); border-top: 1px dashed var(--color-border); padding-top: var(--sp-3); }
@@ -361,8 +401,21 @@ const PROJECTS_CSS = `
   .repo-table tbody tr { cursor: pointer; }
   .repo-table tbody tr:hover td { background: var(--color-bg-raised); }
   .repo-table tbody tr:hover td:first-child { color: var(--color-accent); }
+  .repo-table { table-layout: fixed; }
+  .repo-table th:nth-child(2), .repo-table td:nth-child(2) { width: 100px; }
+  .repo-table th:nth-child(3), .repo-table td:nth-child(3) { width: 55px; }
+  .repo-table th:nth-child(4), .repo-table td:nth-child(4) { width: 55px; }
+  .repo-table th:nth-child(5), .repo-table td:nth-child(5) { width: 70px; }
+  .repo-table th:nth-child(6), .repo-table td:nth-child(6) { width: 90px; }
+  .repo-table th:nth-child(7), .repo-table td:nth-child(7) { width: 95px; }
+  .repo-table th:nth-child(8), .repo-table td:nth-child(8) { width: 65px; }
   .repo-table .nm { font-family: var(--font-mono); }
+  .repo-table .nm .n,
+  .repo-table .nm .desc {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
   .repo-table .desc { color: var(--color-fg-faint); font-size: var(--fs-xs); margin-top: 2px; }
+  .repo-table td:not(.nm) { white-space: nowrap; }
   .repo-table .dim { color: var(--color-fg-faint); font-size: var(--fs-xs); }
   .repo-table .status-active { color: var(--color-accent); }
   .repo-table .status-archived { color: var(--color-fg-faint); }

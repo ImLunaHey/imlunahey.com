@@ -1,11 +1,14 @@
-import { Link } from '@tanstack/react-router';
+import { getRouteApi, Link } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { USES_META, USES_SECTIONS } from '../data';
+
+const usesRoute = getRouteApi('/_main/uses');
 
 export default function UsesPage() {
   const totalItems = useMemo(() => USES_SECTIONS.reduce((sum, s) => sum + s.items.length, 0), []);
   const [activeId, setActiveId] = useState<string>(USES_SECTIONS[0]?.id ?? '');
   const sectionsRef = useRef<HTMLDivElement | null>(null);
+  const { publicRepos } = usesRoute.useLoaderData();
 
   useEffect(() => {
     const root = sectionsRef.current;
@@ -31,19 +34,13 @@ export default function UsesPage() {
         <div className="layout">
           <aside className="side">
             <div className="grp-ttl">rig</div>
-            {['hardware', 'editor', 'desk', 'keyboard', 'camera'].map((id) => (
+            {['hardware', 'editor', 'camera'].map((id) => (
               <a key={id} href={`#${id}`} className={activeId === id ? 'on' : ''}>
                 {USES_SECTIONS.find((s) => s.id === id)?.title ?? id}
               </a>
             ))}
             <div className="grp-ttl">soft</div>
             {['software', 'runtime', 'services'].map((id) => (
-              <a key={id} href={`#${id}`} className={activeId === id ? 'on' : ''}>
-                {USES_SECTIONS.find((s) => s.id === id)?.title ?? id}
-              </a>
-            ))}
-            <div className="grp-ttl">life</div>
-            {['edc', 'boat'].map((id) => (
               <a key={id} href={`#${id}`} className={activeId === id ? 'on' : ''}>
                 {USES_SECTIONS.find((s) => s.id === id)?.title ?? id}
               </a>
@@ -66,9 +63,6 @@ export default function UsesPage() {
                 . affiliate-free.
               </p>
               <div className="meta">
-                <span>
-                  version <b>{USES_META.version}</b>
-                </span>
                 <span>
                   items <b>{totalItems}</b>
                 </span>
@@ -96,13 +90,19 @@ export default function UsesPage() {
                     </thead>
                   ) : null}
                   <tbody>
-                    {sec.items.map((it) => (
-                      <tr key={it.name}>
-                        <td className="nm">{it.name}</td>
-                        <td className="tg">{it.config}</td>
-                        <td className="note">{it.note}</td>
-                      </tr>
-                    ))}
+                    {sec.items.map((it) => {
+                      const note =
+                        it.name === 'github' && publicRepos != null
+                          ? `${publicRepos} public repos.`
+                          : (it.note ?? '');
+                      return (
+                        <tr key={it.name}>
+                          <td className="nm">{it.name}</td>
+                          <td className="tg">{it.config}</td>
+                          <td className="note">{note}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </section>
@@ -111,9 +111,7 @@ export default function UsesPage() {
         </div>
 
         <footer className="uses-footer">
-          <span>
-            last reviewed · {USES_META.lastUpdated} · next review · {USES_META.nextReview}
-          </span>
+          <span>last reviewed · {USES_META.lastUpdated}</span>
           <span>
             ←{' '}
             <Link to="/" className="t-accent">
@@ -188,7 +186,7 @@ const CSS = `
     font-size: var(--fs-sm); letter-spacing: 0.1em;
     font-family: var(--font-mono);
   }
-  .sec-desc { font-size: var(--fs-md); color: var(--color-fg-dim); max-width: 60ch; margin-bottom: var(--sp-5); line-height: 1.6; }
+  .sec-desc { font-size: var(--fs-md); color: var(--color-fg-dim); margin-bottom: var(--sp-5); line-height: 1.6; }
 
   .uses-table {
     width: 100%; border-collapse: collapse; font-size: var(--fs-sm);

@@ -6,6 +6,9 @@ const LINKS: { to: string; label: string; match?: (path: string) => boolean }[] 
   { to: '/blog', label: '/writing', match: (p) => p.startsWith('/blog') },
   { to: '/projects', label: '/projects', match: (p) => p.startsWith('/projects') },
   { to: '/gallery', label: '/gallery', match: (p) => p.startsWith('/gallery') },
+  { to: '/watching', label: '/watching', match: (p) => p.startsWith('/watching') },
+  { to: '/games', label: '/games', match: (p) => p.startsWith('/games') },
+  { to: '/music', label: '/music', match: (p) => p.startsWith('/music') },
   { to: '/uses', label: '/uses', match: (p) => p.startsWith('/uses') },
 ];
 

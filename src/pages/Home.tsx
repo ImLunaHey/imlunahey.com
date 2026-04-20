@@ -1,23 +1,10 @@
-import { Link } from '@tanstack/react-router';
-import {
-  ABOUT,
-  BLOG,
-  BSKY_POSTS,
-  CMD_BAR,
-  GITHUB,
-  MUSIC,
-  NOW,
-  PINNED_REPOS,
-  SITE,
-  SOCIALS,
-  SOURCES,
-  STATUS,
-  USES,
-  VITALS,
-  WATCHING,
-  WATCHING_STATS,
-  WEATHER,
-} from '../data';
+import { Await, getRouteApi, Link } from '@tanstack/react-router';
+import { ErrorBoundary } from '../components/ErrorBoundary';
+import { ABOUT, SITE, SOCIALS, SOURCES, STATUS, USES } from '../data';
+import { LASTFM_PROFILE_URL } from '../server/lastfm';
+import { formatUpdated } from '../lib/format';
+
+const homeRoute = getRouteApi('/_main/');
 
 const fmtDate = (iso: string) => {
   const d = new Date(iso);
@@ -27,11 +14,75 @@ const fmtDate = (iso: string) => {
   return `${Math.floor(diff / 86_400)}d ago`;
 };
 
-const fmtTime = (s: number) => {
-  const m = Math.floor(s / 60);
-  const r = Math.floor(s % 60);
-  return `${m}:${String(r).padStart(2, '0')}`;
+const fmtMonthYear = (iso: string) => {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toLowerCase();
 };
+
+const BskySkel = () => (
+  <>
+    {Array.from({ length: 3 }).map((_, i) => (
+      <div key={i} className="bsky-post">
+        <div className="skel" style={{ width: '100%', marginBottom: 6 }} />
+        <div className="skel" style={{ width: '60%' }} />
+      </div>
+    ))}
+  </>
+);
+
+const MusicSkel = () => (
+  <div className="music-wrap">
+    <div className="music-top">
+      <div className="skel music-art" style={{ height: 72 }} />
+      <div className="music-meta" style={{ flex: 1 }}>
+        <div className="skel" style={{ width: '40%', height: 10, marginBottom: 8 }} />
+        <div className="skel" style={{ width: '85%', marginBottom: 6 }} />
+        <div className="skel" style={{ width: '55%' }} />
+      </div>
+    </div>
+  </div>
+);
+
+const WatchingSkel = () => (
+  <>
+    <div className="skel" style={{ width: 130, height: 14, marginBottom: 12 }} />
+    <div className="watch-grid">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="poster skel" style={{ aspectRatio: '2/3' }} />
+      ))}
+    </div>
+  </>
+);
+
+const BlogSkel = () => (
+  <>
+    {Array.from({ length: 4 }).map((_, i) => (
+      <div key={i} className="blog-row">
+        <div style={{ flex: 1 }}>
+          <div className="skel" style={{ width: '70%', height: 10, marginBottom: 4 }} />
+          <div className="skel" style={{ width: '50%', height: 12 }} />
+        </div>
+      </div>
+    ))}
+  </>
+);
+
+const ContribSkel = () => (
+  <>
+    <div className="contrib-top">
+      <div className="skel" style={{ width: 180, height: 28 }} />
+    </div>
+    <div className="contrib">
+      {Array.from({ length: 53 }).map((_, wi) => (
+        <div key={wi} className="wk">
+          {Array.from({ length: 7 }).map((_, di) => (
+            <div key={di} className="d" />
+          ))}
+        </div>
+      ))}
+    </div>
+  </>
+);
 
 const langCls: Record<string, string> = {
   typescript: 'lang-ts',
@@ -40,7 +91,14 @@ const langCls: Record<string, string> = {
 };
 
 export default function HomePage() {
-  const musicElapsed = MUSIC.duration * MUSIC.progress;
+  const { repos, stats, contribs, bskyPosts, lastTrack, blog, weather, watches } = homeRoute.useLoaderData();
+  const pinned = repos.filter((r) => r.pinned).slice(0, 6);
+  const latestActiveRepo = repos
+    .filter((r) => r.status === 'active')
+    .reduce<(typeof repos)[number] | undefined>(
+      (min, r) => (min === undefined || r.updated < min.updated ? r : min),
+      undefined,
+    );
 
   return (
     <>
@@ -52,23 +110,22 @@ export default function HomePage() {
             <span className="ok">●</span> <b>online</b>
           </span>
           <span>
-            <b>uptime</b> {CMD_BAR.uptime}
+            <b>repos</b> {stats.repos}
           </span>
           <span>
-            <b>load</b> {CMD_BAR.load}
+            <b>stars</b> {stats.stars.toLocaleString()}
           </span>
           <span>
-            <b>mem</b> {CMD_BAR.mem}
+            <b>commits</b> {stats.commits.toLocaleString()}
           </span>
           <span>
-            <b>last deploy</b> {CMD_BAR.lastDeploy}
+            <b>langs</b> {stats.languages}
           </span>
-          <span>
-            <b>last commit</b> {CMD_BAR.lastCommit}
-          </span>
-          <span>
-            <span className="warn">●</span> coffee low
-          </span>
+          {latestActiveRepo ? (
+            <span>
+              <b>last push</b> {formatUpdated(latestActiveRepo.updated)}
+            </span>
+          ) : null}
         </div>
 
         {/* hero */}
@@ -87,32 +144,32 @@ export default function HomePage() {
           <aside className="vitals">
             <div className="row on">
               <span>status</span>
-              <b>● {VITALS.status}</b>
+              <b>● online</b>
             </div>
             <div className="row">
               <span>location</span>
-              <b>{VITALS.location}</b>
+              <b>{SITE.location}</b>
             </div>
             <div className="row">
               <span>timezone</span>
-              <b>{VITALS.timezone}</b>
+              <b>{SITE.tz.toLowerCase()}</b>
             </div>
             <div className="row">
               <span>pronouns</span>
-              <b>{VITALS.pronouns}</b>
+              <b>{SITE.pronouns}</b>
             </div>
             <hr />
             <div className="row">
               <span>stack</span>
-              <b>{VITALS.stack}</b>
+              <b>{ABOUT.tags.join(' · ')}</b>
             </div>
             <div className="row">
-              <span>edits</span>
-              <b>{VITALS.editor}</b>
+              <span>editor</span>
+              <b>{USES.software.find((s) => s.tag === 'editor')?.name ?? USES.software[0]?.name}</b>
             </div>
             <div className="row">
               <span>runtime</span>
-              <b>{VITALS.runtime}</b>
+              <b>{USES.runtime.find((r) => r.tag === 'primary')?.name ?? USES.runtime[0]?.name}</b>
             </div>
             <hr />
             <div className="row">
@@ -140,30 +197,88 @@ export default function HomePage() {
             <div className="panel-head">
               <span className="dot" />
               <span className="ttl">~/now</span>
-              <span className="src-tag">// static</span>
+              <span className="src-tag">// live</span>
             </div>
             <div className="panel-body">
               <div className="now-wrap">
                 <div>
                   <div className="label">currently</div>
                   <div className="now-headline">
-                    {NOW.headline[0]}
+                    building
                     <br />
-                    <span className="dim">{NOW.headline[1]}</span>
+                    <span className="dim">and tinkering.</span>
                   </div>
                 </div>
                 <dl className="now-grid">
-                  {NOW.rows.map((r) => (
-                    <div key={r.k} style={{ display: 'contents' }}>
-                      <dt>// {r.k}</dt>
+                  {latestActiveRepo ? (
+                    <div style={{ display: 'contents' }}>
+                      <dt>// building</dt>
                       <dd>
                         <span className="bullet">→</span>
-                        {r.k === 'listening' && !r.v
-                          ? `${MUSIC.artist} — ${MUSIC.track.split(',')[0].toLowerCase()}`
-                          : r.v}
+                        <Link to={`/projects/${latestActiveRepo.name}` as never} className="glow-link">
+                          {latestActiveRepo.name}
+                        </Link>
                       </dd>
                     </div>
-                  ))}
+                  ) : null}
+                  <ErrorBoundary fallback={null}>
+                    <Await promise={blog} fallback={null}>
+                      {(b) =>
+                        b.entries[0] ? (
+                          <div style={{ display: 'contents' }}>
+                            <dt>// writing</dt>
+                            <dd>
+                              <span className="bullet">→</span>
+                              <Link to={`/blog/${b.entries[0].rkey}` as never} className="glow-link">
+                                {b.entries[0].title.toLowerCase()}
+                              </Link>
+                            </dd>
+                          </div>
+                        ) : null
+                      }
+                    </Await>
+                  </ErrorBoundary>
+                  <ErrorBoundary fallback={null}>
+                    <Await promise={lastTrack} fallback={null}>
+                      {(t) =>
+                        t && t.nowPlaying ? (
+                          <div style={{ display: 'contents' }}>
+                            <dt>// listening</dt>
+                            <dd>
+                              <span className="bullet">→</span>
+                              <a href={t.url} target="_blank" rel="noopener noreferrer" className="glow-link">
+                                {`${t.artist} — ${t.track}`.toLowerCase()}
+                              </a>
+                            </dd>
+                          </div>
+                        ) : null
+                      }
+                    </Await>
+                  </ErrorBoundary>
+                  <ErrorBoundary fallback={null}>
+                    <Await promise={watches} fallback={null}>
+                      {(w) =>
+                        w.items[0] ? (
+                          <div style={{ display: 'contents' }}>
+                            <dt>// watching</dt>
+                            <dd>
+                              <span className="bullet">→</span>
+                              {w.items[0].title.toLowerCase()}
+                            </dd>
+                          </div>
+                        ) : null
+                      }
+                    </Await>
+                  </ErrorBoundary>
+                  {latestActiveRepo ? (
+                    <div style={{ display: 'contents' }}>
+                      <dt>// last commit</dt>
+                      <dd>
+                        <span className="bullet">→</span>
+                        {`${latestActiveRepo.name} · ${formatUpdated(latestActiveRepo.updated)}`}
+                      </dd>
+                    </div>
+                  ) : null}
                 </dl>
               </div>
             </div>
@@ -173,13 +288,31 @@ export default function HomePage() {
           <div className="c-vitals-sm">
             <div className="vitals-sm">
               <div className="vitals-cell">
-                <div>
-                  <span className="lb">weather</span>
-                  <div className="big accent">{WEATHER.tempC}°</div>
-                </div>
-                <span className="sub">
-                  {WEATHER.code} · london
-                </span>
+                <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>weather unavailable</div>}>
+                  <Await promise={weather} fallback={<div className="skel" style={{ width: 80, height: 28 }} />}>
+                    {(w) =>
+                      w ? (
+                        <>
+                          <div>
+                            <span className="lb">weather</span>
+                            <div className="big accent">{w.tempC}°</div>
+                          </div>
+                          <span className="sub">
+                            {w.code} · london
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <span className="lb">weather</span>
+                            <div className="big accent">—</div>
+                          </div>
+                          <span className="sub">offline · london</span>
+                        </>
+                      )
+                    }
+                  </Await>
+                </ErrorBoundary>
               </div>
               <div className="vitals-cell">
                 <div>
@@ -196,30 +329,78 @@ export default function HomePage() {
             <div className="panel-head">
               <span className="dot" />
               <span className="ttl">./now_playing</span>
-              <span className="src-tag">// last.fm</span>
+              <a
+                className="src-tag"
+                href={LASTFM_PROFILE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                // last.fm
+              </a>
             </div>
             <div className="panel-body">
-              <div className="music-wrap">
-                <div className="music-top">
-                  <div className="music-art" />
-                  <div className="music-meta">
-                    <div className="label">now playing</div>
-                    <div className="music-track">{MUSIC.track.toLowerCase()}</div>
-                    <div className="music-artist">{MUSIC.artist.toLowerCase()}</div>
-                  </div>
-                </div>
-                <div>
-                  <div className="music-bars">
-                    {Array.from({ length: 7 }).map((_, i) => (
-                      <span key={i} />
-                    ))}
-                  </div>
-                  <div className="music-prog">
-                    <span>{fmtTime(musicElapsed)}</span>
-                    <span>{fmtTime(MUSIC.duration)}</span>
-                  </div>
-                </div>
-              </div>
+              <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>music panel errored.</div>}>
+              <Await promise={lastTrack} fallback={<MusicSkel />}>
+                {(t) =>
+                  t && t.nowPlaying ? (
+                    <div className="music-wrap">
+                      <div className="music-top">
+                        <div
+                          className="music-art"
+                          style={t.art ? { backgroundImage: `url(${t.art})`, backgroundSize: 'cover' } : undefined}
+                        />
+                        <div className="music-meta">
+                          <div className="label">now playing</div>
+                          <a
+                            className="music-track"
+                            href={t.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {t.track.toLowerCase()}
+                          </a>
+                          <a
+                            className="music-artist"
+                            href={t.artistUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {t.artist.toLowerCase()}
+                          </a>
+                        </div>
+                      </div>
+                      <div className="music-bars playing">
+                        {Array.from({ length: 7 }).map((_, i) => (
+                          <span key={i} />
+                        ))}
+                      </div>
+                      <Link to={'/music' as never} className="see-all">
+                        full history →
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="music-wrap idle">
+                      <div className="music-top">
+                        <div className="music-art" />
+                        <div className="music-meta">
+                          <div className="label">
+                            {t === null ? 'not configured' : 'not listening to anything'}
+                          </div>
+                          {t === null ? (
+                            <div className="music-artist">set LASTFM_API_KEY</div>
+                          ) : null}
+                        </div>
+                      </div>
+                      {t !== null ? (
+                        <Link to={'/music' as never} className="see-all">
+                          full history →
+                        </Link>
+                      ) : null}
+                    </div>
+                  )
+                }
+              </Await>
+              </ErrorBoundary>
             </div>
           </div>
         </section>
@@ -244,27 +425,51 @@ export default function HomePage() {
           <div className="panel c-bsky">
             <div className="panel-head">
               <span className="dot" />
-              <span className="ttl">@{SITE.handle}.com · bsky</span>
+              <span className="ttl">./bsky --all</span>
               <span className="src-tag">// get_author_feed</span>
             </div>
             <div className="panel-body tight">
-              {BSKY_POSTS.map((p) => (
-                <div key={p.ts} className="bsky-post">
-                  <div className="txt">{p.text}</div>
-                  <div className="meta">
-                    <span>{fmtDate(p.ts)}</span>
-                    <span>
-                      <b>♥</b> {p.likes}
-                    </span>
-                    <span>
-                      <b>↩</b> {p.replies}
-                    </span>
-                    <span style={{ marginLeft: 'auto' }} className="t-accent">
-                      read →
-                    </span>
-                  </div>
-                </div>
-              ))}
+              <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>bluesky unavailable.</div>}>
+              <Await promise={bskyPosts} fallback={<BskySkel />}>
+                {(posts) =>
+                  posts.length === 0 ? (
+                    <div className="bsky-post">
+                      <div className="txt">no recent posts.</div>
+                    </div>
+                  ) : (
+                    <>
+                      {posts.map((p) => (
+                        <a
+                          key={p.url}
+                          href={p.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bsky-post"
+                        >
+                          <div className="txt">{p.text}</div>
+                          <div className="meta">
+                            <span className="t-faint">@{p.handle}</span>
+                            <span>{fmtDate(p.ts)}</span>
+                            <span>
+                              <b>♥</b> {p.likes}
+                            </span>
+                            <span>
+                              <b>↩</b> {p.replies}
+                            </span>
+                            <span>
+                              <b>↻</b> {p.reposts}
+                            </span>
+                            <span style={{ marginLeft: 'auto' }} className="t-accent">
+                              read →
+                            </span>
+                          </div>
+                        </a>
+                      ))}
+                    </>
+                  )
+                }
+              </Await>
+              </ErrorBoundary>
             </div>
           </div>
 
@@ -276,15 +481,27 @@ export default function HomePage() {
               <span className="src-tag">// whtwnd</span>
             </div>
             <div className="panel-body tight">
-              {BLOG.slice(0, 6).map((b) => (
-                <Link key={b.slug} to={`/blog/${b.slug}` as never} className="blog-row">
-                  <div>
-                    <span className="dt">{b.date}</span>
-                    <span className="tt">{b.title}</span>
-                  </div>
-                  <span className="rt">{b.readMin}m read</span>
-                </Link>
-              ))}
+              <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>blog unavailable.</div>}>
+                <Await promise={blog} fallback={<BlogSkel />}>
+                  {(b) =>
+                    b.entries.length === 0 ? (
+                      <div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>no posts yet.</div>
+                    ) : (
+                      <>
+                        {b.entries.slice(0, 6).map((e) => (
+                          <Link key={e.rkey} to={`/blog/${e.rkey}` as never} className="blog-row">
+                            <div>
+                              <span className="dt">{e.createdAt.slice(0, 10)}</span>
+                              <span className="tt">{e.title}</span>
+                            </div>
+                            <span className="rt">{e.readMin}m read</span>
+                          </Link>
+                        ))}
+                      </>
+                    )
+                  }
+                </Await>
+              </ErrorBoundary>
             </div>
           </div>
         </section>
@@ -310,48 +527,66 @@ export default function HomePage() {
               <span className="src-tag">// users/imlunahey/events</span>
             </div>
             <div className="panel-body">
-              <div className="contrib-top">
-                <div>
-                  <span className="big">{GITHUB.totalCommits.toLocaleString()}</span>
-                  <span className="t-faint" style={{ fontSize: 'var(--fs-xs)', marginLeft: 8 }}>
-                    commits · past 365 days
-                  </span>
-                </div>
-                <div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>
-                  longest streak · <span className="t-accent">{GITHUB.longestStreak}d</span>
-                </div>
-              </div>
-              <div className="contrib">
-                {GITHUB.contrib.map((wk, wi) => (
-                  <div key={wi} className="wk">
-                    {wk.map((d, di) => (
-                      <div key={di} className={`d${d ? ' l' + d : ''}`} />
-                    ))}
-                  </div>
-                ))}
-              </div>
-              <div className="contrib-legend">
-                <span>{GITHUB.legendStart}</span>
-                <div className="scale">
-                  <span>less</span>
-                  <span className="sq" />
-                  <span
-                    className="sq"
-                    style={{ background: 'color-mix(in oklch, var(--color-accent) 15%, var(--color-bg))' }}
-                  />
-                  <span
-                    className="sq"
-                    style={{ background: 'color-mix(in oklch, var(--color-accent) 35%, var(--color-bg))' }}
-                  />
-                  <span
-                    className="sq"
-                    style={{ background: 'color-mix(in oklch, var(--color-accent) 60%, var(--color-bg))' }}
-                  />
-                  <span className="sq" style={{ background: 'var(--color-accent)' }} />
-                  <span>more</span>
-                </div>
-                <span>{GITHUB.legendEnd}</span>
-              </div>
+              <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>contributions unavailable.</div>}>
+              <Await promise={contribs} fallback={<ContribSkel />}>
+                {(c) =>
+                  c ? (
+                    <>
+                      <div className="contrib-top">
+                        <div>
+                          <span className="big">{c.totalContributions.toLocaleString()}</span>
+                          <span className="t-faint" style={{ fontSize: 'var(--fs-xs)', marginLeft: 8 }}>
+                            contributions · past 365 days
+                          </span>
+                        </div>
+                        <div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>
+                          longest streak · <span className="t-accent">{c.longestStreak}d</span>
+                        </div>
+                      </div>
+                      <div className="contrib">
+                        {c.weeks.map((wk, wi) => (
+                          <div key={wi} className="wk">
+                            {wk.map((d) => (
+                              <div
+                                key={d.date}
+                                className={`d${d.level ? ' l' + d.level : ''}`}
+                                data-tip={`${d.count} contribution${d.count === 1 ? '' : 's'} · ${d.date}`}
+                              />
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="contrib-legend">
+                        <span>{fmtMonthYear(c.rangeStart)}</span>
+                        <div className="scale">
+                          <span>less</span>
+                          <span className="sq" />
+                          <span
+                            className="sq"
+                            style={{ background: 'color-mix(in oklch, var(--color-accent) 28%, var(--color-bg))' }}
+                          />
+                          <span
+                            className="sq"
+                            style={{ background: 'color-mix(in oklch, var(--color-accent) 55%, var(--color-bg))' }}
+                          />
+                          <span
+                            className="sq"
+                            style={{ background: 'color-mix(in oklch, var(--color-accent) 80%, var(--color-bg))' }}
+                          />
+                          <span className="sq" style={{ background: 'var(--color-accent)' }} />
+                          <span>more</span>
+                        </div>
+                        <span>{fmtMonthYear(c.rangeEnd)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>
+                      github contributions unavailable. set GITHUB_TOKEN.
+                    </div>
+                  )
+                }
+              </Await>
+              </ErrorBoundary>
             </div>
           </div>
 
@@ -363,8 +598,8 @@ export default function HomePage() {
               <span className="src-tag">// users/imlunahey/repos</span>
             </div>
             <div className="panel-body tight">
-              {PINNED_REPOS.map((r) => (
-                <div key={r.name} className="proj-row">
+              {pinned.map((r) => (
+                <div key={`${r.owner}/${r.name}`} className="proj-row">
                   <div>
                     <div className="pn">{r.name}</div>
                     <div className="pd">// {r.desc}</div>
@@ -385,27 +620,49 @@ export default function HomePage() {
             <div className="panel-head">
               <span className="dot" />
               <span className="ttl">./watching</span>
-              <span className="src-tag">// trakt · tmdb</span>
+              <span className="src-tag">// popfeed.social</span>
             </div>
             <div className="panel-body">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-                <span className="label">recently watched</span>
-                <span className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>
-                  {WATCHING_STATS.thisYear} this year
-                </span>
-              </div>
-              <div className="watch-grid">
-                {WATCHING.map((w) => (
-                  <div key={w.title} className="poster">
-                    <span className="kind">
-                      {w.kind}
-                      {w.s ? ' · ' + w.s : ''}
-                    </span>
-                    <span className="rating">{w.rating.toFixed(1)}</span>
-                    {w.title}
-                  </div>
-                ))}
-              </div>
+              <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>popfeed unavailable.</div>}>
+                <Await promise={watches} fallback={<WatchingSkel />}>
+                  {(w) => (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+                        <span className="label">recently watched</span>
+                        <span className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>
+                          {w.items.length} review{w.items.length === 1 ? '' : 's'}
+                          {w.thisYear > 0 ? ` · ${w.thisYear} this year` : ''}
+                        </span>
+                      </div>
+                      {w.items.length === 0 ? (
+                        <div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>no reviews yet.</div>
+                      ) : (
+                        <>
+                          <div className="watch-grid">
+                            {w.items.slice(0, 9).map((it) => {
+                              const style = it.poster
+                                ? { backgroundImage: `url(${it.poster})`, backgroundSize: 'cover' as const, backgroundPosition: 'center' }
+                                : undefined;
+                              return (
+                                <Link
+                                  key={it.rkey}
+                                  to={`/watching/${it.rkey}` as never}
+                                  className="poster"
+                                  style={style}
+                                  aria-label={it.title}
+                                />
+                              );
+                            })}
+                          </div>
+                          <Link to={'/watching' as never} className="see-all">
+                            all reviews →
+                          </Link>
+                        </>
+                      )}
+                    </>
+                  )}
+                </Await>
+              </ErrorBoundary>
             </div>
           </div>
         </section>
@@ -451,12 +708,19 @@ export default function HomePage() {
           {/* SOCIALS */}
           <div className="c-socials">
             <div className="socials-row">
-              {SOCIALS.map((s) => (
-                <a key={s.net} className="social-cell" href={s.url}>
-                  <span className="net">{s.net}</span>
-                  <span className="h">{s.handle}</span>
-                </a>
-              ))}
+              {SOCIALS.map((s) =>
+                s.url ? (
+                  <a key={s.net} className="social-cell" href={s.url}>
+                    <span className="net">{s.net}</span>
+                    <span className="h">{s.handle}</span>
+                  </a>
+                ) : (
+                  <div key={s.net} className="social-cell">
+                    <span className="net">{s.net}</span>
+                    <span className="h">{s.handle}</span>
+                  </div>
+                ),
+              )}
             </div>
           </div>
 
@@ -540,7 +804,7 @@ const HOME_CSS = `
     position: relative;
   }
   .hero::before {
-    content: "~/user.current ─────────────────────";
+    content: "~/user.current";
     position: absolute;
     top: 32px; left: 0;
     font-size: var(--fs-xs);
@@ -661,11 +925,12 @@ const HOME_CSS = `
   .now-headline .dim { color: var(--color-fg); text-shadow: none; }
   .now-grid {
     display: grid;
-    grid-template-columns: 88px 1fr;
+    grid-template-columns: 120px minmax(0, 1fr);
     gap: 10px 14px;
     font-size: var(--fs-sm);
     align-items: baseline;
   }
+  .now-grid dt { white-space: nowrap; }
   .now-grid dt { color: var(--color-fg-faint); font-size: var(--fs-xs); padding-top: 2px; }
   .now-grid dd { color: var(--color-fg); }
   .now-grid dd .bullet { color: var(--color-accent); margin-right: 4px; }
@@ -713,9 +978,26 @@ const HOME_CSS = `
     display: flex; align-items: center; justify-content: center;
     color: var(--color-accent); font-size: 24px; text-shadow: 0 0 8px var(--accent-glow);
   }
+  .music-meta { display: flex; flex-direction: column; min-width: 0; }
   .music-meta .lb { font-size: var(--fs-xs); color: var(--color-fg-faint); }
-  .music-track { font-size: var(--fs-sm); color: var(--color-fg); margin-top: 4px; line-height: 1.3; }
+  .music-track { font-size: var(--fs-sm); color: var(--color-fg); margin-top: 4px; line-height: 1.3; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .music-track:hover { color: var(--color-accent); text-decoration: none; }
+  a.music-artist { font-size: var(--fs-xs); color: var(--color-fg-dim); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  a.music-artist:hover { color: var(--color-accent); text-decoration: none; }
   .music-artist { font-size: var(--fs-xs); color: var(--color-fg-dim); }
+  .panel-head a.src-tag { color: var(--color-fg-faint); text-decoration: none; }
+  .panel-head a.src-tag:hover { color: var(--color-accent); text-decoration: none; }
+  a.see-all {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--color-fg-faint);
+    text-decoration: none;
+    padding-top: var(--sp-3);
+    margin-top: auto;
+    align-self: flex-start;
+  }
+  a.see-all:hover { color: var(--color-accent); text-decoration: none; }
   .music-bars { display: flex; align-items: flex-end; gap: 3px; height: 24px; }
   .music-bars span {
     display: block; width: 4px; background: var(--color-accent);
@@ -733,16 +1015,21 @@ const HOME_CSS = `
 
   /* bluesky posts */
   .bsky-post {
-    padding: var(--sp-4) 0;
+    display: block;
+    padding: var(--sp-3) 0;
     border-bottom: 1px dashed var(--color-border);
     font-size: var(--fs-sm);
+    color: inherit;
+    text-decoration: none;
   }
+  .bsky-post:hover { text-decoration: none; }
+  .bsky-post:hover .txt { color: var(--color-accent); }
   .bsky-post:first-child { padding-top: 0; }
   .bsky-post:last-child { border-bottom: 0; }
   .bsky-post .txt { color: var(--color-fg); line-height: 1.55; }
   .bsky-post .meta {
-    display: flex; gap: var(--sp-4);
-    margin-top: 6px;
+    display: flex; gap: var(--sp-3); flex-wrap: wrap;
+    margin-top: 4px;
     font-size: var(--fs-xs); color: var(--color-fg-faint);
   }
   .bsky-post .meta b { color: var(--color-fg-dim); font-weight: 400; }
@@ -768,6 +1055,7 @@ const HOME_CSS = `
   .blog-row .rt { color: var(--color-fg-faint); font-size: var(--fs-xs); white-space: nowrap; }
 
   /* contribution */
+  .panel.c-activity { overflow: visible; }
   .contrib {
     display: grid;
     grid-template-columns: repeat(53, 1fr);
@@ -775,11 +1063,30 @@ const HOME_CSS = `
     margin-top: var(--sp-3);
   }
   .contrib .wk { display: flex; flex-direction: column; gap: 2px; }
-  .contrib .d { width: 100%; aspect-ratio: 1; background: var(--color-bg-raised); border: 1px solid var(--color-border); }
-  .contrib .d.l1 { background: color-mix(in oklch, var(--color-accent) 15%, var(--color-bg)); }
-  .contrib .d.l2 { background: color-mix(in oklch, var(--color-accent) 35%, var(--color-bg)); }
-  .contrib .d.l3 { background: color-mix(in oklch, var(--color-accent) 60%, var(--color-bg)); }
-  .contrib .d.l4 { background: var(--color-accent); box-shadow: 0 0 4px var(--accent-glow); }
+  .contrib .d { width: 100%; aspect-ratio: 1; background: var(--color-bg-raised); border: 1px solid var(--color-border); position: relative; }
+  .contrib .d::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-bg-raised);
+    border: 1px solid var(--color-border-bright);
+    color: var(--color-fg);
+    padding: 4px 8px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.08s ease;
+    z-index: 10;
+  }
+  .contrib .d:hover::after { opacity: 1; }
+  .contrib .d.l1 { background: color-mix(in oklch, var(--color-accent) 28%, var(--color-bg)); border-color: color-mix(in oklch, var(--color-accent) 30%, var(--color-bg)); }
+  .contrib .d.l2 { background: color-mix(in oklch, var(--color-accent) 55%, var(--color-bg)); border-color: color-mix(in oklch, var(--color-accent) 55%, var(--color-bg)); }
+  .contrib .d.l3 { background: color-mix(in oklch, var(--color-accent) 80%, var(--color-bg)); border-color: color-mix(in oklch, var(--color-accent) 80%, var(--color-bg)); }
+  .contrib .d.l4 { background: var(--color-accent); border-color: var(--color-accent); box-shadow: 0 0 4px var(--accent-glow); }
   .contrib-top { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-4); flex-wrap: wrap; }
   .contrib-top .big {
     font-family: var(--font-display);
@@ -797,7 +1104,7 @@ const HOME_CSS = `
   /* projects */
   .proj-row {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: var(--sp-3);
     padding: var(--sp-3) 0;
     border-bottom: 1px dashed var(--color-border);
@@ -806,8 +1113,8 @@ const HOME_CSS = `
   }
   .proj-row:last-child { border-bottom: 0; }
   .proj-row:hover .pn { color: var(--color-accent); }
-  .pn { font-size: var(--fs-sm); color: var(--color-fg); }
-  .pd { font-size: var(--fs-xs); color: var(--color-fg-faint); margin-top: 2px; }
+  .pn { font-size: var(--fs-sm); color: var(--color-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pd { font-size: var(--fs-xs); color: var(--color-fg-faint); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pm { font-size: var(--fs-xs); color: var(--color-fg-dim); text-align: right; }
   .pm .lang-ts { color: oklch(0.72 0.14 240); }
   .pm .lang-rs { color: oklch(0.72 0.16 35); }
@@ -821,15 +1128,13 @@ const HOME_CSS = `
   }
   .poster {
     aspect-ratio: 2/3;
-    background: var(--color-bg-raised);
+    background-color: var(--color-bg-raised);
     border: 1px solid var(--color-border);
-    background-image: repeating-linear-gradient(45deg, var(--color-border) 0 4px, transparent 4px 8px);
-    position: relative;
-    display: flex; align-items: flex-end; padding: 6px;
-    font-size: 10px; color: var(--color-fg-dim); text-transform: lowercase;
+    display: block;
     cursor: pointer;
+    text-decoration: none;
   }
-  .poster:hover { border-color: var(--color-accent); }
+  .poster:hover { border-color: var(--color-accent); text-decoration: none; }
   .poster .rating {
     position: absolute; top: 4px; right: 4px;
     background: var(--color-bg); border: 1px solid var(--color-border-bright);
@@ -933,4 +1238,11 @@ const HOME_CSS = `
   .home-footer .sources { font-family: var(--font-mono); line-height: 1.8; }
   .home-footer .sources .k { color: var(--color-accent); display: inline-block; width: 100px; }
   .home-footer .sources .v { color: var(--color-fg-dim); }
+
+  /* skeletons */
+  @keyframes skel-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+  .skel-line { display: block; height: 12px; background: var(--color-bg-raised); border-radius: 2px; margin: 4px 0; animation: skel-pulse 1.4s ease-in-out infinite; }
+  .skel-line.short { width: 60%; }
+  .skel-box { background: var(--color-bg-raised); animation: skel-pulse 1.4s ease-in-out infinite; }
+  .bsky-post.skel { pointer-events: none; }
 `;

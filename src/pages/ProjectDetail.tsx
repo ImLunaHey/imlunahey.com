@@ -1,12 +1,9 @@
-import { Link, Navigate, useParams } from '@tanstack/react-router';
-import { useEffect, useRef, useState } from 'react';
-import {
-  ALL_REPOS,
-  PROJECT_COMMITS,
-  PROJECT_READMES,
-  type ReadmeBlock,
-  type Repo,
-} from '../data';
+import { Await, getRouteApi, Link, Navigate, useParams } from '@tanstack/react-router';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import type { Repo } from '../data';
+import { formatUpdated } from '../lib/format';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 const LANG_CLS: Record<string, string> = {
   typescript: 'lang-ts',
@@ -14,27 +11,43 @@ const LANG_CLS: Record<string, string> = {
   go: 'lang-go',
 };
 
+const detailRoute = getRouteApi('/_main/projects/$name');
+
+function commitRelative(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const d = Math.floor(ms / (1000 * 60 * 60 * 24));
+  if (d <= 0) return 'today';
+  if (d < 30) return `${d}d`;
+  if (d < 365) return `${Math.floor(d / 30)}mo`;
+  return `${Math.floor(d / 365)}y`;
+}
+
+const IMG_EXT = /\.(png|jpe?g|gif|svg|webp|avif|bmp|ico)(\?.*)?$/i;
+
+function stripLeadingH1(md: string): string {
+  return md.replace(/^\s*#\s+[^\n]+\n*/, '');
+}
+
+function rewriteReadmeUrl(owner: string, name: string) {
+  const blob = `https://github.com/${owner}/${name}/blob/HEAD/`;
+  const raw = `https://raw.githubusercontent.com/${owner}/${name}/HEAD/`;
+  return (url: string): string => {
+    if (!url) return url;
+    if (/^(https?:|mailto:|data:|#)/i.test(url)) return url;
+    const cleaned = url.replace(/^\.\//, '').replace(/^\/+/, '');
+    return (IMG_EXT.test(cleaned) ? raw : blob) + cleaned;
+  };
+}
+
 export default function ProjectDetailPage() {
   const params = useParams({ strict: false }) as { name?: string };
   const name = params.name;
-  const repo = name ? ALL_REPOS.find((r) => r.name === name) : undefined;
+  const { repos, readme, commits } = detailRoute.useLoaderData();
+  const repo = name ? repos.find((r) => r.name === name) : undefined;
 
   if (!repo) return <Navigate to={'/not-found' as never} replace />;
 
-  const readme: ReadmeBlock[] =
-    PROJECT_READMES[repo.name] ?? [
-      { h: 'readme' },
-      { p: 'no readme written yet. the github repo has the canonical version.' },
-    ];
-
-  // deterministic pseudo-commit-chart from name
-  const seed = [...repo.name].reduce((a, c) => a + c.charCodeAt(0), 0);
-  const bars = Array.from({ length: 24 }, (_, i) => {
-    const r = (((i * 37 + seed * 13) * 9301 + 49_297) % 233_280) / 233_280;
-    return Math.max(0.1, r);
-  });
-
-  const related = ALL_REPOS.filter((r) => r.lang === repo.lang && r.name !== repo.name).slice(0, 3);
+  const related = repos.filter((r) => r.lang === repo.lang && r.name !== repo.name).slice(0, 3);
 
   return (
     <>
@@ -59,12 +72,12 @@ export default function ProjectDetailPage() {
             <span>
               ★ <b>{repo.stars}</b>
             </span>
-            <span>
-              <b>{repo.commits}</b> commits
-            </span>
-            <span>
-              updated <b>{repo.updated}d</b> ago
-            </span>
+            {repo.commits != null ? (
+              <span>
+                <b>{repo.commits}</b> commits
+              </span>
+            ) : null}
+            <span>updated <b>{formatUpdated(repo.updated)}</b></span>
             <span className={`status-${repo.status}`} style={{ marginLeft: 'auto' }}>
               ● {repo.status}
             </span>
@@ -102,12 +115,33 @@ export default function ProjectDetailPage() {
 
         <div className="body">
           <article className="readme">
-            {readme.map((b, i) => {
-              if ('h' in b) return <h2 key={i}>{b.h}</h2>;
-              if ('p' in b) return <Paragraph key={i} text={b.p} />;
-              if ('code' in b) return <CodeBlock key={i} code={b.code} />;
-              return null;
-            })}
+            <ErrorBoundary fallback={<p className="t-faint">readme unavailable.</p>}>
+              <Await
+                promise={readme}
+                fallback={
+                  <>
+                    <div className="skel" style={{ width: '35%', height: 20, marginBottom: 12 }} />
+                    <div className="skel" style={{ width: '100%', marginBottom: 8 }} />
+                    <div className="skel" style={{ width: '95%', marginBottom: 8 }} />
+                    <div className="skel" style={{ width: '88%', marginBottom: 8 }} />
+                    <div className="skel" style={{ width: '70%' }} />
+                  </>
+                }
+              >
+                {(md) =>
+                  md ? (
+                    <Markdown remarkPlugins={[remarkGfm]} urlTransform={rewriteReadmeUrl(repo.owner, repo.name)}>
+                      {stripLeadingH1(md)}
+                    </Markdown>
+                  ) : (
+                    <>
+                      <h2>readme</h2>
+                      <p>no readme in this repo. the github page is the canonical view.</p>
+                    </>
+                  )
+                }
+              </Await>
+            </ErrorBoundary>
             {repo.writeup ? (
               <Link to={`/blog/${repo.writeup}` as never} className="writeup-callout">
                 <div className="icon">¶</div>
@@ -141,39 +175,61 @@ export default function ProjectDetailPage() {
                 <dd>
                   <span className="acc">{repo.stars}</span>
                 </dd>
-                <dt>commits</dt>
-                <dd>{repo.commits}</dd>
-                <dt>license</dt>
-                <dd className="dim">MIT</dd>
+                <dt>forks</dt>
+                <dd>{repo.forks}</dd>
+                {repo.commits != null ? (
+                  <>
+                    <dt>commits</dt>
+                    <dd>{repo.commits}</dd>
+                  </>
+                ) : null}
+                <dt>owner</dt>
+                <dd className="dim">{repo.owner}</dd>
                 <dt>updated</dt>
-                <dd className="dim">{repo.updated}d ago</dd>
+                <dd className="dim">{formatUpdated(repo.updated)}</dd>
               </dl>
             </div>
 
-            <div className="side-box activity">
-              <h3>── last 24w</h3>
-              <div className="bar-row">
-                {bars.map((v, i) => (
-                  <div key={i} className={`bar${v > 0.65 ? ' hi' : ''}`} style={{ height: `${v * 100}%` }} />
-                ))}
-              </div>
-              <div className="dim" style={{ fontSize: 10, color: 'var(--color-fg-faint)', fontFamily: 'var(--font-mono)' }}>
-                commits/week · deterministic mock
-              </div>
-            </div>
-
-            <div className="side-box">
-              <h3>── recent commits</h3>
-              <div className="commits-list">
-                {PROJECT_COMMITS.map((c) => (
-                  <div key={c.sha} className="c">
-                    <span className="sha">{c.sha}</span>
-                    <span className="msg">{c.msg}</span>
-                    <span className="when">{c.when}</span>
+            <ErrorBoundary fallback={null}>
+              <Await
+                promise={commits}
+                fallback={
+                  <div className="side-box">
+                    <h3>── recent commits</h3>
+                    <div className="commits-list">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="c">
+                          <span className="skel" style={{ width: 80, height: 10 }} />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
+                }
+              >
+                {(list) =>
+                  list.length > 0 ? (
+                    <div className="side-box">
+                      <h3>── recent commits</h3>
+                      <div className="commits-list">
+                        {list.map((c) => (
+                          <a
+                            key={c.sha}
+                            className="c"
+                            href={`https://github.com/${repo.owner}/${repo.name}/commit/${c.sha}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <span className="sha">{c.sha}</span>
+                            <span className="msg">{c.msg}</span>
+                            <span className="when">{commitRelative(c.date)}</span>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null
+                }
+              </Await>
+            </ErrorBoundary>
           </aside>
         </div>
 
@@ -190,7 +246,7 @@ export default function ProjectDetailPage() {
 
         <footer className="project-footer">
           <span>
-            src: <span className="t-accent">api.github.com/repos/imlunahey/{repo.name}</span>
+            src: <span className="t-accent">api.github.com/repos/{repo.owner}/{repo.name}</span>
           </span>
           <span>
             ←{' '}
@@ -210,84 +266,6 @@ function RelatedCard({ repo }: { repo: Repo }) {
       <div className="rc-name">{repo.name}</div>
       <div className="rc-desc">{repo.desc}</div>
     </Link>
-  );
-}
-
-function Paragraph({ text }: { text: string }) {
-  // very small inline formatter: `code` spans + [text](url) links
-  const parts: React.ReactNode[] = [];
-  const regex = /(`[^`]+`)|(\[[^\]]+\]\([^)]+\))/g;
-  let last = 0;
-  let m: RegExpExecArray | null;
-  while ((m = regex.exec(text)) !== null) {
-    if (m.index > last) parts.push(text.slice(last, m.index));
-    const match = m[0];
-    if (match.startsWith('`')) {
-      parts.push(
-        <code key={m.index} className="inline">
-          {match.slice(1, -1)}
-        </code>,
-      );
-    } else {
-      const inner = /\[([^\]]+)\]\(([^)]+)\)/.exec(match);
-      if (inner) {
-        const [, label, href] = inner;
-        const isExternal = /^https?:\/\//.test(href);
-        parts.push(
-          isExternal ? (
-            <a key={m.index} href={href} target="_blank" rel="noopener noreferrer">
-              {label}
-            </a>
-          ) : (
-            <Link key={m.index} to={href as never}>
-              {label}
-            </Link>
-          ),
-        );
-      } else {
-        parts.push(match);
-      }
-    }
-    last = m.index + match.length;
-  }
-  if (last < text.length) parts.push(text.slice(last));
-  return <p>{parts}</p>;
-}
-
-function CodeBlock({ code }: { code: string }) {
-  const ref = useRef<HTMLButtonElement | null>(null);
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!copied) return;
-    const id = window.setTimeout(() => setCopied(false), 1200);
-    return () => window.clearTimeout(id);
-  }, [copied]);
-
-  return (
-    <div className="code-wrap">
-      <div className="code-top">
-        <b>// shell</b>
-        <button
-          ref={ref}
-          type="button"
-          className={'copy' + (copied ? ' flash' : '')}
-          onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(code);
-              setCopied(true);
-            } catch {
-              // swallow
-            }
-          }}
-        >
-          {copied ? '✓ copied' : '⎘ copy'}
-        </button>
-      </div>
-      <pre>
-        <code>{code}</code>
-      </pre>
-    </div>
   );
 }
 
@@ -416,7 +394,8 @@ const CSS = `
   .activity .bar.hi { background: var(--color-accent); opacity: 1; }
 
   .commits-list { font-family: var(--font-mono); font-size: 11px; line-height: 1.6; }
-  .commits-list .c { display: flex; gap: var(--sp-2); border-bottom: 1px dashed var(--color-border); padding: 6px 0; align-items: baseline; }
+  .commits-list .c { display: flex; gap: var(--sp-2); border-bottom: 1px dashed var(--color-border); padding: 6px 0; align-items: baseline; color: inherit; text-decoration: none; }
+  .commits-list .c:hover .msg { color: var(--color-fg); }
   .commits-list .c:last-child { border-bottom: 0; }
   .commits-list .c .sha { color: var(--color-accent); flex-shrink: 0; }
   .commits-list .c .msg { color: var(--color-fg-dim); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

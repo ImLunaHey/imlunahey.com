@@ -1,5 +1,5 @@
 import { AppBskyFeedDefs, AppBskyFeedPost } from '@atcute/client/lexicons';
-import { Link, Navigate, useParams } from '@tanstack/react-router';
+import { getRouteApi, Link, Navigate, useParams } from '@tanstack/react-router';
 import { useBlogEntry } from '../hooks/use-blog-entry';
 import { useBlogEntryComments } from '../hooks/use-blog-entry-comments';
 import { useProfile } from '../hooks/use-profile';
@@ -7,7 +7,9 @@ import { useReadTime } from '../hooks/use-read-time';
 import { useViewCount } from '../hooks/use-view-count';
 import { MarkdownPreview } from '../components/MarkdownPreview';
 import { RelativeTime } from '../components/RelativeTime';
-import { BLOG, SITE } from '../data';
+import { SITE } from '../data';
+
+const entryRoute = getRouteApi('/_main/blog/$rkey');
 
 const AUTHOR_DID = 'did:plc:k6acu4chiwkixvdedcmdgmal';
 
@@ -102,6 +104,7 @@ const Entry = ({ rkey }: { rkey: string }) => {
   const { data: readTime } = useReadTime({ rkey });
   const { data: views } = useViewCount({ rkey });
   const { data: profile } = useProfile({ actor: AUTHOR_DID });
+  const { entries } = entryRoute.useLoaderData();
 
   if (blogEntryError) return <Navigate replace to={'/not-found' as never} />;
   if (blogEntryLoading) {
@@ -116,11 +119,8 @@ const Entry = ({ rkey }: { rkey: string }) => {
 
   const title = blogEntry.value.title;
   const createdAt = blogEntry.value.createdAt;
-  // match slug against static BLOG for kind + related metadata
-  const staticMatch = BLOG.find((b) => b.slug === rkey || b.title === title);
-  const kind = staticMatch?.kind ?? 'devlog';
   const dateStr = createdAt ? new Date(createdAt).toISOString().slice(0, 10) : '';
-  const related = BLOG.filter((b) => b.slug !== rkey).slice(0, 3);
+  const related = entries.filter((e) => e.rkey !== rkey).slice(0, 3);
 
   return (
     <main className="shell-post">
@@ -133,7 +133,6 @@ const Entry = ({ rkey }: { rkey: string }) => {
           <span className="dot">.</span>
         </h1>
         <div className="meta">
-          <span className={`kind-chip ${kind}`}>{kind}</span>
           {dateStr ? <span>{dateStr}</span> : null}
           {readTime?.text ? <span>{readTime.text}</span> : null}
           {views ? <span>{views} views</span> : null}
@@ -171,8 +170,8 @@ const Entry = ({ rkey }: { rkey: string }) => {
         <div className="related">
           <div className="related-head">── also reading</div>
           {related.map((r) => (
-            <Link key={r.slug} to={`/blog/${r.slug}` as never}>
-              <span className="dt">{r.date}</span>
+            <Link key={r.rkey} to={`/blog/${r.rkey}` as never}>
+              <span className="dt">{r.createdAt.slice(0, 10)}</span>
               <span>{r.title}</span>
               <span className="rt">{r.readMin}m</span>
             </Link>

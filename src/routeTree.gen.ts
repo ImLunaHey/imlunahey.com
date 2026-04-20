@@ -16,6 +16,7 @@ import { Route as MainUsesRouteImport } from './routes/_main/uses'
 import { Route as MainShowsRouteImport } from './routes/_main/shows'
 import { Route as MainShowcaseRouteImport } from './routes/_main/showcase'
 import { Route as MainReferrerCheckerRouteImport } from './routes/_main/referrer-checker'
+import { Route as MainMusicRouteImport } from './routes/_main/music'
 import { Route as MainMoviesRouteImport } from './routes/_main/movies'
 import { Route as MainInfiniteCanvasRouteImport } from './routes/_main/infinite-canvas'
 import { Route as MainGalleryRouteImport } from './routes/_main/gallery'
@@ -23,10 +24,14 @@ import { Route as MainDesignSystemRouteImport } from './routes/_main/design-syst
 import { Route as MainDesignRouteImport } from './routes/_main/design'
 import { Route as MainContactRouteImport } from './routes/_main/contact'
 import { Route as MainWhitewindIndexRouteImport } from './routes/_main/whitewind/index'
+import { Route as MainWatchingIndexRouteImport } from './routes/_main/watching/index'
 import { Route as MainProjectsIndexRouteImport } from './routes/_main/projects/index'
+import { Route as MainGamesIndexRouteImport } from './routes/_main/games/index'
 import { Route as MainBlogIndexRouteImport } from './routes/_main/blog/index'
 import { Route as MainWhitewindRkeyRouteImport } from './routes/_main/whitewind/$rkey'
+import { Route as MainWatchingRkeyRouteImport } from './routes/_main/watching/$rkey'
 import { Route as MainProjectsNameRouteImport } from './routes/_main/projects/$name'
+import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
 import { Route as MainBlueskyToolsIndexRouteImport } from './routes/_main/bluesky/tools/index'
 import { Route as MainBlueskyToolsPdfUploaderRouteImport } from './routes/_main/bluesky/tools/pdf-uploader'
@@ -70,6 +75,11 @@ const MainReferrerCheckerRoute = MainReferrerCheckerRouteImport.update({
   path: '/referrer-checker',
   getParentRoute: () => MainRoute,
 } as any)
+const MainMusicRoute = MainMusicRouteImport.update({
+  id: '/music',
+  path: '/music',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainMoviesRoute = MainMoviesRouteImport.update({
   id: '/movies',
   path: '/movies',
@@ -105,9 +115,19 @@ const MainWhitewindIndexRoute = MainWhitewindIndexRouteImport.update({
   path: '/whitewind/',
   getParentRoute: () => MainRoute,
 } as any)
+const MainWatchingIndexRoute = MainWatchingIndexRouteImport.update({
+  id: '/watching/',
+  path: '/watching/',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainProjectsIndexRoute = MainProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainGamesIndexRoute = MainGamesIndexRouteImport.update({
+  id: '/games/',
+  path: '/games/',
   getParentRoute: () => MainRoute,
 } as any)
 const MainBlogIndexRoute = MainBlogIndexRouteImport.update({
@@ -120,9 +140,19 @@ const MainWhitewindRkeyRoute = MainWhitewindRkeyRouteImport.update({
   path: '/whitewind/$rkey',
   getParentRoute: () => MainRoute,
 } as any)
+const MainWatchingRkeyRoute = MainWatchingRkeyRouteImport.update({
+  id: '/watching/$rkey',
+  path: '/watching/$rkey',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainProjectsNameRoute = MainProjectsNameRouteImport.update({
   id: '/projects/$name',
   path: '/projects/$name',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainGamesRkeyRoute = MainGamesRkeyRouteImport.update({
+  id: '/games/$rkey',
+  path: '/games/$rkey',
   getParentRoute: () => MainRoute,
 } as any)
 const MainBlogRkeyRoute = MainBlogRkeyRouteImport.update({
@@ -180,15 +210,20 @@ export interface FileRoutesByFullPath {
   '/gallery': typeof MainGalleryRoute
   '/infinite-canvas': typeof MainInfiniteCanvasRoute
   '/movies': typeof MainMoviesRoute
+  '/music': typeof MainMusicRoute
   '/referrer-checker': typeof MainReferrerCheckerRoute
   '/showcase': typeof MainShowcaseRoute
   '/shows': typeof MainShowsRoute
   '/uses': typeof MainUsesRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
+  '/games/$rkey': typeof MainGamesRkeyRoute
   '/projects/$name': typeof MainProjectsNameRoute
+  '/watching/$rkey': typeof MainWatchingRkeyRoute
   '/whitewind/$rkey': typeof MainWhitewindRkeyRoute
   '/blog/': typeof MainBlogIndexRoute
+  '/games/': typeof MainGamesIndexRoute
   '/projects/': typeof MainProjectsIndexRoute
+  '/watching/': typeof MainWatchingIndexRoute
   '/whitewind/': typeof MainWhitewindIndexRoute
   '/bluesky/tools/list-cleaner': typeof MainBlueskyToolsListCleanerRoute
   '/bluesky/tools/pdf-uploader': typeof MainBlueskyToolsPdfUploaderRoute
@@ -206,16 +241,21 @@ export interface FileRoutesByTo {
   '/gallery': typeof MainGalleryRoute
   '/infinite-canvas': typeof MainInfiniteCanvasRoute
   '/movies': typeof MainMoviesRoute
+  '/music': typeof MainMusicRoute
   '/referrer-checker': typeof MainReferrerCheckerRoute
   '/showcase': typeof MainShowcaseRoute
   '/shows': typeof MainShowsRoute
   '/uses': typeof MainUsesRoute
   '/': typeof MainIndexRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
+  '/games/$rkey': typeof MainGamesRkeyRoute
   '/projects/$name': typeof MainProjectsNameRoute
+  '/watching/$rkey': typeof MainWatchingRkeyRoute
   '/whitewind/$rkey': typeof MainWhitewindRkeyRoute
   '/blog': typeof MainBlogIndexRoute
+  '/games': typeof MainGamesIndexRoute
   '/projects': typeof MainProjectsIndexRoute
+  '/watching': typeof MainWatchingIndexRoute
   '/whitewind': typeof MainWhitewindIndexRoute
   '/bluesky/tools/list-cleaner': typeof MainBlueskyToolsListCleanerRoute
   '/bluesky/tools/pdf-uploader': typeof MainBlueskyToolsPdfUploaderRoute
@@ -235,16 +275,21 @@ export interface FileRoutesById {
   '/_main/gallery': typeof MainGalleryRoute
   '/_main/infinite-canvas': typeof MainInfiniteCanvasRoute
   '/_main/movies': typeof MainMoviesRoute
+  '/_main/music': typeof MainMusicRoute
   '/_main/referrer-checker': typeof MainReferrerCheckerRoute
   '/_main/showcase': typeof MainShowcaseRoute
   '/_main/shows': typeof MainShowsRoute
   '/_main/uses': typeof MainUsesRoute
   '/_main/': typeof MainIndexRoute
   '/_main/blog/$rkey': typeof MainBlogRkeyRoute
+  '/_main/games/$rkey': typeof MainGamesRkeyRoute
   '/_main/projects/$name': typeof MainProjectsNameRoute
+  '/_main/watching/$rkey': typeof MainWatchingRkeyRoute
   '/_main/whitewind/$rkey': typeof MainWhitewindRkeyRoute
   '/_main/blog/': typeof MainBlogIndexRoute
+  '/_main/games/': typeof MainGamesIndexRoute
   '/_main/projects/': typeof MainProjectsIndexRoute
+  '/_main/watching/': typeof MainWatchingIndexRoute
   '/_main/whitewind/': typeof MainWhitewindIndexRoute
   '/_main/bluesky/tools/list-cleaner': typeof MainBlueskyToolsListCleanerRoute
   '/_main/bluesky/tools/pdf-uploader': typeof MainBlueskyToolsPdfUploaderRoute
@@ -265,15 +310,20 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/infinite-canvas'
     | '/movies'
+    | '/music'
     | '/referrer-checker'
     | '/showcase'
     | '/shows'
     | '/uses'
     | '/blog/$rkey'
+    | '/games/$rkey'
     | '/projects/$name'
+    | '/watching/$rkey'
     | '/whitewind/$rkey'
     | '/blog/'
+    | '/games/'
     | '/projects/'
+    | '/watching/'
     | '/whitewind/'
     | '/bluesky/tools/list-cleaner'
     | '/bluesky/tools/pdf-uploader'
@@ -291,16 +341,21 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/infinite-canvas'
     | '/movies'
+    | '/music'
     | '/referrer-checker'
     | '/showcase'
     | '/shows'
     | '/uses'
     | '/'
     | '/blog/$rkey'
+    | '/games/$rkey'
     | '/projects/$name'
+    | '/watching/$rkey'
     | '/whitewind/$rkey'
     | '/blog'
+    | '/games'
     | '/projects'
+    | '/watching'
     | '/whitewind'
     | '/bluesky/tools/list-cleaner'
     | '/bluesky/tools/pdf-uploader'
@@ -319,16 +374,21 @@ export interface FileRouteTypes {
     | '/_main/gallery'
     | '/_main/infinite-canvas'
     | '/_main/movies'
+    | '/_main/music'
     | '/_main/referrer-checker'
     | '/_main/showcase'
     | '/_main/shows'
     | '/_main/uses'
     | '/_main/'
     | '/_main/blog/$rkey'
+    | '/_main/games/$rkey'
     | '/_main/projects/$name'
+    | '/_main/watching/$rkey'
     | '/_main/whitewind/$rkey'
     | '/_main/blog/'
+    | '/_main/games/'
     | '/_main/projects/'
+    | '/_main/watching/'
     | '/_main/whitewind/'
     | '/_main/bluesky/tools/list-cleaner'
     | '/_main/bluesky/tools/pdf-uploader'
@@ -395,6 +455,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainReferrerCheckerRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/music': {
+      id: '/_main/music'
+      path: '/music'
+      fullPath: '/music'
+      preLoaderRoute: typeof MainMusicRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/movies': {
       id: '/_main/movies'
       path: '/movies'
@@ -444,11 +511,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainWhitewindIndexRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/watching/': {
+      id: '/_main/watching/'
+      path: '/watching'
+      fullPath: '/watching/'
+      preLoaderRoute: typeof MainWatchingIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/projects/': {
       id: '/_main/projects/'
       path: '/projects'
       fullPath: '/projects/'
       preLoaderRoute: typeof MainProjectsIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/games/': {
+      id: '/_main/games/'
+      path: '/games'
+      fullPath: '/games/'
+      preLoaderRoute: typeof MainGamesIndexRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/blog/': {
@@ -465,11 +546,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainWhitewindRkeyRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/watching/$rkey': {
+      id: '/_main/watching/$rkey'
+      path: '/watching/$rkey'
+      fullPath: '/watching/$rkey'
+      preLoaderRoute: typeof MainWatchingRkeyRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/projects/$name': {
       id: '/_main/projects/$name'
       path: '/projects/$name'
       fullPath: '/projects/$name'
       preLoaderRoute: typeof MainProjectsNameRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/games/$rkey': {
+      id: '/_main/games/$rkey'
+      path: '/games/$rkey'
+      fullPath: '/games/$rkey'
+      preLoaderRoute: typeof MainGamesRkeyRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/blog/$rkey': {
@@ -538,16 +633,21 @@ interface MainRouteChildren {
   MainGalleryRoute: typeof MainGalleryRoute
   MainInfiniteCanvasRoute: typeof MainInfiniteCanvasRoute
   MainMoviesRoute: typeof MainMoviesRoute
+  MainMusicRoute: typeof MainMusicRoute
   MainReferrerCheckerRoute: typeof MainReferrerCheckerRoute
   MainShowcaseRoute: typeof MainShowcaseRoute
   MainShowsRoute: typeof MainShowsRoute
   MainUsesRoute: typeof MainUsesRoute
   MainIndexRoute: typeof MainIndexRoute
   MainBlogRkeyRoute: typeof MainBlogRkeyRoute
+  MainGamesRkeyRoute: typeof MainGamesRkeyRoute
   MainProjectsNameRoute: typeof MainProjectsNameRoute
+  MainWatchingRkeyRoute: typeof MainWatchingRkeyRoute
   MainWhitewindRkeyRoute: typeof MainWhitewindRkeyRoute
   MainBlogIndexRoute: typeof MainBlogIndexRoute
+  MainGamesIndexRoute: typeof MainGamesIndexRoute
   MainProjectsIndexRoute: typeof MainProjectsIndexRoute
+  MainWatchingIndexRoute: typeof MainWatchingIndexRoute
   MainWhitewindIndexRoute: typeof MainWhitewindIndexRoute
   MainBlueskyToolsListCleanerRoute: typeof MainBlueskyToolsListCleanerRoute
   MainBlueskyToolsPdfUploaderRoute: typeof MainBlueskyToolsPdfUploaderRoute
@@ -565,16 +665,21 @@ const MainRouteChildren: MainRouteChildren = {
   MainGalleryRoute: MainGalleryRoute,
   MainInfiniteCanvasRoute: MainInfiniteCanvasRoute,
   MainMoviesRoute: MainMoviesRoute,
+  MainMusicRoute: MainMusicRoute,
   MainReferrerCheckerRoute: MainReferrerCheckerRoute,
   MainShowcaseRoute: MainShowcaseRoute,
   MainShowsRoute: MainShowsRoute,
   MainUsesRoute: MainUsesRoute,
   MainIndexRoute: MainIndexRoute,
   MainBlogRkeyRoute: MainBlogRkeyRoute,
+  MainGamesRkeyRoute: MainGamesRkeyRoute,
   MainProjectsNameRoute: MainProjectsNameRoute,
+  MainWatchingRkeyRoute: MainWatchingRkeyRoute,
   MainWhitewindRkeyRoute: MainWhitewindRkeyRoute,
   MainBlogIndexRoute: MainBlogIndexRoute,
+  MainGamesIndexRoute: MainGamesIndexRoute,
   MainProjectsIndexRoute: MainProjectsIndexRoute,
+  MainWatchingIndexRoute: MainWatchingIndexRoute,
   MainWhitewindIndexRoute: MainWhitewindIndexRoute,
   MainBlueskyToolsListCleanerRoute: MainBlueskyToolsListCleanerRoute,
   MainBlueskyToolsPdfUploaderRoute: MainBlueskyToolsPdfUploaderRoute,
