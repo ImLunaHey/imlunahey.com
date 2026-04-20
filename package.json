@@ -20,7 +20,7 @@
     "@atcute/car": "^3.0.2",
     "@atcute/client": "^2.0.8",
     "@atcute/identity": "^1.1.4",
-    "@atcute/identity-resolver": "^0.1.2",
+    "@atcute/identity-resolver": "^1.2.2",
     "@atcute/whitewind": "^1.0.4",
     "@atproto/api": "^0.14.9",
     "@codemirror/lang-json": "^6.0.1",
