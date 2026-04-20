@@ -1,8 +1,16 @@
-import { getRouteApi, Link } from '@tanstack/react-router';
+import { Await, getRouteApi, Link } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { USES_META, USES_SECTIONS } from '../data';
 
 const usesRoute = getRouteApi('/_main/uses');
+
+function GithubNote({ promise, fallback }: { promise: Promise<number | null>; fallback: string }) {
+  return (
+    <Await promise={promise} fallback={fallback}>
+      {(n) => (n != null ? `${n} public repos.` : fallback)}
+    </Await>
+  );
+}
 
 export default function UsesPage() {
   const totalItems = useMemo(() => USES_SECTIONS.reduce((sum, s) => sum + s.items.length, 0), []);
@@ -90,19 +98,19 @@ export default function UsesPage() {
                     </thead>
                   ) : null}
                   <tbody>
-                    {sec.items.map((it) => {
-                      const note =
-                        it.name === 'github' && publicRepos != null
-                          ? `${publicRepos} public repos.`
-                          : (it.note ?? '');
-                      return (
-                        <tr key={it.name}>
-                          <td className="nm">{it.name}</td>
-                          <td className="tg">{it.config}</td>
-                          <td className="note">{note}</td>
-                        </tr>
-                      );
-                    })}
+                    {sec.items.map((it) => (
+                      <tr key={it.name}>
+                        <td className="nm">{it.name}</td>
+                        <td className="tg">{it.config}</td>
+                        <td className="note">
+                          {it.name === 'github' ? (
+                            <GithubNote promise={publicRepos} fallback={it.note ?? 'public repos.'} />
+                          ) : (
+                            (it.note ?? '')
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </section>

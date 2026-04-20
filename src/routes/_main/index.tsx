@@ -11,8 +11,8 @@ import { TTL } from '../../server/cache';
 
 export const Route = createFileRoute('/_main/')({
   component: HomePage,
-  loader: async () => ({
-    ...(await getAllRepos()),
+  loader: () => ({
+    repoData: getAllRepos(),
     contribs: getContributions(),
     bskyPosts: getBskyPosts(),
     lastTrack: getRecentTrack(),

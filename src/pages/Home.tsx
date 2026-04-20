@@ -19,6 +19,29 @@ const fmtMonthYear = (iso: string) => {
   return d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toLowerCase();
 };
 
+const CmdBarSkel = () => (
+  <>
+    {Array.from({ length: 4 }).map((_, i) => (
+      <span key={i}>
+        <span className="skel" style={{ display: 'inline-block', width: 60, height: 10 }} />
+      </span>
+    ))}
+  </>
+);
+
+const PinnedSkel = () => (
+  <>
+    {Array.from({ length: 4 }).map((_, i) => (
+      <div key={i} className="proj-row">
+        <div style={{ flex: 1 }}>
+          <div className="skel" style={{ width: '50%', height: 12, marginBottom: 6 }} />
+          <div className="skel" style={{ width: '80%', height: 10 }} />
+        </div>
+      </div>
+    ))}
+  </>
+);
+
 const BskySkel = () => (
   <>
     {Array.from({ length: 3 }).map((_, i) => (
@@ -91,14 +114,7 @@ const langCls: Record<string, string> = {
 };
 
 export default function HomePage() {
-  const { repos, stats, contribs, bskyPosts, lastTrack, blog, weather, watches } = homeRoute.useLoaderData();
-  const pinned = repos.filter((r) => r.pinned).slice(0, 6);
-  const latestActiveRepo = repos
-    .filter((r) => r.status === 'active')
-    .reduce<(typeof repos)[number] | undefined>(
-      (min, r) => (min === undefined || r.updated < min.updated ? r : min),
-      undefined,
-    );
+  const { repoData, contribs, bskyPosts, lastTrack, blog, weather, watches } = homeRoute.useLoaderData();
 
   return (
     <>
@@ -109,23 +125,37 @@ export default function HomePage() {
           <span>
             <span className="ok">●</span> <b>online</b>
           </span>
-          <span>
-            <b>repos</b> {stats.repos}
-          </span>
-          <span>
-            <b>stars</b> {stats.stars.toLocaleString()}
-          </span>
-          <span>
-            <b>commits</b> {stats.commits.toLocaleString()}
-          </span>
-          <span>
-            <b>langs</b> {stats.languages}
-          </span>
-          {latestActiveRepo ? (
-            <span>
-              <b>last push</b> {formatUpdated(latestActiveRepo.updated)}
-            </span>
-          ) : null}
+          <Await promise={repoData} fallback={<CmdBarSkel />}>
+            {(d) => {
+              const latest = d.repos
+                .filter((r) => r.status === 'active')
+                .reduce<(typeof d.repos)[number] | undefined>(
+                  (min, r) => (min === undefined || r.updated < min.updated ? r : min),
+                  undefined,
+                );
+              return (
+                <>
+                  <span>
+                    <b>repos</b> {d.stats.repos}
+                  </span>
+                  <span>
+                    <b>stars</b> {d.stats.stars.toLocaleString()}
+                  </span>
+                  <span>
+                    <b>commits</b> {d.stats.commits.toLocaleString()}
+                  </span>
+                  <span>
+                    <b>langs</b> {d.stats.languages}
+                  </span>
+                  {latest ? (
+                    <span>
+                      <b>last push</b> {formatUpdated(latest.updated)}
+                    </span>
+                  ) : null}
+                </>
+              );
+            }}
+          </Await>
         </div>
 
         {/* hero */}
@@ -210,17 +240,29 @@ export default function HomePage() {
                   </div>
                 </div>
                 <dl className="now-grid">
-                  {latestActiveRepo ? (
-                    <div style={{ display: 'contents' }}>
-                      <dt>// building</dt>
-                      <dd>
-                        <span className="bullet">→</span>
-                        <Link to={`/projects/${latestActiveRepo.name}` as never} className="glow-link">
-                          {latestActiveRepo.name}
-                        </Link>
-                      </dd>
-                    </div>
-                  ) : null}
+                  <ErrorBoundary fallback={null}>
+                    <Await promise={repoData} fallback={null}>
+                      {(d) => {
+                        const latest = d.repos
+                          .filter((r) => r.status === 'active')
+                          .reduce<(typeof d.repos)[number] | undefined>(
+                            (min, r) => (min === undefined || r.updated < min.updated ? r : min),
+                            undefined,
+                          );
+                        return latest ? (
+                          <div style={{ display: 'contents' }}>
+                            <dt>// building</dt>
+                            <dd>
+                              <span className="bullet">→</span>
+                              <Link to={`/projects/${latest.name}` as never} className="glow-link">
+                                {latest.name}
+                              </Link>
+                            </dd>
+                          </div>
+                        ) : null;
+                      }}
+                    </Await>
+                  </ErrorBoundary>
                   <ErrorBoundary fallback={null}>
                     <Await promise={blog} fallback={null}>
                       {(b) =>
@@ -270,15 +312,27 @@ export default function HomePage() {
                       }
                     </Await>
                   </ErrorBoundary>
-                  {latestActiveRepo ? (
-                    <div style={{ display: 'contents' }}>
-                      <dt>// last commit</dt>
-                      <dd>
-                        <span className="bullet">→</span>
-                        {`${latestActiveRepo.name} · ${formatUpdated(latestActiveRepo.updated)}`}
-                      </dd>
-                    </div>
-                  ) : null}
+                  <ErrorBoundary fallback={null}>
+                    <Await promise={repoData} fallback={null}>
+                      {(d) => {
+                        const latest = d.repos
+                          .filter((r) => r.status === 'active')
+                          .reduce<(typeof d.repos)[number] | undefined>(
+                            (min, r) => (min === undefined || r.updated < min.updated ? r : min),
+                            undefined,
+                          );
+                        return latest ? (
+                          <div style={{ display: 'contents' }}>
+                            <dt>// last commit</dt>
+                            <dd>
+                              <span className="bullet">→</span>
+                              {`${latest.name} · ${formatUpdated(latest.updated)}`}
+                            </dd>
+                          </div>
+                        ) : null;
+                      }}
+                    </Await>
+                  </ErrorBoundary>
                 </dl>
               </div>
             </div>
@@ -598,20 +652,31 @@ export default function HomePage() {
               <span className="src-tag">// users/imlunahey/repos</span>
             </div>
             <div className="panel-body tight">
-              {pinned.map((r) => (
-                <div key={`${r.owner}/${r.name}`} className="proj-row">
-                  <div>
-                    <div className="pn">{r.name}</div>
-                    <div className="pd">// {r.desc}</div>
-                  </div>
-                  <div className="pm">
-                    <div>
-                      <span className={langCls[r.lang] || ''}>●</span> {r.lang}
-                    </div>
-                    <div>★ {r.stars}</div>
-                  </div>
-                </div>
-              ))}
+              <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>projects unavailable.</div>}>
+                <Await promise={repoData} fallback={<PinnedSkel />}>
+                  {(d) => {
+                    const pinned = d.repos.filter((r) => r.pinned).slice(0, 6);
+                    return (
+                      <>
+                        {pinned.map((r) => (
+                          <div key={`${r.owner}/${r.name}`} className="proj-row">
+                            <div>
+                              <div className="pn">{r.name}</div>
+                              <div className="pd">// {r.desc}</div>
+                            </div>
+                            <div className="pm">
+                              <div>
+                                <span className={langCls[r.lang] || ''}>●</span> {r.lang}
+                              </div>
+                              <div>★ {r.stars}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    );
+                  }}
+                </Await>
+              </ErrorBoundary>
             </div>
           </div>
 

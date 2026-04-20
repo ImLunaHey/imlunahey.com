@@ -1,7 +1,8 @@
-import { getRouteApi, Link, useNavigate } from '@tanstack/react-router';
+import { Await, getRouteApi, Link, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
 import type { Repo } from '../data';
 import { formatUpdated } from '../lib/format';
+import type { ProjectStats } from '../server/repos';
 
 type Filter = string;
 type SortKey = 'name' | 'lang' | 'stars' | 'forks' | 'commits' | 'updated' | 'status';
@@ -34,30 +35,11 @@ const DEFAULT_DIR: Record<SortKey, 1 | -1> = {
 const projectsRoute = getRouteApi('/_main/projects/');
 
 export default function ProjectsPage() {
-  const navigate = useNavigate();
-  const { repos, stats } = projectsRoute.useLoaderData();
-  const pinned = useMemo(() => repos.filter((r) => r.pinned), [repos]);
+  const { repoData } = projectsRoute.useLoaderData();
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('updated');
   const [sortDir, setSortDir] = useState<1 | -1>(DEFAULT_DIR.updated);
-
-  const rows = useMemo(() => {
-    const q = search.toLowerCase();
-    const filtered = repos.filter((r) => {
-      if (q && !r.name.includes(q)) return false;
-      if (filter === 'all') return true;
-      if (filter === 'active' || filter === 'archived' || filter === 'wip') return r.status === filter;
-      return r.lang === filter;
-    });
-    const sorted = [...filtered].sort((a, b) => {
-      const av = a[sortKey];
-      const bv = b[sortKey];
-      if (typeof av === 'string' && typeof bv === 'string') return sortDir * av.localeCompare(bv);
-      return sortDir * (((av as number | null) ?? 0) - ((bv as number | null) ?? 0));
-    });
-    return sorted;
-  }, [repos, filter, search, sortKey, sortDir]);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -83,52 +65,14 @@ export default function ProjectsPage() {
             open source, experiments, abandoned drafts. some live in production, most live in my recent-folder. filter,
             sort, click to see install commands.
           </p>
-          <div className="counts">
-            <div>
-              repos
-              <b>{stats.repos}</b>
-            </div>
-            <div>
-              stars
-              <b>{stats.stars.toLocaleString()}</b>
-            </div>
-            <div>
-              forks
-              <b>{stats.forks.toLocaleString()}</b>
-            </div>
-            <div>
-              commits
-              <b>{stats.commits.toLocaleString()}</b>
-            </div>
-            <div>
-              active
-              <b>{stats.active}</b>
-            </div>
-            <div>
-              languages
-              <b>{stats.languages}</b>
-            </div>
-          </div>
+          <Await promise={repoData} fallback={<CountsSkel />}>
+            {(d) => <Counts stats={d.stats} />}
+          </Await>
         </header>
 
-        {pinned.length > 0 ? (
-          <>
-            <div className="section-hd">
-              <h2>
-                <span className="num">01 //</span>pinned.
-              </h2>
-              <span className="meta">
-                {pinned.length} of {stats.repos} · hand-picked
-              </span>
-            </div>
-
-            <section className="pinned">
-              {pinned.slice(0, 6).map((r) => (
-                <PinnedCard key={`${r.owner}/${r.name}`} repo={r} />
-              ))}
-            </section>
-          </>
-        ) : null}
+        <Await promise={repoData} fallback={<PinnedSkel />}>
+          {(d) => <PinnedSection repos={d.repos} stats={d.stats} />}
+        </Await>
 
         <div className="section-hd">
           <h2>
@@ -158,64 +102,18 @@ export default function ProjectsPage() {
           />
         </div>
 
-        <table className="repo-table">
-          <thead>
-            <tr>
-              {(
-                [
-                  ['name', 'repo'],
-                  ['lang', 'lang'],
-                  ['stars', 'stars'],
-                  ['forks', 'forks'],
-                  ['commits', 'commits'],
-                  ['updated', 'updated'],
-                  ['status', 'status'],
-                ] as const
-              ).map(([key, label]) => (
-                <th key={key} onClick={() => toggleSort(key)}>
-                  {label}
-                  {sortKey === key ? <span className="arr"> {sortDir > 0 ? '▲' : '▼'}</span> : null}
-                </th>
-              ))}
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr
-                key={`${r.owner}/${r.name}`}
-                onClick={() => navigate({ to: `/projects/${r.name}` as never })}
-              >
-                <td className="nm">
-                  <div className="n" title={r.name}>{r.name}</div>
-                  <div className="desc" title={r.desc}>// {r.desc}</div>
-                </td>
-                <td>
-                  <span className={LANG_CLS[r.lang] || ''}>●</span> <span className="dim">{r.lang}</span>
-                </td>
-                <td>{r.stars}</td>
-                <td className="dim">{r.forks}</td>
-                <td className="dim">{r.commits ?? '—'}</td>
-                <td className="dim">{formatUpdated(r.updated)}</td>
-                <td>
-                  <span className={'status-' + r.status}>● {r.status}</span>
-                </td>
-                <td className="actions" onClick={(e) => e.stopPropagation()}>
-                  {r.launch ? (
-                    <a href={r.launch} target="_blank" rel="noopener noreferrer" className="act primary" title="launch">
-                      ↗
-                    </a>
-                  ) : null}
-                  {r.source ? (
-                    <a href={r.source} target="_blank" rel="noopener noreferrer" className="act" title="source">
-                      ◤◥
-                    </a>
-                  ) : null}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Await promise={repoData} fallback={<TableSkel />}>
+          {(d) => (
+            <RepoTable
+              repos={d.repos}
+              filter={filter}
+              search={search}
+              sortKey={sortKey}
+              sortDir={sortDir}
+              toggleSort={toggleSort}
+            />
+          )}
+        </Await>
 
         <footer className="projects-footer">
           <span>
@@ -224,6 +122,206 @@ export default function ProjectsPage() {
         </footer>
       </main>
     </>
+  );
+}
+
+function Counts({ stats }: { stats: ProjectStats }) {
+  return (
+    <div className="counts">
+      <div>
+        repos<b>{stats.repos}</b>
+      </div>
+      <div>
+        stars<b>{stats.stars.toLocaleString()}</b>
+      </div>
+      <div>
+        forks<b>{stats.forks.toLocaleString()}</b>
+      </div>
+      <div>
+        commits<b>{stats.commits.toLocaleString()}</b>
+      </div>
+      <div>
+        active<b>{stats.active}</b>
+      </div>
+      <div>
+        languages<b>{stats.languages}</b>
+      </div>
+    </div>
+  );
+}
+
+function CountsSkel() {
+  return (
+    <div className="counts">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i}>
+          <span className="skel" style={{ display: 'inline-block', width: 60, height: 10 }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PinnedSection({ repos, stats }: { repos: Repo[]; stats: ProjectStats }) {
+  const pinned = useMemo(() => repos.filter((r) => r.pinned), [repos]);
+  if (pinned.length === 0) return null;
+  return (
+    <>
+      <div className="section-hd">
+        <h2>
+          <span className="num">01 //</span>pinned.
+        </h2>
+        <span className="meta">
+          {pinned.length} of {stats.repos} · hand-picked
+        </span>
+      </div>
+      <section className="pinned">
+        {pinned.slice(0, 6).map((r) => (
+          <PinnedCard key={`${r.owner}/${r.name}`} repo={r} />
+        ))}
+      </section>
+    </>
+  );
+}
+
+function PinnedSkel() {
+  return (
+    <>
+      <div className="section-hd">
+        <h2>
+          <span className="num">01 //</span>pinned.
+        </h2>
+        <span className="meta"><span className="skel" style={{ display: 'inline-block', width: 120, height: 10 }} /></span>
+      </div>
+      <section className="pinned">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="pin-card">
+            <div className="skel" style={{ width: '60%', height: 14, marginBottom: 8 }} />
+            <div className="skel" style={{ width: '80%', height: 10, marginBottom: 6 }} />
+            <div className="skel" style={{ width: '100%', height: 10 }} />
+          </div>
+        ))}
+      </section>
+    </>
+  );
+}
+
+function RepoTable({
+  repos,
+  filter,
+  search,
+  sortKey,
+  sortDir,
+  toggleSort,
+}: {
+  repos: Repo[];
+  filter: Filter;
+  search: string;
+  sortKey: SortKey;
+  sortDir: 1 | -1;
+  toggleSort: (k: SortKey) => void;
+}) {
+  const navigate = useNavigate();
+  const rows = useMemo(() => {
+    const q = search.toLowerCase();
+    const filtered = repos.filter((r) => {
+      if (q && !r.name.includes(q)) return false;
+      if (filter === 'all') return true;
+      if (filter === 'active' || filter === 'archived' || filter === 'wip') return r.status === filter;
+      return r.lang === filter;
+    });
+    const sorted = [...filtered].sort((a, b) => {
+      const av = a[sortKey];
+      const bv = b[sortKey];
+      if (typeof av === 'string' && typeof bv === 'string') return sortDir * av.localeCompare(bv);
+      return sortDir * (((av as number | null) ?? 0) - ((bv as number | null) ?? 0));
+    });
+    return sorted;
+  }, [repos, filter, search, sortKey, sortDir]);
+
+  return (
+    <table className="repo-table">
+      <thead>
+        <tr>
+          {(
+            [
+              ['name', 'repo'],
+              ['lang', 'lang'],
+              ['stars', 'stars'],
+              ['forks', 'forks'],
+              ['commits', 'commits'],
+              ['updated', 'updated'],
+              ['status', 'status'],
+            ] as const
+          ).map(([key, label]) => (
+            <th key={key} onClick={() => toggleSort(key)}>
+              {label}
+              {sortKey === key ? <span className="arr"> {sortDir > 0 ? '▲' : '▼'}</span> : null}
+            </th>
+          ))}
+          <th />
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr
+            key={`${r.owner}/${r.name}`}
+            onClick={() => navigate({ to: `/projects/${r.name}` as never })}
+          >
+            <td className="nm">
+              <div className="n" title={r.name}>{r.name}</div>
+              <div className="desc" title={r.desc}>// {r.desc}</div>
+            </td>
+            <td>
+              <span className={LANG_CLS[r.lang] || ''}>●</span> <span className="dim">{r.lang}</span>
+            </td>
+            <td>{r.stars}</td>
+            <td className="dim">{r.forks}</td>
+            <td className="dim">{r.commits ?? '—'}</td>
+            <td className="dim">{formatUpdated(r.updated)}</td>
+            <td>
+              <span className={'status-' + r.status}>● {r.status}</span>
+            </td>
+            <td className="actions" onClick={(e) => e.stopPropagation()}>
+              {r.launch ? (
+                <a href={r.launch} target="_blank" rel="noopener noreferrer" className="act primary" title="launch">
+                  ↗
+                </a>
+              ) : null}
+              {r.source ? (
+                <a href={r.source} target="_blank" rel="noopener noreferrer" className="act" title="source">
+                  ◤◥
+                </a>
+              ) : null}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function TableSkel() {
+  return (
+    <table className="repo-table">
+      <tbody>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <tr key={i}>
+            <td className="nm">
+              <div className="skel" style={{ width: '40%', height: 12, marginBottom: 4 }} />
+              <div className="skel" style={{ width: '70%', height: 10 }} />
+            </td>
+            <td><div className="skel" style={{ width: 60, height: 10 }} /></td>
+            <td><div className="skel" style={{ width: 30, height: 10 }} /></td>
+            <td><div className="skel" style={{ width: 30, height: 10 }} /></td>
+            <td><div className="skel" style={{ width: 40, height: 10 }} /></td>
+            <td><div className="skel" style={{ width: 60, height: 10 }} /></td>
+            <td><div className="skel" style={{ width: 60, height: 10 }} /></td>
+            <td />
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 

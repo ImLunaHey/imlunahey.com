@@ -23,6 +23,6 @@ const getPublicRepoCount = createServerFn({ method: 'GET' }).handler((): Promise
 
 export const Route = createFileRoute('/_main/uses')({
   component: UsesPage,
-  loader: async () => ({ publicRepos: await getPublicRepoCount() }),
+  loader: () => ({ publicRepos: getPublicRepoCount() }),
   staleTime: TTL.medium,
 });
