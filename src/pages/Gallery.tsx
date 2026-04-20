@@ -1,6 +1,6 @@
-import { getRouteApi, Link } from '@tanstack/react-router';
+import { Await, getRouteApi, Link } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { GalleryItem, GalleryKind } from '../server/gallery';
+import type { GalleryData, GalleryItem, GalleryKind } from '../server/gallery';
 
 type Filter = 'all' | GalleryKind;
 
@@ -26,11 +26,122 @@ function fmtDate(iso: string): string {
   return iso.slice(0, 10);
 }
 
+type LbState = { publicUrl: string; list: GalleryItem[]; index: number };
+
 export default function GalleryPage() {
-  const { status, publicUrl, items, generatedAt } = galleryRoute.useLoaderData();
+  const { gallery } = galleryRoute.useLoaderData();
+  const [lb, setLb] = useState<LbState | null>(null);
+
+  useEffect(() => {
+    if (!lb) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLb(null);
+      if (e.key === 'ArrowRight')
+        setLb((prev) => (prev ? { ...prev, index: (prev.index + 1) % prev.list.length } : prev));
+      if (e.key === 'ArrowLeft')
+        setLb((prev) => (prev ? { ...prev, index: (prev.index - 1 + prev.list.length) % prev.list.length } : prev));
+      if (e.key.toLowerCase() === 'r')
+        setLb((prev) => (prev ? { ...prev, index: Math.floor(Math.random() * prev.list.length) } : prev));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lb]);
+
+  return (
+    <>
+      <style>{CSS}</style>
+      <main className="shell-gallery">
+        <header className="page-hd">
+          <div>
+            <div className="label" style={{ marginBottom: 8 }}>
+              ~/gallery
+            </div>
+            <h1>
+              gallery<span className="dot">.</span>
+            </h1>
+            <p className="sub">
+              photos and midjourney sessions. click any tile for the full image; keyboard nav works in the lightbox.
+            </p>
+          </div>
+          <Await promise={gallery} fallback={<CountsSkel />}>
+            {(d) => <Counts data={d} />}
+          </Await>
+        </header>
+
+        <Await promise={gallery} fallback={<BodySkel />}>
+          {(d) => <Body data={d} openLb={setLb} />}
+        </Await>
+
+        <footer className="gallery-footer">
+          <span>
+            src: <span className="t-accent">r2://imlunahey-gallery/manifest.json</span>
+          </span>
+          <span>
+            ←{' '}
+            <Link to="/" className="t-accent">
+              home
+            </Link>
+          </span>
+        </footer>
+      </main>
+
+      {lb ? (
+        <Lightbox
+          publicUrl={lb.publicUrl}
+          list={lb.list}
+          index={lb.index}
+          onClose={() => setLb(null)}
+          onIndex={(i) => setLb({ ...lb, index: i })}
+        />
+      ) : null}
+    </>
+  );
+}
+
+function Counts({ data }: { data: GalleryData }) {
+  const counts = useMemo(() => {
+    let mj = 0;
+    let ph = 0;
+    for (const it of data.items) {
+      if (it.kind === 'mj') mj++;
+      else if (it.kind === 'photo') ph++;
+    }
+    return { all: data.items.length, mj, photo: ph };
+  }, [data.items]);
+  return (
+    <div className="counts">
+      <div>
+        total · <b>{counts.all.toLocaleString()}</b>
+      </div>
+      <div>
+        midjourney · <b>{counts.mj.toLocaleString()}</b>
+      </div>
+      <div>
+        photos · <b>{counts.photo}</b>
+      </div>
+      <div>
+        updated · <b>{data.generatedAt ? fmtDate(data.generatedAt) : '—'}</b>
+      </div>
+    </div>
+  );
+}
+
+function CountsSkel() {
+  return (
+    <div className="counts">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i}>
+          <span className="skel" style={{ display: 'inline-block', width: 100, height: 10 }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Body({ data, openLb }: { data: GalleryData; openLb: (s: LbState) => void }) {
+  const { status, publicUrl, items } = data;
   const [filter, setFilter] = useState<Filter>('all');
   const [series, setSeries] = useState<string | null>(null);
-  const [lb, setLb] = useState<{ list: GalleryItem[]; index: number } | null>(null);
 
   const allSeries = useMemo(() => {
     const s = new Set<string>();
@@ -56,160 +167,97 @@ export default function GalleryPage() {
     return { all: items.length, mj, photo: ph };
   }, [items]);
 
-  useEffect(() => {
-    if (!lb) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLb(null);
-      if (e.key === 'ArrowRight')
-        setLb((prev) => (prev ? { ...prev, index: (prev.index + 1) % prev.list.length } : prev));
-      if (e.key === 'ArrowLeft')
-        setLb((prev) => (prev ? { ...prev, index: (prev.index - 1 + prev.list.length) % prev.list.length } : prev));
-      if (e.key.toLowerCase() === 'r')
-        setLb((prev) => (prev ? { ...prev, index: Math.floor(Math.random() * prev.list.length) } : prev));
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [lb]);
+  if (status !== 'ready' || items.length === 0) return <EmptyState status={status} />;
 
   const openTile = (target: GalleryItem) => {
     const idx = filtered.findIndex((x) => x.key === target.key);
-    setLb({ list: filtered, index: Math.max(0, idx) });
+    openLb({ publicUrl, list: filtered, index: Math.max(0, idx) });
   };
-
   const surpriseMe = () => {
     if (filtered.length === 0) return;
-    setLb({ list: filtered, index: Math.floor(Math.random() * filtered.length) });
+    openLb({ publicUrl, list: filtered, index: Math.floor(Math.random() * filtered.length) });
   };
 
   return (
     <>
-      <style>{CSS}</style>
-      <main className="shell-gallery">
-        <header className="page-hd">
-          <div>
-            <div className="label" style={{ marginBottom: 8 }}>
-              ~/gallery
-            </div>
-            <h1>
-              gallery<span className="dot">.</span>
-            </h1>
-            <p className="sub">
-              photos and midjourney sessions. click any tile for the full image; keyboard nav works in the lightbox.
-            </p>
-          </div>
-          <div className="counts">
-            <div>
-              total · <b>{counts.all.toLocaleString()}</b>
-            </div>
-            <div>
-              midjourney · <b>{counts.mj.toLocaleString()}</b>
-            </div>
-            <div>
-              photos · <b>{counts.photo}</b>
-            </div>
-            <div>
-              updated · <b>{generatedAt ? fmtDate(generatedAt) : '—'}</b>
-            </div>
-          </div>
-        </header>
+      <div className="gal-bar">
+        <div className="seg">
+          {(['all', 'mj', 'photo'] as const).map((m) => (
+            <button
+              key={m}
+              className={filter === m ? 'on' : ''}
+              onClick={() => {
+                setFilter(m);
+                setSeries(null);
+              }}
+              type="button"
+            >
+              {m === 'all' ? 'all' : m === 'mj' ? 'midjourney' : 'photos'}
+              <span className="n">{counts[m].toLocaleString()}</span>
+            </button>
+          ))}
+        </div>
+        {filter !== 'photo' && allSeries.length > 0 ? (
+          <select
+            className="series-picker"
+            value={series ?? ''}
+            onChange={(e) => setSeries(e.target.value || null)}
+          >
+            <option value="">all series</option>
+            {allSeries.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        ) : null}
+        <span className="view">
+          showing <b>{filtered.length.toLocaleString()}</b> of {items.length.toLocaleString()}
+        </span>
+        <div className="spacer" />
+        <button className="surprise" type="button" onClick={surpriseMe}>
+          ⚄ surprise me
+        </button>
+      </div>
 
-        {status !== 'ready' || items.length === 0 ? (
-          <EmptyState status={status} />
-        ) : (
-          <>
-            <div className="gal-bar">
-              <div className="seg">
-                {(['all', 'mj', 'photo'] as const).map((m) => (
-                  <button
-                    key={m}
-                    className={filter === m ? 'on' : ''}
-                    onClick={() => {
-                      setFilter(m);
-                      setSeries(null);
-                    }}
-                    type="button"
-                  >
-                    {m === 'all' ? 'all' : m === 'mj' ? 'midjourney' : 'photos'}
-                    <span className="n">{counts[m].toLocaleString()}</span>
-                  </button>
-                ))}
-              </div>
-              {filter !== 'photo' && allSeries.length > 0 ? (
-                <select
-                  className="series-picker"
-                  value={series ?? ''}
-                  onChange={(e) => setSeries(e.target.value || null)}
-                >
-                  <option value="">all series</option>
-                  {allSeries.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              ) : null}
-              <span className="view">
-                showing <b>{filtered.length.toLocaleString()}</b> of {items.length.toLocaleString()}
-              </span>
-              <div className="spacer" />
-              <button className="surprise" type="button" onClick={surpriseMe}>
-                ⚄ surprise me
-              </button>
-            </div>
+      <div className="grid">
+        {filtered.slice(0, 200).map((it) => (
+          <button
+            key={it.key}
+            type="button"
+            className="tile"
+            onClick={() => openTile(it)}
+            aria-label={it.prompt ?? it.key}
+          >
+            <img
+              src={thumbUrl(publicUrl, it.key, 400)}
+              width={it.w}
+              height={it.h}
+              loading="lazy"
+              alt={it.prompt ?? ''}
+            />
+            <span className={`badge ${it.kind}`}>{it.kind === 'mj' ? 'mj' : '📷'}</span>
+            {it.prompt ? <div className="prompt">{truncate(it.prompt, 80)}</div> : null}
+          </button>
+        ))}
+      </div>
 
-            <div className="grid">
-              {filtered.slice(0, 200).map((it) => (
-                <button
-                  key={it.key}
-                  type="button"
-                  className="tile"
-                  onClick={() => openTile(it)}
-                  aria-label={it.prompt ?? it.key}
-                >
-                  <img
-                    src={thumbUrl(publicUrl, it.key, 400)}
-                    width={it.w}
-                    height={it.h}
-                    loading="lazy"
-                    alt={it.prompt ?? ''}
-                  />
-                  <span className={`badge ${it.kind}`}>{it.kind === 'mj' ? 'mj' : '📷'}</span>
-                  {it.prompt ? <div className="prompt">{truncate(it.prompt, 80)}</div> : null}
-                </button>
-              ))}
-            </div>
-
-            {filtered.length > 200 ? (
-              <div className="more-hint">
-                rendering first 200 · virtualization coming for larger sets
-              </div>
-            ) : null}
-          </>
-        )}
-
-        <footer className="gallery-footer">
-          <span>
-            src: <span className="t-accent">r2://imlunahey-gallery/manifest.json</span>
-          </span>
-          <span>
-            ←{' '}
-            <Link to="/" className="t-accent">
-              home
-            </Link>
-          </span>
-        </footer>
-      </main>
-
-      {lb ? (
-        <Lightbox
-          publicUrl={publicUrl}
-          list={lb.list}
-          index={lb.index}
-          onClose={() => setLb(null)}
-          onIndex={(i) => setLb({ ...lb, index: i })}
-        />
+      {filtered.length > 200 ? (
+        <div className="more-hint">
+          rendering first 200 · virtualization coming for larger sets
+        </div>
       ) : null}
     </>
+  );
+}
+
+function BodySkel() {
+  return (
+    <div className="grid" style={{ marginTop: 'var(--sp-5)' }}>
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div key={i} className="tile skel" />
+      ))}
+    </div>
   );
 }
 
@@ -385,6 +433,7 @@ const CSS = `
     overflow: hidden;
     padding: 0;
   }
+  .tile.skel { cursor: default; }
   .tile:hover { border-color: var(--color-accent-dim); }
   .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .tile .badge {

@@ -76,7 +76,16 @@ async function fetchPinned(account: string): Promise<string[]> {
 type CountsNode = {
   name: string;
   owner: { login: string };
-  defaultBranchRef: { target: { history: { totalCount: number } } | null } | null;
+  defaultBranchRef: {
+    target:
+      | {
+          history: {
+            totalCount: number;
+            nodes: Array<{ committedDate: string }>;
+          };
+        }
+      | null;
+  } | null;
 };
 type CountsPage = {
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
@@ -87,9 +96,11 @@ type CountsResp = {
   errors?: Array<{ message: string }>;
 };
 
-async function fetchCommitCounts(account: string): Promise<Map<string, number>> {
+export type RepoMeta = { count: number; lastCommitAt: string | null };
+
+async function fetchCommitCounts(account: string): Promise<Map<string, RepoMeta>> {
   if (!process.env.GITHUB_TOKEN) return new Map();
-  const out = new Map<string, number>();
+  const out = new Map<string, RepoMeta>();
   let cursor: string | null = null;
   for (let p = 0; p < 10; p++) {
     const query = `query($login: String!, $cursor: String) {
@@ -100,7 +111,7 @@ async function fetchCommitCounts(account: string): Promise<Map<string, number>> 
             nodes {
               name
               owner { login }
-              defaultBranchRef { target { ... on Commit { history(first: 1) { totalCount } } } }
+              defaultBranchRef { target { ... on Commit { history(first: 1) { totalCount nodes { committedDate } } } } }
             }
           }
         }
@@ -110,7 +121,7 @@ async function fetchCommitCounts(account: string): Promise<Map<string, number>> 
             nodes {
               name
               owner { login }
-              defaultBranchRef { target { ... on Commit { history(first: 1) { totalCount } } } }
+              defaultBranchRef { target { ... on Commit { history(first: 1) { totalCount nodes { committedDate } } } } }
             }
           }
         }
@@ -130,8 +141,10 @@ async function fetchCommitCounts(account: string): Promise<Map<string, number>> 
     const page = data?.data?.repositoryOwner?.repositories;
     if (!page) break;
     for (const n of page.nodes) {
-      const count = n.defaultBranchRef?.target?.history?.totalCount;
-      if (typeof count === 'number') out.set(`${n.owner.login}/${n.name}`, count);
+      const hist = n.defaultBranchRef?.target?.history;
+      if (!hist) continue;
+      const lastCommitAt = hist.nodes[0]?.committedDate ?? null;
+      out.set(`${n.owner.login}/${n.name}`, { count: hist.totalCount, lastCommitAt });
     }
     if (!page.pageInfo.hasNextPage) break;
     cursor = page.pageInfo.endCursor;
@@ -139,10 +152,12 @@ async function fetchCommitCounts(account: string): Promise<Map<string, number>> 
   return out;
 }
 
-function normalize(api: ApiRepo, pinned: Set<string>, commits: Map<string, number>): Repo {
+function normalize(api: ApiRepo, pinned: Set<string>, commits: Map<string, RepoMeta>): Repo {
   const now = Date.now();
-  const lastCommit = new Date(api.pushed_at || api.updated_at).getTime();
   const key = `${api.owner.login}/${api.name}`;
+  const meta = commits.get(key);
+  const lastCommitIso = meta?.lastCommitAt ?? api.pushed_at ?? api.updated_at;
+  const lastCommit = new Date(lastCommitIso).getTime();
   return {
     owner: api.owner.login,
     name: api.name,
@@ -150,7 +165,7 @@ function normalize(api: ApiRepo, pinned: Set<string>, commits: Map<string, numbe
     lang: (api.language ?? 'unknown').toLowerCase(),
     stars: api.stargazers_count,
     forks: api.forks_count,
-    commits: commits.get(key) ?? null,
+    commits: meta?.count ?? null,
     updated: Math.max(0, Math.floor((now - lastCommit) / (1000 * 60 * 60 * 24))),
     status: api.archived ? 'archived' : 'active',
     source: api.html_url,
@@ -180,7 +195,7 @@ export const getAllRepos = createServerFn({ method: 'GET' }).handler((): Promise
 
     const allApi: ApiRepo[] = [];
     const pinnedSet = new Set<string>();
-    const commitCounts = new Map<string, number>();
+    const commitCounts = new Map<string, RepoMeta>();
     for (const r of repoResults) {
       if (r.status === 'fulfilled') allApi.push(...r.value);
     }

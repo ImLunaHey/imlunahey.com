@@ -658,11 +658,15 @@ export default function HomePage() {
                     const recent = [...d.repos]
                       .filter((r) => r.status === 'active')
                       .sort((a, b) => a.updated - b.updated)
-                      .slice(0, 6);
+                      .slice(0, 12);
                     return (
                       <>
                         {recent.map((r) => (
-                          <div key={`${r.owner}/${r.name}`} className="proj-row">
+                          <Link
+                            key={`${r.owner}/${r.name}`}
+                            to={`/projects/${r.name}` as never}
+                            className="proj-row"
+                          >
                             <div>
                               <div className="pn">{r.name}</div>
                               <div className="pd">// {r.desc}</div>
@@ -673,7 +677,7 @@ export default function HomePage() {
                               </div>
                               <div>★ {r.stars}</div>
                             </div>
-                          </div>
+                          </Link>
                         ))}
                       </>
                     );
@@ -1178,8 +1182,11 @@ const HOME_CSS = `
     border-bottom: 1px dashed var(--color-border);
     align-items: baseline;
     cursor: pointer;
+    color: inherit;
+    text-decoration: none;
   }
   .proj-row:last-child { border-bottom: 0; }
+  .proj-row:hover { text-decoration: none; }
   .proj-row:hover .pn { color: var(--color-accent); }
   .pn { font-size: var(--fs-sm); color: var(--color-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pd { font-size: var(--fs-xs); color: var(--color-fg-faint); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

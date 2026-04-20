@@ -5,6 +5,6 @@ import { TTL } from '../../../server/cache';
 
 export const Route = createFileRoute('/_main/blog/$rkey')({
   component: BlogEntryPage,
-  loader: () => getBlogEntries(),
+  loader: () => ({ blog: getBlogEntries() }),
   staleTime: TTL.short,
 });

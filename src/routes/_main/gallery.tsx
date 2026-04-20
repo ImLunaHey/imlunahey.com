@@ -5,6 +5,6 @@ import { TTL } from '../../server/cache';
 
 export const Route = createFileRoute('/_main/gallery')({
   component: GalleryPage,
-  loader: () => getGallery(),
+  loader: () => ({ gallery: getGallery() }),
   staleTime: TTL.medium,
 });
