@@ -53,7 +53,7 @@ function normalizeTrack(
 }
 
 export const getRecentTrack = createServerFn({ method: 'GET' }).handler((): Promise<LastFmTrack | null> =>
-  cached('lastfm:recent', TTL.short, async () => {
+  cached('lastfm:recent', TTL.live, async () => {
     const key = process.env.LASTFM_API_KEY;
     if (!key) return null;
     const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${LASTFM_USER}&api_key=${key}&format=json&limit=1&extended=1`;

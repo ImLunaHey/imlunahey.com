@@ -9,43 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as StudioRouteImport } from './routes/studio'
 import { Route as MainRouteImport } from './routes/_main'
 import { Route as MainIndexRouteImport } from './routes/_main/index'
 import { Route as MainUsesRouteImport } from './routes/_main/uses'
-import { Route as MainShowsRouteImport } from './routes/_main/shows'
-import { Route as MainShowcaseRouteImport } from './routes/_main/showcase'
-import { Route as MainReferrerCheckerRouteImport } from './routes/_main/referrer-checker'
 import { Route as MainMusicRouteImport } from './routes/_main/music'
-import { Route as MainMoviesRouteImport } from './routes/_main/movies'
-import { Route as MainInfiniteCanvasRouteImport } from './routes/_main/infinite-canvas'
 import { Route as MainGalleryRouteImport } from './routes/_main/gallery'
 import { Route as MainDesignSystemRouteImport } from './routes/_main/design-system'
-import { Route as MainDesignRouteImport } from './routes/_main/design'
-import { Route as MainContactRouteImport } from './routes/_main/contact'
-import { Route as MainWhitewindIndexRouteImport } from './routes/_main/whitewind/index'
 import { Route as MainWatchingIndexRouteImport } from './routes/_main/watching/index'
 import { Route as MainProjectsIndexRouteImport } from './routes/_main/projects/index'
 import { Route as MainGamesIndexRouteImport } from './routes/_main/games/index'
 import { Route as MainBlogIndexRouteImport } from './routes/_main/blog/index'
-import { Route as MainWhitewindRkeyRouteImport } from './routes/_main/whitewind/$rkey'
 import { Route as MainWatchingRkeyRouteImport } from './routes/_main/watching/$rkey'
 import { Route as MainProjectsNameRouteImport } from './routes/_main/projects/$name'
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
-import { Route as MainBlueskyToolsIndexRouteImport } from './routes/_main/bluesky/tools/index'
-import { Route as MainBlueskyToolsPdfUploaderRouteImport } from './routes/_main/bluesky/tools/pdf-uploader'
-import { Route as MainBlueskyToolsListCleanerRouteImport } from './routes/_main/bluesky/tools/list-cleaner'
-import { Route as MainBlueskyToolsFeedIndexRouteImport } from './routes/_main/bluesky/tools/feed/index'
-import { Route as MainBlueskyToolsCarExplorerIndexRouteImport } from './routes/_main/bluesky/tools/car-explorer/index'
-import { Route as MainBlueskyToolsFeedIdRouteImport } from './routes/_main/bluesky/tools/feed/$id'
-import { Route as MainBlueskyToolsCarExplorerSplatRouteImport } from './routes/_main/bluesky/tools/car-explorer/$'
 
-const StudioRoute = StudioRouteImport.update({
-  id: '/studio',
-  path: '/studio',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const MainRoute = MainRouteImport.update({
   id: '/_main',
   getParentRoute: () => rootRouteImport,
@@ -60,34 +38,9 @@ const MainUsesRoute = MainUsesRouteImport.update({
   path: '/uses',
   getParentRoute: () => MainRoute,
 } as any)
-const MainShowsRoute = MainShowsRouteImport.update({
-  id: '/shows',
-  path: '/shows',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainShowcaseRoute = MainShowcaseRouteImport.update({
-  id: '/showcase',
-  path: '/showcase',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainReferrerCheckerRoute = MainReferrerCheckerRouteImport.update({
-  id: '/referrer-checker',
-  path: '/referrer-checker',
-  getParentRoute: () => MainRoute,
-} as any)
 const MainMusicRoute = MainMusicRouteImport.update({
   id: '/music',
   path: '/music',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainMoviesRoute = MainMoviesRouteImport.update({
-  id: '/movies',
-  path: '/movies',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainInfiniteCanvasRoute = MainInfiniteCanvasRouteImport.update({
-  id: '/infinite-canvas',
-  path: '/infinite-canvas',
   getParentRoute: () => MainRoute,
 } as any)
 const MainGalleryRoute = MainGalleryRouteImport.update({
@@ -98,21 +51,6 @@ const MainGalleryRoute = MainGalleryRouteImport.update({
 const MainDesignSystemRoute = MainDesignSystemRouteImport.update({
   id: '/design-system',
   path: '/design-system',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainDesignRoute = MainDesignRouteImport.update({
-  id: '/design',
-  path: '/design',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainContactRoute = MainContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainWhitewindIndexRoute = MainWhitewindIndexRouteImport.update({
-  id: '/whitewind/',
-  path: '/whitewind/',
   getParentRoute: () => MainRoute,
 } as any)
 const MainWatchingIndexRoute = MainWatchingIndexRouteImport.update({
@@ -135,11 +73,6 @@ const MainBlogIndexRoute = MainBlogIndexRouteImport.update({
   path: '/blog/',
   getParentRoute: () => MainRoute,
 } as any)
-const MainWhitewindRkeyRoute = MainWhitewindRkeyRouteImport.update({
-  id: '/whitewind/$rkey',
-  path: '/whitewind/$rkey',
-  getParentRoute: () => MainRoute,
-} as any)
 const MainWatchingRkeyRoute = MainWatchingRkeyRouteImport.update({
   id: '/watching/$rkey',
   path: '/watching/$rkey',
@@ -160,259 +93,109 @@ const MainBlogRkeyRoute = MainBlogRkeyRouteImport.update({
   path: '/blog/$rkey',
   getParentRoute: () => MainRoute,
 } as any)
-const MainBlueskyToolsIndexRoute = MainBlueskyToolsIndexRouteImport.update({
-  id: '/bluesky/tools/',
-  path: '/bluesky/tools/',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainBlueskyToolsPdfUploaderRoute =
-  MainBlueskyToolsPdfUploaderRouteImport.update({
-    id: '/bluesky/tools/pdf-uploader',
-    path: '/bluesky/tools/pdf-uploader',
-    getParentRoute: () => MainRoute,
-  } as any)
-const MainBlueskyToolsListCleanerRoute =
-  MainBlueskyToolsListCleanerRouteImport.update({
-    id: '/bluesky/tools/list-cleaner',
-    path: '/bluesky/tools/list-cleaner',
-    getParentRoute: () => MainRoute,
-  } as any)
-const MainBlueskyToolsFeedIndexRoute =
-  MainBlueskyToolsFeedIndexRouteImport.update({
-    id: '/bluesky/tools/feed/',
-    path: '/bluesky/tools/feed/',
-    getParentRoute: () => MainRoute,
-  } as any)
-const MainBlueskyToolsCarExplorerIndexRoute =
-  MainBlueskyToolsCarExplorerIndexRouteImport.update({
-    id: '/bluesky/tools/car-explorer/',
-    path: '/bluesky/tools/car-explorer/',
-    getParentRoute: () => MainRoute,
-  } as any)
-const MainBlueskyToolsFeedIdRoute = MainBlueskyToolsFeedIdRouteImport.update({
-  id: '/bluesky/tools/feed/$id',
-  path: '/bluesky/tools/feed/$id',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainBlueskyToolsCarExplorerSplatRoute =
-  MainBlueskyToolsCarExplorerSplatRouteImport.update({
-    id: '/bluesky/tools/car-explorer/$',
-    path: '/bluesky/tools/car-explorer/$',
-    getParentRoute: () => MainRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
-  '/studio': typeof StudioRoute
-  '/contact': typeof MainContactRoute
-  '/design': typeof MainDesignRoute
   '/design-system': typeof MainDesignSystemRoute
   '/gallery': typeof MainGalleryRoute
-  '/infinite-canvas': typeof MainInfiniteCanvasRoute
-  '/movies': typeof MainMoviesRoute
   '/music': typeof MainMusicRoute
-  '/referrer-checker': typeof MainReferrerCheckerRoute
-  '/showcase': typeof MainShowcaseRoute
-  '/shows': typeof MainShowsRoute
   '/uses': typeof MainUsesRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
-  '/whitewind/$rkey': typeof MainWhitewindRkeyRoute
   '/blog/': typeof MainBlogIndexRoute
   '/games/': typeof MainGamesIndexRoute
   '/projects/': typeof MainProjectsIndexRoute
   '/watching/': typeof MainWatchingIndexRoute
-  '/whitewind/': typeof MainWhitewindIndexRoute
-  '/bluesky/tools/list-cleaner': typeof MainBlueskyToolsListCleanerRoute
-  '/bluesky/tools/pdf-uploader': typeof MainBlueskyToolsPdfUploaderRoute
-  '/bluesky/tools/': typeof MainBlueskyToolsIndexRoute
-  '/bluesky/tools/car-explorer/$': typeof MainBlueskyToolsCarExplorerSplatRoute
-  '/bluesky/tools/feed/$id': typeof MainBlueskyToolsFeedIdRoute
-  '/bluesky/tools/car-explorer/': typeof MainBlueskyToolsCarExplorerIndexRoute
-  '/bluesky/tools/feed/': typeof MainBlueskyToolsFeedIndexRoute
 }
 export interface FileRoutesByTo {
-  '/studio': typeof StudioRoute
-  '/contact': typeof MainContactRoute
-  '/design': typeof MainDesignRoute
   '/design-system': typeof MainDesignSystemRoute
   '/gallery': typeof MainGalleryRoute
-  '/infinite-canvas': typeof MainInfiniteCanvasRoute
-  '/movies': typeof MainMoviesRoute
   '/music': typeof MainMusicRoute
-  '/referrer-checker': typeof MainReferrerCheckerRoute
-  '/showcase': typeof MainShowcaseRoute
-  '/shows': typeof MainShowsRoute
   '/uses': typeof MainUsesRoute
   '/': typeof MainIndexRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
-  '/whitewind/$rkey': typeof MainWhitewindRkeyRoute
   '/blog': typeof MainBlogIndexRoute
   '/games': typeof MainGamesIndexRoute
   '/projects': typeof MainProjectsIndexRoute
   '/watching': typeof MainWatchingIndexRoute
-  '/whitewind': typeof MainWhitewindIndexRoute
-  '/bluesky/tools/list-cleaner': typeof MainBlueskyToolsListCleanerRoute
-  '/bluesky/tools/pdf-uploader': typeof MainBlueskyToolsPdfUploaderRoute
-  '/bluesky/tools': typeof MainBlueskyToolsIndexRoute
-  '/bluesky/tools/car-explorer/$': typeof MainBlueskyToolsCarExplorerSplatRoute
-  '/bluesky/tools/feed/$id': typeof MainBlueskyToolsFeedIdRoute
-  '/bluesky/tools/car-explorer': typeof MainBlueskyToolsCarExplorerIndexRoute
-  '/bluesky/tools/feed': typeof MainBlueskyToolsFeedIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_main': typeof MainRouteWithChildren
-  '/studio': typeof StudioRoute
-  '/_main/contact': typeof MainContactRoute
-  '/_main/design': typeof MainDesignRoute
   '/_main/design-system': typeof MainDesignSystemRoute
   '/_main/gallery': typeof MainGalleryRoute
-  '/_main/infinite-canvas': typeof MainInfiniteCanvasRoute
-  '/_main/movies': typeof MainMoviesRoute
   '/_main/music': typeof MainMusicRoute
-  '/_main/referrer-checker': typeof MainReferrerCheckerRoute
-  '/_main/showcase': typeof MainShowcaseRoute
-  '/_main/shows': typeof MainShowsRoute
   '/_main/uses': typeof MainUsesRoute
   '/_main/': typeof MainIndexRoute
   '/_main/blog/$rkey': typeof MainBlogRkeyRoute
   '/_main/games/$rkey': typeof MainGamesRkeyRoute
   '/_main/projects/$name': typeof MainProjectsNameRoute
   '/_main/watching/$rkey': typeof MainWatchingRkeyRoute
-  '/_main/whitewind/$rkey': typeof MainWhitewindRkeyRoute
   '/_main/blog/': typeof MainBlogIndexRoute
   '/_main/games/': typeof MainGamesIndexRoute
   '/_main/projects/': typeof MainProjectsIndexRoute
   '/_main/watching/': typeof MainWatchingIndexRoute
-  '/_main/whitewind/': typeof MainWhitewindIndexRoute
-  '/_main/bluesky/tools/list-cleaner': typeof MainBlueskyToolsListCleanerRoute
-  '/_main/bluesky/tools/pdf-uploader': typeof MainBlueskyToolsPdfUploaderRoute
-  '/_main/bluesky/tools/': typeof MainBlueskyToolsIndexRoute
-  '/_main/bluesky/tools/car-explorer/$': typeof MainBlueskyToolsCarExplorerSplatRoute
-  '/_main/bluesky/tools/feed/$id': typeof MainBlueskyToolsFeedIdRoute
-  '/_main/bluesky/tools/car-explorer/': typeof MainBlueskyToolsCarExplorerIndexRoute
-  '/_main/bluesky/tools/feed/': typeof MainBlueskyToolsFeedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/studio'
-    | '/contact'
-    | '/design'
     | '/design-system'
     | '/gallery'
-    | '/infinite-canvas'
-    | '/movies'
     | '/music'
-    | '/referrer-checker'
-    | '/showcase'
-    | '/shows'
     | '/uses'
     | '/blog/$rkey'
     | '/games/$rkey'
     | '/projects/$name'
     | '/watching/$rkey'
-    | '/whitewind/$rkey'
     | '/blog/'
     | '/games/'
     | '/projects/'
     | '/watching/'
-    | '/whitewind/'
-    | '/bluesky/tools/list-cleaner'
-    | '/bluesky/tools/pdf-uploader'
-    | '/bluesky/tools/'
-    | '/bluesky/tools/car-explorer/$'
-    | '/bluesky/tools/feed/$id'
-    | '/bluesky/tools/car-explorer/'
-    | '/bluesky/tools/feed/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/studio'
-    | '/contact'
-    | '/design'
     | '/design-system'
     | '/gallery'
-    | '/infinite-canvas'
-    | '/movies'
     | '/music'
-    | '/referrer-checker'
-    | '/showcase'
-    | '/shows'
     | '/uses'
     | '/'
     | '/blog/$rkey'
     | '/games/$rkey'
     | '/projects/$name'
     | '/watching/$rkey'
-    | '/whitewind/$rkey'
     | '/blog'
     | '/games'
     | '/projects'
     | '/watching'
-    | '/whitewind'
-    | '/bluesky/tools/list-cleaner'
-    | '/bluesky/tools/pdf-uploader'
-    | '/bluesky/tools'
-    | '/bluesky/tools/car-explorer/$'
-    | '/bluesky/tools/feed/$id'
-    | '/bluesky/tools/car-explorer'
-    | '/bluesky/tools/feed'
   id:
     | '__root__'
     | '/_main'
-    | '/studio'
-    | '/_main/contact'
-    | '/_main/design'
     | '/_main/design-system'
     | '/_main/gallery'
-    | '/_main/infinite-canvas'
-    | '/_main/movies'
     | '/_main/music'
-    | '/_main/referrer-checker'
-    | '/_main/showcase'
-    | '/_main/shows'
     | '/_main/uses'
     | '/_main/'
     | '/_main/blog/$rkey'
     | '/_main/games/$rkey'
     | '/_main/projects/$name'
     | '/_main/watching/$rkey'
-    | '/_main/whitewind/$rkey'
     | '/_main/blog/'
     | '/_main/games/'
     | '/_main/projects/'
     | '/_main/watching/'
-    | '/_main/whitewind/'
-    | '/_main/bluesky/tools/list-cleaner'
-    | '/_main/bluesky/tools/pdf-uploader'
-    | '/_main/bluesky/tools/'
-    | '/_main/bluesky/tools/car-explorer/$'
-    | '/_main/bluesky/tools/feed/$id'
-    | '/_main/bluesky/tools/car-explorer/'
-    | '/_main/bluesky/tools/feed/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   MainRoute: typeof MainRouteWithChildren
-  StudioRoute: typeof StudioRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/studio': {
-      id: '/studio'
-      path: '/studio'
-      fullPath: '/studio'
-      preLoaderRoute: typeof StudioRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_main': {
       id: '/_main'
       path: ''
@@ -434,46 +217,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainUsesRouteImport
       parentRoute: typeof MainRoute
     }
-    '/_main/shows': {
-      id: '/_main/shows'
-      path: '/shows'
-      fullPath: '/shows'
-      preLoaderRoute: typeof MainShowsRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/showcase': {
-      id: '/_main/showcase'
-      path: '/showcase'
-      fullPath: '/showcase'
-      preLoaderRoute: typeof MainShowcaseRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/referrer-checker': {
-      id: '/_main/referrer-checker'
-      path: '/referrer-checker'
-      fullPath: '/referrer-checker'
-      preLoaderRoute: typeof MainReferrerCheckerRouteImport
-      parentRoute: typeof MainRoute
-    }
     '/_main/music': {
       id: '/_main/music'
       path: '/music'
       fullPath: '/music'
       preLoaderRoute: typeof MainMusicRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/movies': {
-      id: '/_main/movies'
-      path: '/movies'
-      fullPath: '/movies'
-      preLoaderRoute: typeof MainMoviesRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/infinite-canvas': {
-      id: '/_main/infinite-canvas'
-      path: '/infinite-canvas'
-      fullPath: '/infinite-canvas'
-      preLoaderRoute: typeof MainInfiniteCanvasRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/gallery': {
@@ -488,27 +236,6 @@ declare module '@tanstack/react-router' {
       path: '/design-system'
       fullPath: '/design-system'
       preLoaderRoute: typeof MainDesignSystemRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/design': {
-      id: '/_main/design'
-      path: '/design'
-      fullPath: '/design'
-      preLoaderRoute: typeof MainDesignRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/contact': {
-      id: '/_main/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof MainContactRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/whitewind/': {
-      id: '/_main/whitewind/'
-      path: '/whitewind'
-      fullPath: '/whitewind/'
-      preLoaderRoute: typeof MainWhitewindIndexRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/watching/': {
@@ -539,13 +266,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainBlogIndexRouteImport
       parentRoute: typeof MainRoute
     }
-    '/_main/whitewind/$rkey': {
-      id: '/_main/whitewind/$rkey'
-      path: '/whitewind/$rkey'
-      fullPath: '/whitewind/$rkey'
-      preLoaderRoute: typeof MainWhitewindRkeyRouteImport
-      parentRoute: typeof MainRoute
-    }
     '/_main/watching/$rkey': {
       id: '/_main/watching/$rkey'
       path: '/watching/$rkey'
@@ -574,127 +294,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainBlogRkeyRouteImport
       parentRoute: typeof MainRoute
     }
-    '/_main/bluesky/tools/': {
-      id: '/_main/bluesky/tools/'
-      path: '/bluesky/tools'
-      fullPath: '/bluesky/tools/'
-      preLoaderRoute: typeof MainBlueskyToolsIndexRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/bluesky/tools/pdf-uploader': {
-      id: '/_main/bluesky/tools/pdf-uploader'
-      path: '/bluesky/tools/pdf-uploader'
-      fullPath: '/bluesky/tools/pdf-uploader'
-      preLoaderRoute: typeof MainBlueskyToolsPdfUploaderRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/bluesky/tools/list-cleaner': {
-      id: '/_main/bluesky/tools/list-cleaner'
-      path: '/bluesky/tools/list-cleaner'
-      fullPath: '/bluesky/tools/list-cleaner'
-      preLoaderRoute: typeof MainBlueskyToolsListCleanerRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/bluesky/tools/feed/': {
-      id: '/_main/bluesky/tools/feed/'
-      path: '/bluesky/tools/feed'
-      fullPath: '/bluesky/tools/feed/'
-      preLoaderRoute: typeof MainBlueskyToolsFeedIndexRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/bluesky/tools/car-explorer/': {
-      id: '/_main/bluesky/tools/car-explorer/'
-      path: '/bluesky/tools/car-explorer'
-      fullPath: '/bluesky/tools/car-explorer/'
-      preLoaderRoute: typeof MainBlueskyToolsCarExplorerIndexRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/bluesky/tools/feed/$id': {
-      id: '/_main/bluesky/tools/feed/$id'
-      path: '/bluesky/tools/feed/$id'
-      fullPath: '/bluesky/tools/feed/$id'
-      preLoaderRoute: typeof MainBlueskyToolsFeedIdRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/bluesky/tools/car-explorer/$': {
-      id: '/_main/bluesky/tools/car-explorer/$'
-      path: '/bluesky/tools/car-explorer/$'
-      fullPath: '/bluesky/tools/car-explorer/$'
-      preLoaderRoute: typeof MainBlueskyToolsCarExplorerSplatRouteImport
-      parentRoute: typeof MainRoute
-    }
   }
 }
 
 interface MainRouteChildren {
-  MainContactRoute: typeof MainContactRoute
-  MainDesignRoute: typeof MainDesignRoute
   MainDesignSystemRoute: typeof MainDesignSystemRoute
   MainGalleryRoute: typeof MainGalleryRoute
-  MainInfiniteCanvasRoute: typeof MainInfiniteCanvasRoute
-  MainMoviesRoute: typeof MainMoviesRoute
   MainMusicRoute: typeof MainMusicRoute
-  MainReferrerCheckerRoute: typeof MainReferrerCheckerRoute
-  MainShowcaseRoute: typeof MainShowcaseRoute
-  MainShowsRoute: typeof MainShowsRoute
   MainUsesRoute: typeof MainUsesRoute
   MainIndexRoute: typeof MainIndexRoute
   MainBlogRkeyRoute: typeof MainBlogRkeyRoute
   MainGamesRkeyRoute: typeof MainGamesRkeyRoute
   MainProjectsNameRoute: typeof MainProjectsNameRoute
   MainWatchingRkeyRoute: typeof MainWatchingRkeyRoute
-  MainWhitewindRkeyRoute: typeof MainWhitewindRkeyRoute
   MainBlogIndexRoute: typeof MainBlogIndexRoute
   MainGamesIndexRoute: typeof MainGamesIndexRoute
   MainProjectsIndexRoute: typeof MainProjectsIndexRoute
   MainWatchingIndexRoute: typeof MainWatchingIndexRoute
-  MainWhitewindIndexRoute: typeof MainWhitewindIndexRoute
-  MainBlueskyToolsListCleanerRoute: typeof MainBlueskyToolsListCleanerRoute
-  MainBlueskyToolsPdfUploaderRoute: typeof MainBlueskyToolsPdfUploaderRoute
-  MainBlueskyToolsIndexRoute: typeof MainBlueskyToolsIndexRoute
-  MainBlueskyToolsCarExplorerSplatRoute: typeof MainBlueskyToolsCarExplorerSplatRoute
-  MainBlueskyToolsFeedIdRoute: typeof MainBlueskyToolsFeedIdRoute
-  MainBlueskyToolsCarExplorerIndexRoute: typeof MainBlueskyToolsCarExplorerIndexRoute
-  MainBlueskyToolsFeedIndexRoute: typeof MainBlueskyToolsFeedIndexRoute
 }
 
 const MainRouteChildren: MainRouteChildren = {
-  MainContactRoute: MainContactRoute,
-  MainDesignRoute: MainDesignRoute,
   MainDesignSystemRoute: MainDesignSystemRoute,
   MainGalleryRoute: MainGalleryRoute,
-  MainInfiniteCanvasRoute: MainInfiniteCanvasRoute,
-  MainMoviesRoute: MainMoviesRoute,
   MainMusicRoute: MainMusicRoute,
-  MainReferrerCheckerRoute: MainReferrerCheckerRoute,
-  MainShowcaseRoute: MainShowcaseRoute,
-  MainShowsRoute: MainShowsRoute,
   MainUsesRoute: MainUsesRoute,
   MainIndexRoute: MainIndexRoute,
   MainBlogRkeyRoute: MainBlogRkeyRoute,
   MainGamesRkeyRoute: MainGamesRkeyRoute,
   MainProjectsNameRoute: MainProjectsNameRoute,
   MainWatchingRkeyRoute: MainWatchingRkeyRoute,
-  MainWhitewindRkeyRoute: MainWhitewindRkeyRoute,
   MainBlogIndexRoute: MainBlogIndexRoute,
   MainGamesIndexRoute: MainGamesIndexRoute,
   MainProjectsIndexRoute: MainProjectsIndexRoute,
   MainWatchingIndexRoute: MainWatchingIndexRoute,
-  MainWhitewindIndexRoute: MainWhitewindIndexRoute,
-  MainBlueskyToolsListCleanerRoute: MainBlueskyToolsListCleanerRoute,
-  MainBlueskyToolsPdfUploaderRoute: MainBlueskyToolsPdfUploaderRoute,
-  MainBlueskyToolsIndexRoute: MainBlueskyToolsIndexRoute,
-  MainBlueskyToolsCarExplorerSplatRoute: MainBlueskyToolsCarExplorerSplatRoute,
-  MainBlueskyToolsFeedIdRoute: MainBlueskyToolsFeedIdRoute,
-  MainBlueskyToolsCarExplorerIndexRoute: MainBlueskyToolsCarExplorerIndexRoute,
-  MainBlueskyToolsFeedIndexRoute: MainBlueskyToolsFeedIndexRoute,
 }
 
 const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   MainRoute: MainRouteWithChildren,
-  StudioRoute: StudioRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,5 +1,6 @@
 import { Await, getRouteApi, Link } from '@tanstack/react-router';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { LiveMusicPanel } from '../components/LiveMusicPanel';
 import { ABOUT, SITE, SOCIALS, SOURCES, STATUS, USES } from '../data';
 import { LASTFM_PROFILE_URL } from '../server/lastfm';
 import { formatUpdated } from '../lib/format';
@@ -394,66 +395,9 @@ export default function HomePage() {
             </div>
             <div className="panel-body">
               <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>music panel errored.</div>}>
-              <Await promise={lastTrack} fallback={<MusicSkel />}>
-                {(t) =>
-                  t && t.nowPlaying ? (
-                    <div className="music-wrap">
-                      <div className="music-top">
-                        <div
-                          className="music-art"
-                          style={t.art ? { backgroundImage: `url(${t.art})`, backgroundSize: 'cover' } : undefined}
-                        />
-                        <div className="music-meta">
-                          <div className="label">now playing</div>
-                          <a
-                            className="music-track"
-                            href={t.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {t.track.toLowerCase()}
-                          </a>
-                          <a
-                            className="music-artist"
-                            href={t.artistUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {t.artist.toLowerCase()}
-                          </a>
-                        </div>
-                      </div>
-                      <div className="music-bars playing">
-                        {Array.from({ length: 7 }).map((_, i) => (
-                          <span key={i} />
-                        ))}
-                      </div>
-                      <Link to={'/music' as never} className="see-all">
-                        full history →
-                      </Link>
-                    </div>
-                  ) : (
-                    <div className="music-wrap idle">
-                      <div className="music-top">
-                        <div className="music-art" />
-                        <div className="music-meta">
-                          <div className="label">
-                            {t === null ? 'not configured' : 'not listening to anything'}
-                          </div>
-                          {t === null ? (
-                            <div className="music-artist">set LASTFM_API_KEY</div>
-                          ) : null}
-                        </div>
-                      </div>
-                      {t !== null ? (
-                        <Link to={'/music' as never} className="see-all">
-                          full history →
-                        </Link>
-                      ) : null}
-                    </div>
-                  )
-                }
-              </Await>
+                <Await promise={lastTrack} fallback={<MusicSkel />}>
+                  {(t) => <LiveMusicPanel initial={t} />}
+                </Await>
               </ErrorBoundary>
             </div>
           </div>

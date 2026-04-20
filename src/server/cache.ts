@@ -16,6 +16,7 @@ export async function cached<T>(key: string, ttlMs: number, load: () => Promise<
 }
 
 export const TTL = {
+  live: 1000 * 20, // 20s
   short: 1000 * 60 * 5, // 5m
   medium: 1000 * 60 * 30, // 30m
   long: 1000 * 60 * 60 * 6, // 6h
