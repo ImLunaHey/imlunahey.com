@@ -856,21 +856,19 @@ console.log(greet('world'));`}
                 <SubSection title="tokens" count="8">
                   <div className="token-grid">
                     {[
-                      { cls: 'sh__token--keyword', label: 'keyword', sample: 'const' },
-                      { cls: 'sh__token--string', label: 'string', sample: '"hello"' },
-                      { cls: 'sh__token--class', label: 'class/type', sample: 'Promise' },
-                      { cls: 'sh__token--entity', label: 'entity / fn', sample: 'map' },
-                      { cls: 'sh__token--property', label: 'property', sample: '.length' },
-                      { cls: 'sh__token--identifier', label: 'identifier', sample: 'items' },
-                      { cls: 'sh__token--comment', label: 'comment', sample: '// note' },
-                      { cls: 'sh__token--sign', label: 'punctuation', sample: '=>' },
+                      { tok: 'keyword', color: 'oklch(0.78 0.16 315)', sample: 'const' },
+                      { tok: 'string', color: 'oklch(0.82 0.13 85)', sample: '"hello"' },
+                      { tok: 'class', color: 'oklch(0.85 0.14 65)', sample: 'Promise' },
+                      { tok: 'entity', color: 'var(--color-accent)', sample: 'map' },
+                      { tok: 'property', color: 'oklch(0.78 0.11 210)', sample: '.length' },
+                      { tok: 'identifier', color: 'var(--color-fg)', sample: 'items' },
+                      { tok: 'comment', color: 'var(--color-fg-faint)', sample: '// note' },
+                      { tok: 'sign', color: 'var(--color-fg-faint)', sample: '=>' },
                     ].map((t) => (
-                      <div key={t.cls} className="token-row">
-                        <span className={t.cls} style={{ fontFamily: 'var(--font-mono)' }}>
-                          {t.sample}
-                        </span>
-                        <span className="t-faint">{t.label}</span>
-                        <code className="inline" style={{ marginLeft: 'auto' }}>.{t.cls}</code>
+                      <div key={t.tok} className="token-row">
+                        <span style={{ fontFamily: 'var(--font-mono)', color: t.color }}>{t.sample}</span>
+                        <span className="t-faint">{t.tok}</span>
+                        <code className="inline" style={{ marginLeft: 'auto' }}>--sh-{t.tok}</code>
                       </div>
                     ))}
                   </div>

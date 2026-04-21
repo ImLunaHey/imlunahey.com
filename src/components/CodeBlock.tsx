@@ -45,6 +45,18 @@ export function CodeBlock({ code, filename, bare }: Props) {
 // see: https://sugar-high.vercel.app
 const CSS = `
   .cb {
+    --sh-identifier: var(--color-fg);
+    --sh-keyword:    oklch(0.78 0.16 315);   /* magenta — const, return, import */
+    --sh-string:     oklch(0.82 0.13 85);    /* amber  — "strings" */
+    --sh-class:      oklch(0.85 0.14 65);    /* yellow — classes / types */
+    --sh-property:   oklch(0.78 0.11 210);   /* cyan   — obj.properties */
+    --sh-entity:     var(--color-accent);    /* phosphor — fn calls, jsx tags */
+    --sh-jsxliterals:oklch(0.78 0.11 210);   /* cyan   — jsx braces */
+    --sh-sign:       var(--color-fg-faint);  /* punctuation */
+    --sh-comment:    var(--color-fg-faint);  /* // comments */
+    --sh-break:      var(--color-fg);
+    --sh-space:      transparent;
+
     border: 1px solid var(--color-border);
     background: var(--color-bg-panel);
   }
@@ -81,17 +93,5 @@ const CSS = `
     color: var(--color-fg);
   }
   .cb-code { font-family: inherit; background: transparent; border: 0; padding: 0; color: inherit; white-space: pre; }
-
-  /* sugar-high token theme — phosphor-green */
-  .sh__token--identifier { color: var(--color-fg); }
-  .sh__token--keyword    { color: oklch(0.78 0.16 315); }                /* magenta-ish — keywords (const, return, import) */
-  .sh__token--string     { color: oklch(0.82 0.13 85); }                 /* amber — strings */
-  .sh__token--class      { color: oklch(0.85 0.14 65); }                 /* yellow-orange — classes / types */
-  .sh__token--property   { color: oklch(0.78 0.11 210); }                /* cyan — properties */
-  .sh__token--entity     { color: var(--color-accent); }                 /* phosphor — fn / jsx tags */
-  .sh__token--jsxliterals{ color: oklch(0.78 0.11 210); }                /* cyan — jsx braces */
-  .sh__token--sign       { color: var(--color-fg-faint); }               /* punctuation */
-  .sh__token--comment    { color: var(--color-fg-faint); font-style: italic; }
-  .sh__token--break      { color: var(--color-fg); }
-  .sh__token--space      { color: inherit; }
+  .sh__token--comment { font-style: italic; }
 `;
