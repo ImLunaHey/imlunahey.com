@@ -22,6 +22,7 @@ import { Route as MainGamesIndexRouteImport } from './routes/_main/games/index'
 import { Route as MainBlogIndexRouteImport } from './routes/_main/blog/index'
 import { Route as MainWatchingRkeyRouteImport } from './routes/_main/watching/$rkey'
 import { Route as MainProjectsNameRouteImport } from './routes/_main/projects/$name'
+import { Route as MainLabsVerseRevealRouteImport } from './routes/_main/labs/verse-reveal'
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
 import { Route as MainLabsCssBattlesIndexRouteImport } from './routes/_main/labs/css-battles/index'
@@ -91,6 +92,11 @@ const MainProjectsNameRoute = MainProjectsNameRouteImport.update({
   path: '/projects/$name',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsVerseRevealRoute = MainLabsVerseRevealRouteImport.update({
+  id: '/labs/verse-reveal',
+  path: '/labs/verse-reveal',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainGamesRkeyRoute = MainGamesRkeyRouteImport.update({
   id: '/games/$rkey',
   path: '/games/$rkey',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/uses': typeof MainUsesRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
+  '/labs/verse-reveal': typeof MainLabsVerseRevealRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
   '/blog/': typeof MainBlogIndexRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/': typeof MainIndexRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
+  '/labs/verse-reveal': typeof MainLabsVerseRevealRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
   '/blog': typeof MainBlogIndexRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/_main/': typeof MainIndexRoute
   '/_main/blog/$rkey': typeof MainBlogRkeyRoute
   '/_main/games/$rkey': typeof MainGamesRkeyRoute
+  '/_main/labs/verse-reveal': typeof MainLabsVerseRevealRoute
   '/_main/projects/$name': typeof MainProjectsNameRoute
   '/_main/watching/$rkey': typeof MainWatchingRkeyRoute
   '/_main/blog/': typeof MainBlogIndexRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/uses'
     | '/blog/$rkey'
     | '/games/$rkey'
+    | '/labs/verse-reveal'
     | '/projects/$name'
     | '/watching/$rkey'
     | '/blog/'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/'
     | '/blog/$rkey'
     | '/games/$rkey'
+    | '/labs/verse-reveal'
     | '/projects/$name'
     | '/watching/$rkey'
     | '/blog'
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/_main/'
     | '/_main/blog/$rkey'
     | '/_main/games/$rkey'
+    | '/_main/labs/verse-reveal'
     | '/_main/projects/$name'
     | '/_main/watching/$rkey'
     | '/_main/blog/'
@@ -323,6 +335,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainProjectsNameRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/verse-reveal': {
+      id: '/_main/labs/verse-reveal'
+      path: '/labs/verse-reveal'
+      fullPath: '/labs/verse-reveal'
+      preLoaderRoute: typeof MainLabsVerseRevealRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/games/$rkey': {
       id: '/_main/games/$rkey'
       path: '/games/$rkey'
@@ -362,6 +381,7 @@ interface MainRouteChildren {
   MainIndexRoute: typeof MainIndexRoute
   MainBlogRkeyRoute: typeof MainBlogRkeyRoute
   MainGamesRkeyRoute: typeof MainGamesRkeyRoute
+  MainLabsVerseRevealRoute: typeof MainLabsVerseRevealRoute
   MainProjectsNameRoute: typeof MainProjectsNameRoute
   MainWatchingRkeyRoute: typeof MainWatchingRkeyRoute
   MainBlogIndexRoute: typeof MainBlogIndexRoute
@@ -381,6 +401,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainIndexRoute: MainIndexRoute,
   MainBlogRkeyRoute: MainBlogRkeyRoute,
   MainGamesRkeyRoute: MainGamesRkeyRoute,
+  MainLabsVerseRevealRoute: MainLabsVerseRevealRoute,
   MainProjectsNameRoute: MainProjectsNameRoute,
   MainWatchingRkeyRoute: MainWatchingRkeyRoute,
   MainBlogIndexRoute: MainBlogIndexRoute,

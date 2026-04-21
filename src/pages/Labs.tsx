@@ -20,6 +20,14 @@ const LABS: Lab[] = [
     count: '11 entries',
     ready: true,
   },
+  {
+    slug: 'verse-reveal',
+    title: 'verse reveal',
+    desc: 'text effect that scrubs through the ascii set until each letter lands. staggered by index.',
+    tags: ['animation', 'react'],
+    year: '2023',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {
