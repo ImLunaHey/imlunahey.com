@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
+import { CodeBlock } from '../components/CodeBlock';
 import { SITE } from '../data';
 
 const TOC = {
@@ -22,8 +23,9 @@ const TOC = {
   components: [
     { id: 'cards', num: '13', label: 'cards / panels' },
     { id: 'loading', num: '14', label: 'loading states' },
+    { id: 'code', num: '15', label: 'code blocks' },
   ],
-  patterns: [{ id: 'voice', num: '15', label: 'voice + tone' }],
+  patterns: [{ id: 'voice', num: '16', label: 'voice + tone' }],
 };
 
 const SWATCHES_SURFACES = [
@@ -816,8 +818,68 @@ export default function DesignSystemPage() {
               </div>
             </Section>
 
-            {/* 15 VOICE */}
-            <Section id="voice" num="15" title="voice + tone.">
+            {/* 15 CODE BLOCKS */}
+            <Section id="code" num="15" title="code blocks.">
+              <p className="sec-desc">
+                syntax-highlighted source via{' '}
+                <a href="https://sugar-high.vercel.app" target="_blank" rel="noopener noreferrer" className="glow-link">
+                  sugar-high
+                </a>
+                . token colours map to phosphor palette via{' '}
+                <code className="inline">.sh__token--*</code> css vars; theme lives in{' '}
+                <code className="inline">src/components/CodeBlock.tsx</code>.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+                <SubSection title="with filename + copy" count="1">
+                  <CodeBlock
+                    filename="src / components / Greeting.tsx"
+                    code={`import { SITE } from '../data';
+
+// greet the visitor — defaults to the site handle
+export function Greeting({ name = SITE.name }: { name?: string }) {
+  return (
+    <p className="t-accent">
+      hi, i'm {name}. welcome to the design system.
+    </p>
+  );
+}
+`}
+                  />
+                </SubSection>
+                <SubSection title="bare (no chrome)" count="1">
+                  <CodeBlock
+                    bare
+                    code={`const greet = (name: string) => \`hello, \${name}!\`;
+console.log(greet('world'));`}
+                  />
+                </SubSection>
+                <SubSection title="tokens" count="8">
+                  <div className="token-grid">
+                    {[
+                      { cls: 'sh__token--keyword', label: 'keyword', sample: 'const' },
+                      { cls: 'sh__token--string', label: 'string', sample: '"hello"' },
+                      { cls: 'sh__token--class', label: 'class/type', sample: 'Promise' },
+                      { cls: 'sh__token--entity', label: 'entity / fn', sample: 'map' },
+                      { cls: 'sh__token--property', label: 'property', sample: '.length' },
+                      { cls: 'sh__token--identifier', label: 'identifier', sample: 'items' },
+                      { cls: 'sh__token--comment', label: 'comment', sample: '// note' },
+                      { cls: 'sh__token--sign', label: 'punctuation', sample: '=>' },
+                    ].map((t) => (
+                      <div key={t.cls} className="token-row">
+                        <span className={t.cls} style={{ fontFamily: 'var(--font-mono)' }}>
+                          {t.sample}
+                        </span>
+                        <span className="t-faint">{t.label}</span>
+                        <code className="inline" style={{ marginLeft: 'auto' }}>.{t.cls}</code>
+                      </div>
+                    ))}
+                  </div>
+                </SubSection>
+              </div>
+            </Section>
+
+            {/* 16 VOICE */}
+            <Section id="voice" num="16" title="voice + tone.">
               <p className="sec-desc">
                 three rules. be precise. be lowercase. be slightly dry. no exclamation marks unless someone is actually
                 on fire.
@@ -1248,4 +1310,13 @@ const CSS = `
     justify-content: space-between;
     margin-top: var(--sp-8);
   }
+
+  .token-grid { display: flex; flex-direction: column; gap: 4px; }
+  .token-row {
+    display: flex; align-items: baseline; gap: var(--sp-4);
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--color-border);
+    font-size: var(--fs-sm);
+  }
+  .token-row:last-child { border-bottom: 0; }
 `;

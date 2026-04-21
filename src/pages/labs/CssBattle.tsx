@@ -1,5 +1,5 @@
 import { Link, Navigate, useParams } from '@tanstack/react-router';
-import { useState } from 'react';
+import { CodeBlock } from '../../components/CodeBlock';
 import { BATTLES } from './css-battles/battles';
 
 function fmtDate(iso: string): string {
@@ -10,7 +10,6 @@ function fmtDate(iso: string): string {
 export default function CssBattlePage() {
   const params = useParams({ strict: false }) as { date?: string };
   const battle = BATTLES.find((b) => b.date === params.date);
-  const [copied, setCopied] = useState(false);
 
   if (!battle) return <Navigate to={'/not-found' as never} replace />;
 
@@ -18,16 +17,6 @@ export default function CssBattlePage() {
   const idx = BATTLES.findIndex((b) => b.date === battle.date);
   const prev = idx > 0 ? BATTLES[idx - 1] : undefined;
   const next = idx < BATTLES.length - 1 ? BATTLES[idx + 1] : undefined;
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(battle.source);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    } catch {
-      /* ignore */
-    }
-  };
 
   return (
     <>
@@ -63,17 +52,7 @@ export default function CssBattlePage() {
         </section>
 
         <section className="code">
-          <div className="code-top">
-            <span>
-              <b>src</b> / daily-targets / {battle.date}.tsx
-            </span>
-            <button type="button" className={'copy' + (copied ? ' flash' : '')} onClick={copy}>
-              {copied ? 'copied' : 'copy'}
-            </button>
-          </div>
-          <pre>
-            <code>{battle.source}</code>
-          </pre>
+          <CodeBlock code={battle.source} filename={`src / daily-targets / ${battle.date}.tsx`} />
         </section>
 
         <nav className="pager">
@@ -171,51 +150,7 @@ const CSS = `
     box-shadow: 0 0 0 1px var(--color-bg), 0 0 32px color-mix(in oklch, var(--color-accent) 20%, transparent);
   }
 
-  .code {
-    margin-top: var(--sp-6);
-    border: 1px solid var(--color-border);
-    background: var(--color-bg-panel);
-  }
-  .code-top {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 6px 12px;
-    border-bottom: 1px solid var(--color-border);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--color-fg-faint);
-    background: linear-gradient(to bottom, #0c0c0c, #070707);
-  }
-  .code-top b { color: var(--color-accent-dim); font-weight: 400; }
-  .copy {
-    border: 1px solid var(--color-border-bright);
-    background: transparent;
-    color: var(--color-fg-dim);
-    font: inherit;
-    font-size: 10px;
-    padding: 2px 10px;
-    cursor: pointer;
-    text-transform: lowercase;
-    font-family: var(--font-mono);
-  }
-  .copy:hover { color: var(--color-accent); border-color: var(--color-accent-dim); }
-  .copy.flash { color: var(--color-accent); border-color: var(--color-accent); background: var(--color-bg-raised); }
-  .code pre {
-    margin: 0;
-    padding: var(--sp-4) var(--sp-5);
-    overflow-x: auto;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    line-height: 1.6;
-    color: var(--color-fg);
-  }
-  .code code {
-    font-family: inherit;
-    background: transparent;
-    border: 0;
-    padding: 0;
-    color: inherit;
-    white-space: pre;
-  }
+  .code { margin-top: var(--sp-6); }
 
   .pager {
     display: grid;
