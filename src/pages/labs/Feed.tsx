@@ -1,9 +1,15 @@
 import { simpleFetchHandler, XRPC } from '@atcute/client';
-import { AppBskyEmbedImages, AppBskyFeedPost } from '@atcute/client/lexicons';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { AppBskyEmbedImages, AppBskyFeedDefs, AppBskyFeedPost } from '@atcute/client/lexicons';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useProfile } from '../../hooks/use-profile';
+
+type ThreadNode = AppBskyFeedDefs.ThreadViewPost & { $type: 'app.bsky.feed.defs#threadViewPost' };
+type ThreadChild = NonNullable<AppBskyFeedDefs.ThreadViewPost['replies']>[number];
+
+const isThreadNode = (n: ThreadChild | undefined): n is ThreadNode =>
+  !!n && n.$type === 'app.bsky.feed.defs#threadViewPost';
 
 const rpc = new XRPC({ handler: simpleFetchHandler({ service: 'https://public.api.bsky.app' }) });
 
@@ -39,9 +45,34 @@ function compactNumber(n: number): string {
   return `${(n / 1_000_000).toFixed(1)}m`;
 }
 
+function useThread(uri: string | null) {
+  return useQuery({
+    queryKey: ['labs-feed', 'thread', uri],
+    queryFn: async () => {
+      if (!uri) throw new Error('no uri');
+      const res = await rpc.get('app.bsky.feed.getPostThread', { params: { uri } });
+      const thread = res.data.thread;
+      if (thread.$type !== 'app.bsky.feed.defs#threadViewPost') {
+        throw new Error('thread not viewable');
+      }
+      return thread as ThreadNode;
+    },
+    enabled: !!uri,
+    retry: false,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  });
+}
+
 export default function FeedPage() {
   const rawParams = useParams({ strict: false }) as { _splat?: string };
-  const handle = (rawParams._splat ?? '').replace(/^@/, '') || null;
+  const splat = (rawParams._splat ?? '').split('/').filter(Boolean);
+  // supported shapes:
+  //   []                         → landing
+  //   ['handle']                 → feed view
+  //   ['handle', 'post', 'rkey'] → thread view
+  const handle = splat[0] ? splat[0].replace(/^@/, '') : null;
+  const rkey = splat.length >= 3 && splat[1] === 'post' ? splat[2] : null;
   const navigate = useNavigate();
   const [input, setInput] = useState(handle ?? '');
 
@@ -59,13 +90,23 @@ export default function FeedPage() {
         <div className="crumbs">
           <Link to="/labs">~ / labs</Link>
           <span className="sep">/</span>
-          <span className={handle ? '' : 'last'}>feed</span>
           {handle ? (
             <>
+              <Link to="/labs/feed">feed</Link>
               <span className="sep">/</span>
-              <span className="last">@{handle}</span>
+              {rkey ? (
+                <>
+                  <Link to={`/labs/feed/${handle}` as never}>@{handle}</Link>
+                  <span className="sep">/</span>
+                  <span className="last">post · {rkey}</span>
+                </>
+              ) : (
+                <span className="last">@{handle}</span>
+              )}
             </>
-          ) : null}
+          ) : (
+            <span className="last">feed</span>
+          )}
         </div>
 
         <header className="feed-hd">
@@ -93,7 +134,13 @@ export default function FeedPage() {
           </form>
         </header>
 
-        {handle ? <FeedView handle={handle} /> : <EmptyLanding />}
+        {handle && rkey ? (
+          <ThreadRoute handle={handle} rkey={rkey} />
+        ) : handle ? (
+          <FeedView handle={handle} />
+        ) : (
+          <EmptyLanding />
+        )}
 
         <footer className="feed-footer">
           <span>
@@ -109,6 +156,87 @@ export default function FeedPage() {
       </main>
     </>
   );
+}
+
+function ThreadRoute({ handle, rkey }: { handle: string; rkey: string }) {
+  const { data: profile, isLoading: profileLoading, error: profileError } = useProfile({ actor: handle });
+  const uri = profile?.did ? `at://${profile.did}/app.bsky.feed.post/${rkey}` : null;
+  const { data: thread, isLoading: threadLoading, error: threadError } = useThread(uri);
+
+  if (profileLoading) return <LoadingPanel label="resolving profile…" />;
+  if (profileError) return <ErrorPanel msg={profileError instanceof Error ? profileError.message : String(profileError)} />;
+  if (!profile) return null;
+  if (threadLoading) return <LoadingPanel label="loading thread…" />;
+  if (threadError) return <ErrorPanel msg={threadError instanceof Error ? threadError.message : String(threadError)} />;
+  if (!thread) return null;
+
+  const parents = walkParents(thread);
+  const replies = (thread.replies ?? []).filter(isThreadNode);
+
+  return (
+    <>
+      <Link to={`/labs/feed/${handle}` as never} className="back-row">
+        ← @{handle}'s feed
+      </Link>
+
+      {parents.length > 0 ? (
+        <section className="thread-parents">
+          {parents.map((p) => (
+            <PostCard key={p.post.uri} post={p.post} href={linkFromUri(p.post.uri, p.post.author.handle)} compact />
+          ))}
+        </section>
+      ) : null}
+
+      <section className="thread-focus">
+        <PostCard post={thread.post} focus />
+      </section>
+
+      <section className="thread-replies">
+        <div className="replies-hd">
+          ── replies <span className="replies-count">{thread.post.replyCount ?? 0}</span>
+        </div>
+        {replies.length === 0 ? (
+          <div className="t-faint" style={{ padding: '16px 0', fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-xs)' }}>
+            no replies yet.
+          </div>
+        ) : (
+          replies.map((r) => <ThreadReply key={r.post.uri} node={r} depth={0} />)
+        )}
+      </section>
+    </>
+  );
+}
+
+function ThreadReply({ node, depth }: { node: ThreadNode; depth: number }) {
+  const children = (node.replies ?? []).filter(isThreadNode);
+  const indent = Math.min(depth, 5);
+  return (
+    <div className="thread-reply" style={{ marginLeft: indent * 16 }}>
+      <PostCard post={node.post} href={linkFromUri(node.post.uri, node.post.author.handle)} compact />
+      {children.length > 0 ? (
+        <div className="thread-children">
+          {children.map((c) => (
+            <ThreadReply key={c.post.uri} node={c} depth={depth + 1} />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function walkParents(node: ThreadNode): ThreadNode[] {
+  const out: ThreadNode[] = [];
+  let p: ThreadChild | undefined = node.parent;
+  while (isThreadNode(p)) {
+    out.push(p);
+    p = p.parent;
+  }
+  return out.reverse();
+}
+
+function linkFromUri(uri: string, handle: string): string {
+  const rkey = uri.split('/').pop() ?? '';
+  return `/labs/feed/${handle}/post/${rkey}`;
 }
 
 function EmptyLanding() {
@@ -153,7 +281,7 @@ function FeedView({ handle }: { handle: string }) {
           </div>
         </section>
       ) : (
-        <FeedList feedQuery={feedQuery} />
+        <FeedList feedQuery={feedQuery} browseHandle={handle} />
       )}
     </>
   );
@@ -209,7 +337,7 @@ function ProfileCard({ profile }: { profile: ProfileShape }) {
 
 type FeedQuery = ReturnType<typeof useAuthorFeed>;
 
-function FeedList({ feedQuery }: { feedQuery: FeedQuery }) {
+function FeedList({ feedQuery, browseHandle }: { feedQuery: FeedQuery; browseHandle: string }) {
   const { data, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage, error } = feedQuery;
   const posts = data?.pages.flatMap((p) => p.feed) ?? [];
 
@@ -231,7 +359,7 @@ function FeedList({ feedQuery }: { feedQuery: FeedQuery }) {
     <>
       <section className="posts">
         {posts.map((p) => (
-          <Post key={p.post.uri} item={p} />
+          <Post key={p.post.uri} item={p} browseHandle={browseHandle} />
         ))}
       </section>
       {hasNextPage ? (
@@ -250,35 +378,60 @@ function FeedList({ feedQuery }: { feedQuery: FeedQuery }) {
 // per-feed-item type from lexicons is deeply parameterised — pick what we actually use
 type FeedItem = NonNullable<NonNullable<ReturnType<typeof useAuthorFeed>['data']>['pages'][number]['feed']>[number];
 
-function Post({ item }: { item: FeedItem }) {
-  const record = item.post.record as AppBskyFeedPost.Record;
-  const embed = item.post.embed;
-  const images =
-    embed?.$type === 'app.bsky.embed.images#view'
-      ? (embed as AppBskyEmbedImages.View).images
-      : [];
+function Post({ item, browseHandle }: { item: FeedItem; browseHandle: string }) {
   const rkey = item.post.uri.split('/').pop() ?? '';
   const reason = (item.reason as { $type?: string } | undefined)?.$type;
-
   return (
-    <article className="post">
+    <PostCard
+      post={item.post}
+      reason={
+        reason === 'app.bsky.feed.defs#reasonPin' ? 'pin' : reason === 'app.bsky.feed.defs#reasonRepost' ? 'repost' : null
+      }
+      href={`/labs/feed/${browseHandle}/post/${rkey}`}
+    />
+  );
+}
+
+function PostCard({
+  post,
+  reason,
+  href,
+  compact,
+  focus,
+}: {
+  post: AppBskyFeedDefs.PostView;
+  reason?: 'pin' | 'repost' | null;
+  href?: string | null;
+  compact?: boolean;
+  focus?: boolean;
+}) {
+  const record = post.record as AppBskyFeedPost.Record;
+  const embed = post.embed;
+  const images =
+    embed?.$type === 'app.bsky.embed.images#view' ? (embed as AppBskyEmbedImages.View).images : [];
+  const rkey = post.uri.split('/').pop() ?? '';
+  const bskyUrl = `https://bsky.app/profile/${post.author.did}/post/${rkey}`;
+
+  const body = (
+    <>
       <header className="post-hd">
-        {item.post.author.avatar ? (
-          <img src={item.post.author.avatar} alt="" className="post-avatar" />
+        {post.author.avatar ? (
+          <img src={post.author.avatar} alt="" className="post-avatar" />
         ) : (
           <div className="post-avatar empty-avatar" />
         )}
         <div className="post-id">
-          <span className="post-name">{item.post.author.displayName ?? item.post.author.handle}</span>
-          <span className="post-handle">@{item.post.author.handle}</span>
+          <span className="post-name">{post.author.displayName ?? post.author.handle}</span>
+          <span className="post-handle">@{post.author.handle}</span>
         </div>
-        {reason === 'app.bsky.feed.defs#reasonPin' ? <span className="post-reason">📌 pinned</span> : null}
-        {reason === 'app.bsky.feed.defs#reasonRepost' ? <span className="post-reason">↻ reposted</span> : null}
+        {reason === 'pin' ? <span className="post-reason">📌 pinned</span> : null}
+        {reason === 'repost' ? <span className="post-reason">↻ reposted</span> : null}
         <a
-          href={`https://bsky.app/profile/${item.post.author.did}/post/${rkey}`}
+          href={bskyUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="post-time"
+          onClick={(e) => e.stopPropagation()}
           suppressHydrationWarning
         >
           {fmtRel(record.createdAt)}
@@ -287,12 +440,22 @@ function Post({ item }: { item: FeedItem }) {
       {record.text ? <p className="post-text">{record.text}</p> : null}
       {images.length > 0 ? <Images images={images} /> : null}
       <footer className="post-ft">
-        <span title="replies">↩ {item.post.replyCount ?? 0}</span>
-        <span title="reposts">↻ {item.post.repostCount ?? 0}</span>
-        <span title="likes">♥ {item.post.likeCount ?? 0}</span>
+        <span title="replies">↩ {post.replyCount ?? 0}</span>
+        <span title="reposts">↻ {post.repostCount ?? 0}</span>
+        <span title="likes">♥ {post.likeCount ?? 0}</span>
       </footer>
-    </article>
+    </>
   );
+
+  const cls = 'post' + (compact ? ' compact' : '') + (focus ? ' focus' : '');
+  if (href) {
+    return (
+      <Link to={href as never} className={cls + ' linkable'}>
+        {body}
+      </Link>
+    );
+  }
+  return <article className={cls}>{body}</article>;
 }
 
 function Images({ images }: { images: AppBskyEmbedImages.ViewImage[] }) {
@@ -684,4 +847,58 @@ const CSS = `
     font-size: var(--fs-xs);
     color: var(--color-fg-faint);
   }
+
+  /* linkable post cards */
+  a.post.linkable { text-decoration: none; color: inherit; }
+  a.post.linkable:hover { background: var(--color-bg-raised); }
+  a.post.linkable:hover .post-name { color: var(--color-accent); }
+
+  /* thread view */
+  .back-row {
+    display: inline-block;
+    margin-top: var(--sp-5);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--color-fg-faint);
+    text-decoration: none;
+  }
+  .back-row:hover { color: var(--color-accent); }
+
+  .thread-parents {
+    margin-top: var(--sp-4);
+    padding-left: var(--sp-3);
+    border-left: 2px solid var(--color-border-bright);
+    opacity: 0.75;
+  }
+  .thread-focus {
+    margin-top: var(--sp-4);
+    padding: var(--sp-3) var(--sp-4);
+    border: 1px solid var(--color-accent-dim);
+    background: color-mix(in oklch, var(--color-accent) 4%, var(--color-bg-panel));
+  }
+  .thread-focus .post { border-bottom: 0; padding: 0; }
+
+  .thread-replies {
+    margin-top: var(--sp-6);
+    padding-top: var(--sp-4);
+    border-top: 1px solid var(--color-border);
+  }
+  .replies-hd {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--color-fg-faint);
+    letter-spacing: 0.08em;
+    margin-bottom: var(--sp-3);
+  }
+  .replies-count { color: var(--color-accent); margin-left: 6px; }
+
+  .thread-reply { position: relative; }
+  .thread-reply .post.compact { padding: var(--sp-3) 0; }
+  .thread-children {
+    border-left: 1px dashed var(--color-border);
+    padding-left: var(--sp-3);
+  }
+
+  .post.compact .post-text { font-size: var(--fs-sm); }
+  .post.compact .post-images img { max-height: 240px; }
 `;
