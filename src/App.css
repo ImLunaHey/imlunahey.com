@@ -79,6 +79,10 @@ body {
   font-feature-settings: 'ss01', 'ss02', 'calt', 'liga';
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  /* prevent any stray wide child from horizontally scrolling the page.
+     `clip` beats `hidden` here — hidden creates a scroll container that
+     would break every position:sticky on the page. */
+  overflow-x: clip;
 }
 
 a {
@@ -442,6 +446,47 @@ a:hover {
 .nav a.active {
   color: var(--color-accent);
   text-decoration: none;
+}
+
+/* hide tanstack + debug devtools on mobile — they cover real content at phone
+   widths and aren't useful when you can't pop devtools open anyway. */
+@media (max-width: 760px) {
+  .tsqd-parent-container,
+  button[title="Toggle Debug Mode"] { display: none !important; }
+}
+
+/* mobile nav — horizontal scroller with fade-mask on both edges.
+   the .sp flex-spacer is hidden so every link sits in the same scroll track,
+   and every child gets flex-shrink: 0 so nothing collapses. no hamburger. */
+@media (max-width: 760px) {
+  .nav {
+    gap: var(--sp-4);
+    padding: var(--sp-3) var(--sp-4);
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 24px,
+      #000 calc(100% - 24px),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 24px,
+      #000 calc(100% - 24px),
+      transparent 100%
+    );
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav > * { flex-shrink: 0; }
+  .nav .sp { display: none; }
+  .nav .brand { font-size: var(--fs-lg); }
 }
 
 /* ================================

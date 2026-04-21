@@ -701,7 +701,7 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
+          <div className="colophon">
             <h3>colophon</h3>
             <div style={{ lineHeight: 1.8 }}>
               built with bun + vite + react
@@ -734,8 +734,28 @@ const HOME_CSS = `
     font-size: var(--fs-xs);
     color: var(--color-fg-faint);
     overflow-x: auto;
+    overflow-y: hidden;
     white-space: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    /* fade both edges so overflow reads as "more this way" instead of cut-off */
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 24px,
+      #000 calc(100% - 24px),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 24px,
+      #000 calc(100% - 24px),
+      transparent 100%
+    );
   }
+  .cmdbar::-webkit-scrollbar { display: none; }
+  .cmdbar > * { flex-shrink: 0; }
   .cmdbar .ok { color: var(--color-accent); }
   .cmdbar .warn { color: var(--color-warn); }
   .cmdbar b { color: var(--color-fg-dim); font-weight: 400; }
@@ -1187,6 +1207,22 @@ const HOME_CSS = `
   .home-footer .sources { font-family: var(--font-mono); line-height: 1.8; }
   .home-footer .sources .k { color: var(--color-accent); display: inline-block; width: 100px; }
   .home-footer .sources .v { color: var(--color-fg-dim); }
+  .home-footer .colophon { text-align: right; }
+
+  /* rig section + footer mobile: socials to 2-up, contact bar stacks, footer
+     collapses to single column with colophon left-aligned. */
+  @media (max-width: 560px) {
+    .socials-row { grid-template-columns: repeat(2, 1fr); }
+    .contact-bar {
+      grid-template-columns: 1fr;
+      gap: var(--sp-4);
+      padding: var(--sp-4);
+    }
+    .contact-bar .btn.primary { justify-self: start; }
+    .home-footer { grid-template-columns: 1fr; gap: var(--sp-6); }
+    .home-footer .colophon { text-align: left; }
+    .home-footer .sources .k { width: auto; margin-right: 8px; }
+  }
 
   /* skeletons */
   @keyframes skel-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
