@@ -10,6 +10,7 @@ const LINKS: { to: string; label: string; match?: (path: string) => boolean }[] 
   { to: '/games', label: '/games', match: (p) => p.startsWith('/games') },
   { to: '/music', label: '/music', match: (p) => p.startsWith('/music') },
   { to: '/labs', label: '/labs', match: (p) => p.startsWith('/labs') },
+  { to: '/globe', label: '/globe', match: (p) => p.startsWith('/globe') },
   { to: '/uses', label: '/uses', match: (p) => p.startsWith('/uses') },
 ];
 

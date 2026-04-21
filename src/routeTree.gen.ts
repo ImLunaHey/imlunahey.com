@@ -15,6 +15,7 @@ import { Route as OgSplatRouteImport } from './routes/og/$'
 import { Route as MainUsesRouteImport } from './routes/_main/uses'
 import { Route as MainMusicRouteImport } from './routes/_main/music'
 import { Route as MainHealthRouteImport } from './routes/_main/health'
+import { Route as MainGlobeRouteImport } from './routes/_main/globe'
 import { Route as MainGalleryRouteImport } from './routes/_main/gallery'
 import { Route as MainDesignSystemRouteImport } from './routes/_main/design-system'
 import { Route as MainWatchingIndexRouteImport } from './routes/_main/watching/index'
@@ -77,6 +78,11 @@ const MainMusicRoute = MainMusicRouteImport.update({
 const MainHealthRoute = MainHealthRouteImport.update({
   id: '/health',
   path: '/health',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainGlobeRoute = MainGlobeRouteImport.update({
+  id: '/globe',
+  path: '/globe',
   getParentRoute: () => MainRoute,
 } as any)
 const MainGalleryRoute = MainGalleryRouteImport.update({
@@ -256,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
   '/design-system': typeof MainDesignSystemRoute
   '/gallery': typeof MainGalleryRoute
+  '/globe': typeof MainGlobeRoute
   '/health': typeof MainHealthRoute
   '/music': typeof MainMusicRoute
   '/uses': typeof MainUsesRoute
@@ -296,6 +303,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/design-system': typeof MainDesignSystemRoute
   '/gallery': typeof MainGalleryRoute
+  '/globe': typeof MainGlobeRoute
   '/health': typeof MainHealthRoute
   '/music': typeof MainMusicRoute
   '/uses': typeof MainUsesRoute
@@ -339,6 +347,7 @@ export interface FileRoutesById {
   '/_main': typeof MainRouteWithChildren
   '/_main/design-system': typeof MainDesignSystemRoute
   '/_main/gallery': typeof MainGalleryRoute
+  '/_main/globe': typeof MainGlobeRoute
   '/_main/health': typeof MainHealthRoute
   '/_main/music': typeof MainMusicRoute
   '/_main/uses': typeof MainUsesRoute
@@ -383,6 +392,7 @@ export interface FileRouteTypes {
     | '/'
     | '/design-system'
     | '/gallery'
+    | '/globe'
     | '/health'
     | '/music'
     | '/uses'
@@ -423,6 +433,7 @@ export interface FileRouteTypes {
   to:
     | '/design-system'
     | '/gallery'
+    | '/globe'
     | '/health'
     | '/music'
     | '/uses'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/_main'
     | '/_main/design-system'
     | '/_main/gallery'
+    | '/_main/globe'
     | '/_main/health'
     | '/_main/music'
     | '/_main/uses'
@@ -551,6 +563,13 @@ declare module '@tanstack/react-router' {
       path: '/health'
       fullPath: '/health'
       preLoaderRoute: typeof MainHealthRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/globe': {
+      id: '/_main/globe'
+      path: '/globe'
+      fullPath: '/globe'
+      preLoaderRoute: typeof MainGlobeRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/gallery': {
@@ -797,6 +816,7 @@ declare module '@tanstack/react-router' {
 interface MainRouteChildren {
   MainDesignSystemRoute: typeof MainDesignSystemRoute
   MainGalleryRoute: typeof MainGalleryRoute
+  MainGlobeRoute: typeof MainGlobeRoute
   MainHealthRoute: typeof MainHealthRoute
   MainMusicRoute: typeof MainMusicRoute
   MainUsesRoute: typeof MainUsesRoute
@@ -838,6 +858,7 @@ interface MainRouteChildren {
 const MainRouteChildren: MainRouteChildren = {
   MainDesignSystemRoute: MainDesignSystemRoute,
   MainGalleryRoute: MainGalleryRoute,
+  MainGlobeRoute: MainGlobeRoute,
   MainHealthRoute: MainHealthRoute,
   MainMusicRoute: MainMusicRoute,
   MainUsesRoute: MainUsesRoute,

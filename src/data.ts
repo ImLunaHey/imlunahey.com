@@ -68,7 +68,6 @@ export const BSKY_ACCOUNTS = ['imlunahey.com', 'imlunahey.bsky.social', 'lucidso
 
 export const STATUS = { focus: 'rewriting everything', dnd: true, backAt: '18:00', mood: 5 };
 
-
 export type RepoStatus = 'active' | 'archived' | 'wip';
 
 export type Repo = {
@@ -122,7 +121,11 @@ export const USES_SECTIONS: UsesSection[] = [
     items: [
       { name: 'macbook pro', config: 'm2 · 32gb', note: 'primary workhorse. fans never spin.' },
       { name: 'mac mini', config: 'm4 · 10c/10g · 512gb', note: 'second workstation. runs local ml workloads.' },
-      { name: 'dell s3425dw', config: '34" · 21:9 · curved', note: 'finally back on external screens. had 5 before moving to the uk from aus.' },
+      {
+        name: 'dell s3425dw',
+        config: '34" · 21:9 · curved',
+        note: 'finally back on external screens. had 5 before moving to the uk from aus.',
+      },
       { name: 'iphone', config: '17 pro', note: 'got it near launch day. still at 96% max capacity.' },
       { name: 'ipad', config: 'a16 · 11"', note: 'for testing ios apps. the 7th gen i replaced was laggy as fuck.' },
       { name: 'apple watch', config: 'ultra 2', note: 'mainly for heart-rate monitoring. i have pots.' },
@@ -188,3 +191,95 @@ export const USES_SECTIONS: UsesSection[] = [
   },
 ];
 
+export type PlaceKind = 'lived' | 'visited' | 'passed';
+
+export type Place = {
+  name: string;
+  country: string; // iso-like, lowercase
+  lat: number;
+  lon: number;
+  kind: PlaceKind;
+  when: string; // free-form, e.g. '2019 → now' or '2024 layover'
+  note?: string;
+};
+
+export const PLACES: Place[] = [
+  // LIVED
+  {
+    name: 'adelaide',
+    country: 'au',
+    lat: -34.9285,
+    lon: 138.6007,
+    kind: 'lived',
+    when: '1996 → jun 2016',
+    note: 'childhood and early adulthood. left for london in late 2016.',
+  },
+  {
+    name: 'london',
+    country: 'uk',
+    lat: 51.5074,
+    lon: -0.1278,
+    kind: 'lived',
+    when: 'jun 2016 → oct 2016',
+    note: 'was homeless for a bit.',
+  },
+  {
+    name: 'adelaide',
+    country: 'au',
+    lat: -34.9285,
+    lon: 138.6007,
+    kind: 'lived',
+    when: '2016 → 2025',
+    note: 'got a job, saved money, and moved back to london.',
+  },
+  {
+    name: 'london',
+    country: 'uk',
+    lat: 51.5074,
+    lon: -0.1278,
+    kind: 'lived',
+    when: '2025 → now',
+    note: 'the new home base.',
+  },
+
+  // VISITED
+  {
+    name: 'spain',
+    country: 'es',
+    lat: 40.4168,
+    lon: -3.7038,
+    kind: 'visited',
+    when: '2025 oct',
+    note: 'had a great time in barcelona. would like to go back and explore more of the country.',
+  },
+  {
+    name: 'portugal',
+    country: 'pt',
+    lat: 39.3999,
+    lon: -8.2245,
+    kind: 'visited',
+    when: '2025 oct',
+    note: 'the country is so fucking beautiful, and the food was incredible.',
+  },
+  {
+    name: "'s-hertogenbosch",
+    country: 'nl',
+    lat: 51.6978,
+    lon: 5.3037,
+    kind: 'visited',
+    when: '2025 new years',
+    note: 'first time seeing snow and eftling!',
+  },
+  {
+    name: 'amsterdam',
+    country: 'nl',
+    lat: 52.3676,
+    lon: 4.9041,
+    kind: 'visited',
+    when: '2026 feb',
+    note: 'fell sick but was well worth the trip.',
+  },
+
+  // PASSED (layovers / trains through)
+  { name: 'brussels', country: 'be', lat: 50.8503, lon: 4.3517, kind: 'passed', when: '2025 new years' },
+];
