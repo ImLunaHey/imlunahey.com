@@ -26,6 +26,7 @@ export type OgSlug =
   | 'uses'
   | 'design-system'
   | 'globe'
+  | 'guestbook'
   | 'ai'
   // per-lab cards share a common glyph family:
   | 'lab/css-battles'
@@ -67,6 +68,7 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   uses: { title: 'uses.', subtitle: 'the full rig', glyph: '◈', slug: '/uses' },
   'design-system': { title: 'design.sys.', subtitle: 'tokens, elements, patterns', glyph: '◰', slug: '/design-system' },
   globe: { title: 'globe.', subtitle: 'places lived, visited, passed through', glyph: '◯', slug: '/globe' },
+  guestbook: { title: 'guestbook.', subtitle: 'signed entries via atproto', glyph: '✒', slug: '/guestbook' },
   ai: { title: 'ai.usage.', subtitle: 'every token, every client, every dollar', glyph: '⌬', slug: '/ai' },
   'lab/css-battles': { title: 'css battles.', subtitle: 'daily prompts from cssbattle.dev', glyph: '□', slug: '/labs/css-battles' },
   'lab/verse-reveal': { title: 'verse reveal.', subtitle: 'staggered ascii text effect', glyph: 'A', slug: '/labs/verse-reveal' },

@@ -1,0 +1,15 @@
+{
+  "client_id": "https://imlunahey.com/oauth/client-metadata.json",
+  "application_type": "web",
+  "client_name": "imlunahey.com",
+  "client_uri": "https://imlunahey.com",
+  "logo_uri": "https://imlunahey.com/logo.png",
+  "tos_uri": "https://imlunahey.com",
+  "policy_uri": "https://imlunahey.com",
+  "redirect_uris": ["https://imlunahey.com/oauth/callback"],
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "scope": "atproto transition:generic",
+  "token_endpoint_auth_method": "none",
+  "dpop_bound_access_tokens": true
+}

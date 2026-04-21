@@ -1,0 +1,43 @@
+{
+  "lexicon": 1,
+  "id": "com.imlunahey.guestbook.marker",
+  "description": "A marker record identifying a surface (a website, profile, project) that accepts com.imlunahey.guestbook.entry records. The marker lives on the operator's own PDS; entries reference it by AT-URI. Using `self` as the rkey means a single canonical guestbook per actor.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["title", "url", "createdAt"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Human-readable name shown in clients that render the marker (e.g. 'imlunahey.com guestbook')."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Canonical URL visitors are expected to have arrived from."
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Optional context: who runs this guestbook, what you'd like people to say."
+          },
+          "acceptsRepliesFrom": {
+            "type": "string",
+            "knownValues": ["anyone", "followers", "mutuals", "none"],
+            "default": "anyone",
+            "description": "Hint to clients about who the operator intends to accept entries from. Not enforced by the protocol."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      }
+    }
+  }
+}

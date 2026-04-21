@@ -13,7 +13,7 @@
     "start": "node .output/server/index.mjs",
     "test": "vitest",
     "test:browser": "vitest --workspace=vitest.workspace.ts",
-    "guestbook:marker": "tsx scripts/guestbook-marker.ts"
+    "guestbook:marker": "tsx --env-file=.env.local scripts/guestbook-marker.ts"
   },
   "dependencies": {
     "@ariakit/react": "^0.4.17",
@@ -22,6 +22,7 @@
     "@atcute/client": "^2.0.8",
     "@atcute/identity": "^1.1.4",
     "@atcute/identity-resolver": "^1.2.2",
+    "@atcute/oauth-browser-client": "^3.0.0",
     "@atcute/whitewind": "^1.0.4",
     "@atproto/api": "^0.14.9",
     "@codemirror/lang-json": "^6.0.1",

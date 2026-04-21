@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as MainRouteImport } from './routes/_main'
 import { Route as MainIndexRouteImport } from './routes/_main/index'
 import { Route as OgSplatRouteImport } from './routes/og/$'
+import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
 import { Route as MainUsesRouteImport } from './routes/_main/uses'
 import { Route as MainMusicRouteImport } from './routes/_main/music'
 import { Route as MainHealthRouteImport } from './routes/_main/health'
+import { Route as MainGuestbookRouteImport } from './routes/_main/guestbook'
 import { Route as MainGlobeRouteImport } from './routes/_main/globe'
 import { Route as MainGalleryRouteImport } from './routes/_main/gallery'
 import { Route as MainDesignSystemRouteImport } from './routes/_main/design-system'
@@ -66,6 +68,11 @@ const OgSplatRoute = OgSplatRouteImport.update({
   path: '/og/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OauthCallbackRoute = OauthCallbackRouteImport.update({
+  id: '/oauth/callback',
+  path: '/oauth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MainUsesRoute = MainUsesRouteImport.update({
   id: '/uses',
   path: '/uses',
@@ -79,6 +86,11 @@ const MainMusicRoute = MainMusicRouteImport.update({
 const MainHealthRoute = MainHealthRouteImport.update({
   id: '/health',
   path: '/health',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainGuestbookRoute = MainGuestbookRouteImport.update({
+  id: '/guestbook',
+  path: '/guestbook',
   getParentRoute: () => MainRoute,
 } as any)
 const MainGlobeRoute = MainGlobeRouteImport.update({
@@ -270,9 +282,11 @@ export interface FileRoutesByFullPath {
   '/design-system': typeof MainDesignSystemRoute
   '/gallery': typeof MainGalleryRoute
   '/globe': typeof MainGlobeRoute
+  '/guestbook': typeof MainGuestbookRoute
   '/health': typeof MainHealthRoute
   '/music': typeof MainMusicRoute
   '/uses': typeof MainUsesRoute
+  '/oauth/callback': typeof OauthCallbackRoute
   '/og/$': typeof OgSplatRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
@@ -312,9 +326,11 @@ export interface FileRoutesByTo {
   '/design-system': typeof MainDesignSystemRoute
   '/gallery': typeof MainGalleryRoute
   '/globe': typeof MainGlobeRoute
+  '/guestbook': typeof MainGuestbookRoute
   '/health': typeof MainHealthRoute
   '/music': typeof MainMusicRoute
   '/uses': typeof MainUsesRoute
+  '/oauth/callback': typeof OauthCallbackRoute
   '/og/$': typeof OgSplatRoute
   '/': typeof MainIndexRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
@@ -357,9 +373,11 @@ export interface FileRoutesById {
   '/_main/design-system': typeof MainDesignSystemRoute
   '/_main/gallery': typeof MainGalleryRoute
   '/_main/globe': typeof MainGlobeRoute
+  '/_main/guestbook': typeof MainGuestbookRoute
   '/_main/health': typeof MainHealthRoute
   '/_main/music': typeof MainMusicRoute
   '/_main/uses': typeof MainUsesRoute
+  '/oauth/callback': typeof OauthCallbackRoute
   '/og/$': typeof OgSplatRoute
   '/_main/': typeof MainIndexRoute
   '/_main/blog/$rkey': typeof MainBlogRkeyRoute
@@ -403,9 +421,11 @@ export interface FileRouteTypes {
     | '/design-system'
     | '/gallery'
     | '/globe'
+    | '/guestbook'
     | '/health'
     | '/music'
     | '/uses'
+    | '/oauth/callback'
     | '/og/$'
     | '/blog/$rkey'
     | '/games/$rkey'
@@ -445,9 +465,11 @@ export interface FileRouteTypes {
     | '/design-system'
     | '/gallery'
     | '/globe'
+    | '/guestbook'
     | '/health'
     | '/music'
     | '/uses'
+    | '/oauth/callback'
     | '/og/$'
     | '/'
     | '/blog/$rkey'
@@ -489,9 +511,11 @@ export interface FileRouteTypes {
     | '/_main/design-system'
     | '/_main/gallery'
     | '/_main/globe'
+    | '/_main/guestbook'
     | '/_main/health'
     | '/_main/music'
     | '/_main/uses'
+    | '/oauth/callback'
     | '/og/$'
     | '/_main/'
     | '/_main/blog/$rkey'
@@ -530,6 +554,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   MainRoute: typeof MainRouteWithChildren
+  OauthCallbackRoute: typeof OauthCallbackRoute
   OgSplatRoute: typeof OgSplatRoute
 }
 
@@ -556,6 +581,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OgSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/oauth/callback': {
+      id: '/oauth/callback'
+      path: '/oauth/callback'
+      fullPath: '/oauth/callback'
+      preLoaderRoute: typeof OauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_main/uses': {
       id: '/_main/uses'
       path: '/uses'
@@ -575,6 +607,13 @@ declare module '@tanstack/react-router' {
       path: '/health'
       fullPath: '/health'
       preLoaderRoute: typeof MainHealthRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/guestbook': {
+      id: '/_main/guestbook'
+      path: '/guestbook'
+      fullPath: '/guestbook'
+      preLoaderRoute: typeof MainGuestbookRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/globe': {
@@ -837,6 +876,7 @@ interface MainRouteChildren {
   MainDesignSystemRoute: typeof MainDesignSystemRoute
   MainGalleryRoute: typeof MainGalleryRoute
   MainGlobeRoute: typeof MainGlobeRoute
+  MainGuestbookRoute: typeof MainGuestbookRoute
   MainHealthRoute: typeof MainHealthRoute
   MainMusicRoute: typeof MainMusicRoute
   MainUsesRoute: typeof MainUsesRoute
@@ -880,6 +920,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainDesignSystemRoute: MainDesignSystemRoute,
   MainGalleryRoute: MainGalleryRoute,
   MainGlobeRoute: MainGlobeRoute,
+  MainGuestbookRoute: MainGuestbookRoute,
   MainHealthRoute: MainHealthRoute,
   MainMusicRoute: MainMusicRoute,
   MainUsesRoute: MainUsesRoute,
@@ -922,6 +963,7 @@ const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   MainRoute: MainRouteWithChildren,
+  OauthCallbackRoute: OauthCallbackRoute,
   OgSplatRoute: OgSplatRoute,
 }
 export const routeTree = rootRouteImport

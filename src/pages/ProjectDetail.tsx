@@ -444,6 +444,51 @@ const CSS = `
   .readme a { color: var(--color-accent); }
   .readme a:hover { text-decoration: underline; }
 
+  .readme ul, .readme ol { margin: 0 0 var(--sp-3) var(--sp-5); color: var(--color-fg); line-height: 1.65; }
+  .readme li { margin-bottom: 4px; }
+  .readme blockquote {
+    border-left: 3px solid var(--color-accent-dim);
+    padding: 0 var(--sp-3);
+    margin: var(--sp-4) 0;
+    color: var(--color-fg-dim);
+    font-style: italic;
+  }
+
+  /* gfm tables — react-markdown + remark-gfm emits plain <table> / <th> /
+     <td>, so without styles they render as unstyled browser default. */
+  .readme table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: var(--sp-4) 0;
+    font-size: var(--fs-sm);
+    overflow-x: auto;
+    display: block;
+  }
+  .readme table thead { background: var(--color-bg-panel); }
+  .readme table th {
+    text-align: left;
+    padding: 8px 12px;
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    text-transform: lowercase;
+    letter-spacing: 0.08em;
+    font-weight: 400;
+    border-bottom: 1px solid var(--color-border-bright);
+    white-space: nowrap;
+  }
+  .readme table td {
+    padding: 8px 12px;
+    border-bottom: 1px dashed var(--color-border);
+    color: var(--color-fg);
+    vertical-align: top;
+  }
+  .readme table tr:last-child td { border-bottom: 0; }
+  .readme table code {
+    font-size: 11px;
+    padding: 1px 4px;
+  }
+
   .code-wrap {
     margin: var(--sp-4) 0;
     border: 1px solid var(--color-border);

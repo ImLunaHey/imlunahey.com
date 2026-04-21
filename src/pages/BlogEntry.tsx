@@ -335,6 +335,39 @@ const CSS = `
     color: var(--color-fg);
   }
   .shell-post article pre code { background: transparent; border: 0; padding: 0; color: inherit; font-size: inherit; }
+
+  /* gfm tables — remark-gfm emits <table>/<th>/<td>; style them in the
+     same register as the code blocks so they sit inside the prose. */
+  .shell-post article table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: var(--sp-5) 0;
+    font-size: 14px;
+    overflow-x: auto;
+    display: block;
+  }
+  .shell-post article table thead { background: var(--color-bg-panel); }
+  .shell-post article table th {
+    text-align: left;
+    padding: 8px 12px;
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    text-transform: lowercase;
+    letter-spacing: 0.08em;
+    font-weight: 400;
+    border-bottom: 1px solid var(--color-border-bright);
+    white-space: nowrap;
+  }
+  .shell-post article table td {
+    padding: 8px 12px;
+    border-bottom: 1px dashed var(--color-border);
+    color: var(--color-fg);
+    vertical-align: top;
+  }
+  .shell-post article table tr:last-child td { border-bottom: 0; }
+  .shell-post article table code { font-size: 11px; padding: 1px 4px; }
+
   .shell-post article img {
     display: block;
     max-width: 100%;

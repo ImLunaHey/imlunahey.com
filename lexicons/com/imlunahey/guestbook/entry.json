@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "com.imlunahey.guestbook.entry",
+  "description": "A signed guestbook entry left on another actor's guestbook marker. The entry record lives on the author's own PDS; the marker it references is owned by the site operator.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["text", "subject", "createdAt"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "maxGraphemes": 1000,
+            "description": "The visible entry body. Short prose, no markdown."
+          },
+          "subject": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "AT-URI of the com.imlunahey.guestbook.marker record this entry is signing."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Client-supplied creation timestamp. UTC."
+          },
+          "replyTo": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "Optional — AT-URI of another guestbook entry this one is threading under."
+          },
+          "langs": {
+            "type": "array",
+            "items": { "type": "string", "format": "language" },
+            "maxLength": 3,
+            "description": "BCP-47 tags describing the language(s) of `text`."
+          }
+        }
+      }
+    }
+  }
+}
