@@ -108,6 +108,14 @@ const LABS: Lab[] = [
     year: '2026',
     ready: true,
   },
+  {
+    slug: 'tid',
+    title: 'tid',
+    desc: 'live-generate atproto timestamp ids, or paste one to decode its timestamp + clock id.',
+    tags: ['atproto'],
+    year: '2026',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {

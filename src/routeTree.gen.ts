@@ -23,6 +23,7 @@ import { Route as MainBlogIndexRouteImport } from './routes/_main/blog/index'
 import { Route as MainWatchingRkeyRouteImport } from './routes/_main/watching/$rkey'
 import { Route as MainProjectsNameRouteImport } from './routes/_main/projects/$name'
 import { Route as MainLabsVerseRevealRouteImport } from './routes/_main/labs/verse-reveal'
+import { Route as MainLabsTidRouteImport } from './routes/_main/labs/tid'
 import { Route as MainLabsScreenshotMakerRouteImport } from './routes/_main/labs/screenshot-maker'
 import { Route as MainLabsPdfUploaderRouteImport } from './routes/_main/labs/pdf-uploader'
 import { Route as MainLabsListCleanerRouteImport } from './routes/_main/labs/list-cleaner'
@@ -110,6 +111,11 @@ const MainProjectsNameRoute = MainProjectsNameRouteImport.update({
 const MainLabsVerseRevealRoute = MainLabsVerseRevealRouteImport.update({
   id: '/labs/verse-reveal',
   path: '/labs/verse-reveal',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsTidRoute = MainLabsTidRouteImport.update({
+  id: '/labs/tid',
+  path: '/labs/tid',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsScreenshotMakerRoute = MainLabsScreenshotMakerRouteImport.update({
@@ -223,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
+  '/labs/tid': typeof MainLabsTidRoute
   '/labs/verse-reveal': typeof MainLabsVerseRevealRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByTo {
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
+  '/labs/tid': typeof MainLabsTidRoute
   '/labs/verse-reveal': typeof MainLabsVerseRevealRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
@@ -293,6 +301,7 @@ export interface FileRoutesById {
   '/_main/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/_main/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/_main/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
+  '/_main/labs/tid': typeof MainLabsTidRoute
   '/_main/labs/verse-reveal': typeof MainLabsVerseRevealRoute
   '/_main/projects/$name': typeof MainProjectsNameRoute
   '/_main/watching/$rkey': typeof MainWatchingRkeyRoute
@@ -329,6 +338,7 @@ export interface FileRouteTypes {
     | '/labs/list-cleaner'
     | '/labs/pdf-uploader'
     | '/labs/screenshot-maker'
+    | '/labs/tid'
     | '/labs/verse-reveal'
     | '/projects/$name'
     | '/watching/$rkey'
@@ -363,6 +373,7 @@ export interface FileRouteTypes {
     | '/labs/list-cleaner'
     | '/labs/pdf-uploader'
     | '/labs/screenshot-maker'
+    | '/labs/tid'
     | '/labs/verse-reveal'
     | '/projects/$name'
     | '/watching/$rkey'
@@ -398,6 +409,7 @@ export interface FileRouteTypes {
     | '/_main/labs/list-cleaner'
     | '/_main/labs/pdf-uploader'
     | '/_main/labs/screenshot-maker'
+    | '/_main/labs/tid'
     | '/_main/labs/verse-reveal'
     | '/_main/projects/$name'
     | '/_main/watching/$rkey'
@@ -522,6 +534,13 @@ declare module '@tanstack/react-router' {
       path: '/labs/verse-reveal'
       fullPath: '/labs/verse-reveal'
       preLoaderRoute: typeof MainLabsVerseRevealRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/tid': {
+      id: '/_main/labs/tid'
+      path: '/labs/tid'
+      fullPath: '/labs/tid'
+      preLoaderRoute: typeof MainLabsTidRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/screenshot-maker': {
@@ -673,6 +692,7 @@ interface MainRouteChildren {
   MainLabsListCleanerRoute: typeof MainLabsListCleanerRoute
   MainLabsPdfUploaderRoute: typeof MainLabsPdfUploaderRoute
   MainLabsScreenshotMakerRoute: typeof MainLabsScreenshotMakerRoute
+  MainLabsTidRoute: typeof MainLabsTidRoute
   MainLabsVerseRevealRoute: typeof MainLabsVerseRevealRoute
   MainProjectsNameRoute: typeof MainProjectsNameRoute
   MainWatchingRkeyRoute: typeof MainWatchingRkeyRoute
@@ -708,6 +728,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsListCleanerRoute: MainLabsListCleanerRoute,
   MainLabsPdfUploaderRoute: MainLabsPdfUploaderRoute,
   MainLabsScreenshotMakerRoute: MainLabsScreenshotMakerRoute,
+  MainLabsTidRoute: MainLabsTidRoute,
   MainLabsVerseRevealRoute: MainLabsVerseRevealRoute,
   MainProjectsNameRoute: MainProjectsNameRoute,
   MainWatchingRkeyRoute: MainWatchingRkeyRoute,
