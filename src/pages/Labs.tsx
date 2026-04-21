@@ -44,6 +44,14 @@ const LABS: Lab[] = [
     year: '2024',
     ready: true,
   },
+  {
+    slug: 'car-explorer',
+    title: 'car explorer',
+    desc: 'browse any atproto repo — resolves handle → did → pds, downloads the car, groups by collection.',
+    tags: ['atproto'],
+    year: '2024',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {

@@ -28,7 +28,9 @@ import { Route as MainLabsInfiniteCanvasRouteImport } from './routes/_main/labs/
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
 import { Route as MainLabsCssBattlesIndexRouteImport } from './routes/_main/labs/css-battles/index'
+import { Route as MainLabsCarExplorerIndexRouteImport } from './routes/_main/labs/car-explorer/index'
 import { Route as MainLabsCssBattlesDateRouteImport } from './routes/_main/labs/css-battles/$date'
+import { Route as MainLabsCarExplorerSplatRouteImport } from './routes/_main/labs/car-explorer/$'
 
 const MainRoute = MainRouteImport.update({
   id: '/_main',
@@ -124,11 +126,23 @@ const MainLabsCssBattlesIndexRoute = MainLabsCssBattlesIndexRouteImport.update({
   path: '/labs/css-battles/',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsCarExplorerIndexRoute =
+  MainLabsCarExplorerIndexRouteImport.update({
+    id: '/labs/car-explorer/',
+    path: '/labs/car-explorer/',
+    getParentRoute: () => MainRoute,
+  } as any)
 const MainLabsCssBattlesDateRoute = MainLabsCssBattlesDateRouteImport.update({
   id: '/labs/css-battles/$date',
   path: '/labs/css-battles/$date',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsCarExplorerSplatRoute =
+  MainLabsCarExplorerSplatRouteImport.update({
+    id: '/labs/car-explorer/$',
+    path: '/labs/car-explorer/$',
+    getParentRoute: () => MainRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
@@ -148,7 +162,9 @@ export interface FileRoutesByFullPath {
   '/labs/': typeof MainLabsIndexRoute
   '/projects/': typeof MainProjectsIndexRoute
   '/watching/': typeof MainWatchingIndexRoute
+  '/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
+  '/labs/car-explorer/': typeof MainLabsCarExplorerIndexRoute
   '/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -169,7 +185,9 @@ export interface FileRoutesByTo {
   '/labs': typeof MainLabsIndexRoute
   '/projects': typeof MainProjectsIndexRoute
   '/watching': typeof MainWatchingIndexRoute
+  '/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
+  '/labs/car-explorer': typeof MainLabsCarExplorerIndexRoute
   '/labs/css-battles': typeof MainLabsCssBattlesIndexRoute
 }
 export interface FileRoutesById {
@@ -192,7 +210,9 @@ export interface FileRoutesById {
   '/_main/labs/': typeof MainLabsIndexRoute
   '/_main/projects/': typeof MainProjectsIndexRoute
   '/_main/watching/': typeof MainWatchingIndexRoute
+  '/_main/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/_main/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
+  '/_main/labs/car-explorer/': typeof MainLabsCarExplorerIndexRoute
   '/_main/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
 }
 export interface FileRouteTypes {
@@ -215,7 +235,9 @@ export interface FileRouteTypes {
     | '/labs/'
     | '/projects/'
     | '/watching/'
+    | '/labs/car-explorer/$'
     | '/labs/css-battles/$date'
+    | '/labs/car-explorer/'
     | '/labs/css-battles/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -236,7 +258,9 @@ export interface FileRouteTypes {
     | '/labs'
     | '/projects'
     | '/watching'
+    | '/labs/car-explorer/$'
     | '/labs/css-battles/$date'
+    | '/labs/car-explorer'
     | '/labs/css-battles'
   id:
     | '__root__'
@@ -258,7 +282,9 @@ export interface FileRouteTypes {
     | '/_main/labs/'
     | '/_main/projects/'
     | '/_main/watching/'
+    | '/_main/labs/car-explorer/$'
     | '/_main/labs/css-battles/$date'
+    | '/_main/labs/car-explorer/'
     | '/_main/labs/css-battles/'
   fileRoutesById: FileRoutesById
 }
@@ -401,11 +427,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsCssBattlesIndexRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/car-explorer/': {
+      id: '/_main/labs/car-explorer/'
+      path: '/labs/car-explorer'
+      fullPath: '/labs/car-explorer/'
+      preLoaderRoute: typeof MainLabsCarExplorerIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/css-battles/$date': {
       id: '/_main/labs/css-battles/$date'
       path: '/labs/css-battles/$date'
       fullPath: '/labs/css-battles/$date'
       preLoaderRoute: typeof MainLabsCssBattlesDateRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/car-explorer/$': {
+      id: '/_main/labs/car-explorer/$'
+      path: '/labs/car-explorer/$'
+      fullPath: '/labs/car-explorer/$'
+      preLoaderRoute: typeof MainLabsCarExplorerSplatRouteImport
       parentRoute: typeof MainRoute
     }
   }
@@ -429,7 +469,9 @@ interface MainRouteChildren {
   MainLabsIndexRoute: typeof MainLabsIndexRoute
   MainProjectsIndexRoute: typeof MainProjectsIndexRoute
   MainWatchingIndexRoute: typeof MainWatchingIndexRoute
+  MainLabsCarExplorerSplatRoute: typeof MainLabsCarExplorerSplatRoute
   MainLabsCssBattlesDateRoute: typeof MainLabsCssBattlesDateRoute
+  MainLabsCarExplorerIndexRoute: typeof MainLabsCarExplorerIndexRoute
   MainLabsCssBattlesIndexRoute: typeof MainLabsCssBattlesIndexRoute
 }
 
@@ -451,7 +493,9 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsIndexRoute: MainLabsIndexRoute,
   MainProjectsIndexRoute: MainProjectsIndexRoute,
   MainWatchingIndexRoute: MainWatchingIndexRoute,
+  MainLabsCarExplorerSplatRoute: MainLabsCarExplorerSplatRoute,
   MainLabsCssBattlesDateRoute: MainLabsCssBattlesDateRoute,
+  MainLabsCarExplorerIndexRoute: MainLabsCarExplorerIndexRoute,
   MainLabsCssBattlesIndexRoute: MainLabsCssBattlesIndexRoute,
 }
 
