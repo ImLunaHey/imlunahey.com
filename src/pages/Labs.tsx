@@ -132,6 +132,14 @@ const LABS: Lab[] = [
     year: '2026',
     ready: true,
   },
+  {
+    slug: 'cron',
+    title: 'cron',
+    desc: 'translate any cron expression to english and preview the next 10 fire times in your local timezone.',
+    tags: ['tool'],
+    year: '2026',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {

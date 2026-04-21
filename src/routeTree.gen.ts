@@ -31,6 +31,7 @@ import { Route as MainLabsListCleanerRouteImport } from './routes/_main/labs/lis
 import { Route as MainLabsJwtRouteImport } from './routes/_main/labs/jwt'
 import { Route as MainLabsJetstreamRouteImport } from './routes/_main/labs/jetstream'
 import { Route as MainLabsInfiniteCanvasRouteImport } from './routes/_main/labs/infinite-canvas'
+import { Route as MainLabsCronRouteImport } from './routes/_main/labs/cron'
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
 import { Route as MainLabsPlcLogIndexRouteImport } from './routes/_main/labs/plc-log/index'
@@ -155,6 +156,11 @@ const MainLabsInfiniteCanvasRoute = MainLabsInfiniteCanvasRouteImport.update({
   path: '/labs/infinite-canvas',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsCronRoute = MainLabsCronRouteImport.update({
+  id: '/labs/cron',
+  path: '/labs/cron',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainGamesRkeyRoute = MainGamesRkeyRouteImport.update({
   id: '/games/$rkey',
   path: '/games/$rkey',
@@ -236,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/uses': typeof MainUsesRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
+  '/labs/cron': typeof MainLabsCronRoute
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/labs/jetstream': typeof MainLabsJetstreamRoute
   '/labs/jwt': typeof MainLabsJwtRoute
@@ -273,6 +280,7 @@ export interface FileRoutesByTo {
   '/': typeof MainIndexRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
+  '/labs/cron': typeof MainLabsCronRoute
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/labs/jetstream': typeof MainLabsJetstreamRoute
   '/labs/jwt': typeof MainLabsJwtRoute
@@ -312,6 +320,7 @@ export interface FileRoutesById {
   '/_main/': typeof MainIndexRoute
   '/_main/blog/$rkey': typeof MainBlogRkeyRoute
   '/_main/games/$rkey': typeof MainGamesRkeyRoute
+  '/_main/labs/cron': typeof MainLabsCronRoute
   '/_main/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/_main/labs/jetstream': typeof MainLabsJetstreamRoute
   '/_main/labs/jwt': typeof MainLabsJwtRoute
@@ -351,6 +360,7 @@ export interface FileRouteTypes {
     | '/uses'
     | '/blog/$rkey'
     | '/games/$rkey'
+    | '/labs/cron'
     | '/labs/infinite-canvas'
     | '/labs/jetstream'
     | '/labs/jwt'
@@ -388,6 +398,7 @@ export interface FileRouteTypes {
     | '/'
     | '/blog/$rkey'
     | '/games/$rkey'
+    | '/labs/cron'
     | '/labs/infinite-canvas'
     | '/labs/jetstream'
     | '/labs/jwt'
@@ -426,6 +437,7 @@ export interface FileRouteTypes {
     | '/_main/'
     | '/_main/blog/$rkey'
     | '/_main/games/$rkey'
+    | '/_main/labs/cron'
     | '/_main/labs/infinite-canvas'
     | '/_main/labs/jetstream'
     | '/_main/labs/jwt'
@@ -616,6 +628,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsInfiniteCanvasRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/cron': {
+      id: '/_main/labs/cron'
+      path: '/labs/cron'
+      fullPath: '/labs/cron'
+      preLoaderRoute: typeof MainLabsCronRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/games/$rkey': {
       id: '/_main/games/$rkey'
       path: '/games/$rkey'
@@ -725,6 +744,7 @@ interface MainRouteChildren {
   MainIndexRoute: typeof MainIndexRoute
   MainBlogRkeyRoute: typeof MainBlogRkeyRoute
   MainGamesRkeyRoute: typeof MainGamesRkeyRoute
+  MainLabsCronRoute: typeof MainLabsCronRoute
   MainLabsInfiniteCanvasRoute: typeof MainLabsInfiniteCanvasRoute
   MainLabsJetstreamRoute: typeof MainLabsJetstreamRoute
   MainLabsJwtRoute: typeof MainLabsJwtRoute
@@ -763,6 +783,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainIndexRoute: MainIndexRoute,
   MainBlogRkeyRoute: MainBlogRkeyRoute,
   MainGamesRkeyRoute: MainGamesRkeyRoute,
+  MainLabsCronRoute: MainLabsCronRoute,
   MainLabsInfiniteCanvasRoute: MainLabsInfiniteCanvasRoute,
   MainLabsJetstreamRoute: MainLabsJetstreamRoute,
   MainLabsJwtRoute: MainLabsJwtRoute,
