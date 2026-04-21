@@ -5,6 +5,11 @@ import { Resvg, initWasm } from '@resvg/resvg-wasm';
 // directly via initWasm.
 import wasmModule from '@resvg/resvg-wasm/index_bg.wasm?module';
 import { buildOgSvg, type OgSlug } from '../../lib/og';
+// Font is inlined as base64 so the worker doesn't depend on a self-fetch
+// to /fonts/ working in every deploy shape — on Cloudflare the static
+// asset handler runs before the worker, but a self-fetch from inside the
+// worker can still miss it, which rendered cards black in prod.
+import { getFontBuffer } from '../../lib/og-font';
 
 // One-time wasm init per isolate. In dev, HMR may reload this module
 // after the wasm runtime is already initialized — resvg throws in that
@@ -19,24 +24,6 @@ function ensureInit(): Promise<void> {
     });
   }
   return initPromise;
-}
-
-// Font buffer: fetched lazily from our own /fonts/ path on first request
-// per isolate, then kept in module scope. ~200kb for JetBrains Mono TTF.
-let fontPromise: Promise<Uint8Array | null> | null = null;
-function getFont(reqUrl: string): Promise<Uint8Array | null> {
-  if (!fontPromise) {
-    fontPromise = (async () => {
-      try {
-        const res = await fetch(new URL('/fonts/jetbrains-mono.ttf', reqUrl));
-        if (!res.ok) return null;
-        return new Uint8Array(await res.arrayBuffer());
-      } catch {
-        return null;
-      }
-    })();
-  }
-  return fontPromise;
 }
 
 export const Route = createFileRoute('/og/$')({
@@ -59,22 +46,19 @@ export const Route = createFileRoute('/og/$')({
         const svg = buildOgSvg(slug);
 
         await ensureInit();
-        const font = await getFont(request.url);
 
         const resvg = new Resvg(svg, {
           background: '#000000',
           fitTo: { mode: 'width', value: 1200 },
-          font: font
-            ? {
-                fontBuffers: [font],
-                // override resvg's built-in fallbacks so our ui-monospace /
-                // "JetBrains Mono" css stacks resolve to the bundled font.
-                defaultFontFamily: 'JetBrains Mono',
-                monospaceFamily: 'JetBrains Mono',
-                sansSerifFamily: 'JetBrains Mono',
-                serifFamily: 'JetBrains Mono',
-              }
-            : undefined,
+          font: {
+            fontBuffers: [getFontBuffer()],
+            // override resvg's built-in fallbacks so our ui-monospace /
+            // "JetBrains Mono" css stacks resolve to the bundled font.
+            defaultFontFamily: 'JetBrains Mono',
+            monospaceFamily: 'JetBrains Mono',
+            sansSerifFamily: 'JetBrains Mono',
+            serifFamily: 'JetBrains Mono',
+          },
           textRendering: 1, // optimizeLegibility
           shapeRendering: 2, // geometricPrecision
         });
