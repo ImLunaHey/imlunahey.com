@@ -18,6 +18,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { jsonSchema } from 'codemirror-json-schema';
 import { memo, useRef, useState } from 'react';
 import { useLexiconSchema } from '../../hooks/use-lexicon-schema';
+import { fetchLexicon } from '../../lib/fetch-lexicon';
 
 // ─── resolvers (module-scope: only one instance per page) ──────────────────
 
@@ -71,6 +72,34 @@ const KNOWN_LEXICONS: Record<string, string> = {
   'sh.tangled.repo.issue': 'tangled.sh issue',
   'social.popfeed.feed.review': 'popfeed review',
 };
+
+// ─── per-nsid lookups ──────────────────────────────────────────────────────
+
+/** Extract the reversed-domain authority from an NSID, e.g. app.bsky.feed.post → bsky.app. */
+function authorityDomain(nsid: string): string | null {
+  const parts = nsid.split('.');
+  if (parts.length < 2) return null;
+  return `${parts[1]}.${parts[0]}`;
+}
+
+/** Fetch the hosted lexicon's top-level description (if any). */
+function useLexiconDescription(nsid: string) {
+  return useQuery({
+    queryKey: ['lexicon-desc', nsid],
+    queryFn: async () => {
+      const lex = await fetchLexicon(nsid);
+      // prefer top-level description, fall back to defs.main.description
+      const main = (lex.defs as Record<string, { description?: string } | undefined>).main;
+      return lex.description ?? main?.description ?? null;
+    },
+    enabled: !!nsid,
+    staleTime: Infinity,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
+}
 
 // ─── data fetch ────────────────────────────────────────────────────────────
 
@@ -366,19 +395,42 @@ function CollectionList({ handle, data }: { handle: string; data: CarData }) {
         <span className="cols-ttl">// collections</span>
         <span className="cols-meta">{collections.length} nsid</span>
       </div>
-      {collections.map((nsid) => {
-        const count = data[nsid].length;
-        const label = KNOWN_LEXICONS[nsid];
-        return (
-          <Link key={nsid} to={`/labs/car-explorer/${handle}/${nsid}` as never} className="col-row">
-            <span className="col-nsid">{nsid}</span>
-            <span className="col-lbl">{label ?? <span className="t-faint">unknown lexicon</span>}</span>
-            <span className="col-count">{count.toLocaleString()}</span>
-            <span className="col-go">→</span>
-          </Link>
-        );
-      })}
+      {collections.map((nsid) => (
+        <CollectionRow key={nsid} handle={handle} nsid={nsid} count={data[nsid].length} />
+      ))}
     </section>
+  );
+}
+
+function CollectionRow({ handle, nsid, count }: { handle: string; nsid: string; count: number }) {
+  const domain = authorityDomain(nsid);
+  const { data: fetchedDesc } = useLexiconDescription(nsid);
+  const fallback = KNOWN_LEXICONS[nsid];
+  const desc = fetchedDesc ?? fallback;
+
+  return (
+    <Link to={`/labs/car-explorer/${handle}/${nsid}` as never} className="col-row">
+      <span className="col-icon">
+        {domain ? (
+          <img
+            src={`https://www.google.com/s2/favicons?sz=32&domain=${encodeURIComponent(domain)}`}
+            alt=""
+            width={16}
+            height={16}
+            loading="lazy"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.visibility = 'hidden';
+            }}
+          />
+        ) : null}
+      </span>
+      <span className="col-nsid">{nsid}</span>
+      <span className="col-lbl">
+        {desc ? desc : <span className="t-faint">unknown lexicon</span>}
+      </span>
+      <span className="col-count">{count.toLocaleString()}</span>
+      <span className="col-go">→</span>
+    </Link>
   );
 }
 
@@ -632,9 +684,9 @@ const CSS = `
 
   .col-row {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) auto auto;
-    gap: var(--sp-4);
-    align-items: baseline;
+    grid-template-columns: 20px minmax(0, 2fr) minmax(0, 2fr) auto auto;
+    gap: var(--sp-3);
+    align-items: center;
     padding: 10px var(--sp-3);
     border-bottom: 1px dashed var(--color-border);
     text-decoration: none;
@@ -645,6 +697,12 @@ const CSS = `
   .col-row:hover { background: var(--color-bg-raised); text-decoration: none; }
   .col-row:hover .col-nsid { color: var(--color-accent); }
   .col-row:hover .col-go { color: var(--color-accent); transform: translateX(3px); }
+  .col-icon {
+    width: 16px; height: 16px;
+    display: inline-flex; align-items: center; justify-content: center;
+    opacity: 0.85;
+  }
+  .col-icon img { display: block; width: 16px; height: 16px; image-rendering: -webkit-optimize-contrast; }
   .col-nsid { color: var(--color-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .col-lbl { color: var(--color-fg-faint); font-size: var(--fs-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .col-count {
@@ -712,7 +770,8 @@ const CSS = `
   }
 
   @media (max-width: 640px) {
-    .col-row { grid-template-columns: 1fr auto; }
-    .col-lbl { grid-column: 1 / -1; }
+    .col-row { grid-template-columns: 20px 1fr auto; }
+    .col-lbl { grid-column: 1 / -1; padding-left: 28px; }
+    .col-go { display: none; }
   }
 `;
