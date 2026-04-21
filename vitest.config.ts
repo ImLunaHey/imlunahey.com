@@ -8,7 +8,7 @@ export default defineConfig({
     setupFiles: ['./src/tests/setup/vitest.setup.ts'],
     environment: 'happy-dom',
     css: true,
-    exclude: ['**/node_modules/**', '**/dist/**', 'src/_legacy/**'],
+    exclude: ['**/node_modules/**', '**/dist/**'],
     server: {
       deps: {
         inline: ['codemirror-json-schema'],

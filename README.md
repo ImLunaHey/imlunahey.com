@@ -80,13 +80,13 @@ Set secrets in the CF dashboard (or `wrangler secret put`):
 ```
 src/
   pages/            # route components (Home, Blog, Projects, …)
+    labs/           # experiments: css-battles, verse-reveal, infinite-canvas,
+                    #   pdf-uploader, car-explorer, feed, screenshot-maker, list-cleaner
   routes/           # file-based router shells — just map urls → page components
   components/       # shared UI (NavBar, Layout, ErrorBoundary, LiveMusicPanel, …)
   server/           # createServerFn endpoints: github, lastfm, popfeed, whtwnd, …
   lib/              # small utils (format, markdown helpers)
   data.ts           # static config: SITE, USES, SOCIALS, GITHUB_ACCOUNTS, …
-  _legacy/          # parked experiments (studio, bluesky tools, infinite-canvas, …)
-                    # excluded from the routeTree + typecheck; kept for future migration
 ```
 
 ## Why client-side data fetching

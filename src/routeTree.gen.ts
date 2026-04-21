@@ -25,6 +25,7 @@ import { Route as MainProjectsNameRouteImport } from './routes/_main/projects/$n
 import { Route as MainLabsVerseRevealRouteImport } from './routes/_main/labs/verse-reveal'
 import { Route as MainLabsScreenshotMakerRouteImport } from './routes/_main/labs/screenshot-maker'
 import { Route as MainLabsPdfUploaderRouteImport } from './routes/_main/labs/pdf-uploader'
+import { Route as MainLabsListCleanerRouteImport } from './routes/_main/labs/list-cleaner'
 import { Route as MainLabsInfiniteCanvasRouteImport } from './routes/_main/labs/infinite-canvas'
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
@@ -114,6 +115,11 @@ const MainLabsPdfUploaderRoute = MainLabsPdfUploaderRouteImport.update({
   path: '/labs/pdf-uploader',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsListCleanerRoute = MainLabsListCleanerRouteImport.update({
+  id: '/labs/list-cleaner',
+  path: '/labs/list-cleaner',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsInfiniteCanvasRoute = MainLabsInfiniteCanvasRouteImport.update({
   id: '/labs/infinite-canvas',
   path: '/labs/infinite-canvas',
@@ -171,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
+  '/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/labs/verse-reveal': typeof MainLabsVerseRevealRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
+  '/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/labs/verse-reveal': typeof MainLabsVerseRevealRoute
@@ -225,6 +233,7 @@ export interface FileRoutesById {
   '/_main/blog/$rkey': typeof MainBlogRkeyRoute
   '/_main/games/$rkey': typeof MainGamesRkeyRoute
   '/_main/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
+  '/_main/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/_main/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/_main/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/_main/labs/verse-reveal': typeof MainLabsVerseRevealRoute
@@ -253,6 +262,7 @@ export interface FileRouteTypes {
     | '/blog/$rkey'
     | '/games/$rkey'
     | '/labs/infinite-canvas'
+    | '/labs/list-cleaner'
     | '/labs/pdf-uploader'
     | '/labs/screenshot-maker'
     | '/labs/verse-reveal'
@@ -279,6 +289,7 @@ export interface FileRouteTypes {
     | '/blog/$rkey'
     | '/games/$rkey'
     | '/labs/infinite-canvas'
+    | '/labs/list-cleaner'
     | '/labs/pdf-uploader'
     | '/labs/screenshot-maker'
     | '/labs/verse-reveal'
@@ -306,6 +317,7 @@ export interface FileRouteTypes {
     | '/_main/blog/$rkey'
     | '/_main/games/$rkey'
     | '/_main/labs/infinite-canvas'
+    | '/_main/labs/list-cleaner'
     | '/_main/labs/pdf-uploader'
     | '/_main/labs/screenshot-maker'
     | '/_main/labs/verse-reveal'
@@ -442,6 +454,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsPdfUploaderRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/list-cleaner': {
+      id: '/_main/labs/list-cleaner'
+      path: '/labs/list-cleaner'
+      fullPath: '/labs/list-cleaner'
+      preLoaderRoute: typeof MainLabsListCleanerRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/infinite-canvas': {
       id: '/_main/labs/infinite-canvas'
       path: '/labs/infinite-canvas'
@@ -517,6 +536,7 @@ interface MainRouteChildren {
   MainBlogRkeyRoute: typeof MainBlogRkeyRoute
   MainGamesRkeyRoute: typeof MainGamesRkeyRoute
   MainLabsInfiniteCanvasRoute: typeof MainLabsInfiniteCanvasRoute
+  MainLabsListCleanerRoute: typeof MainLabsListCleanerRoute
   MainLabsPdfUploaderRoute: typeof MainLabsPdfUploaderRoute
   MainLabsScreenshotMakerRoute: typeof MainLabsScreenshotMakerRoute
   MainLabsVerseRevealRoute: typeof MainLabsVerseRevealRoute
@@ -544,6 +564,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainBlogRkeyRoute: MainBlogRkeyRoute,
   MainGamesRkeyRoute: MainGamesRkeyRoute,
   MainLabsInfiniteCanvasRoute: MainLabsInfiniteCanvasRoute,
+  MainLabsListCleanerRoute: MainLabsListCleanerRoute,
   MainLabsPdfUploaderRoute: MainLabsPdfUploaderRoute,
   MainLabsScreenshotMakerRoute: MainLabsScreenshotMakerRoute,
   MainLabsVerseRevealRoute: MainLabsVerseRevealRoute,

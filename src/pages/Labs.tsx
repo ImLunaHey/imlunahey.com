@@ -68,6 +68,14 @@ const LABS: Lab[] = [
     year: '2023',
     ready: true,
   },
+  {
+    slug: 'list-cleaner',
+    title: 'list cleaner',
+    desc: 'find and delete bluesky list subscriptions where the list or its author no longer exists.',
+    tags: ['atproto', 'bluesky'],
+    year: '2024',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {
