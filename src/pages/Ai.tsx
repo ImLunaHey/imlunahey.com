@@ -33,12 +33,18 @@ function Heatmap({ days }: { days: AiContribution[] }) {
   const WEEKS = 53;
   const cols: (AiContribution | null)[][] = Array.from({ length: WEEKS }, () => Array(7).fill(null));
 
-  for (let i = 0; i < Math.min(days.length, WEEKS * 7); i++) {
-    const d = days[days.length - 1 - i];
-    if (!d) break;
+  if (days.length === 0) return <div className="hm-grid" aria-label="daily ai usage heatmap" />;
+
+  // Align days to calendar weeks: col = WEEKS-1 for the week containing the
+  // most recent day, each earlier calendar week shifts one column left.
+  const endDate = new Date(days[days.length - 1].date + 'T00:00:00Z');
+  const endSundayMs = endDate.getTime() - endDate.getUTCDay() * 86400000;
+  for (const d of days) {
     const dt = new Date(d.date + 'T00:00:00Z');
     const dow = dt.getUTCDay();
-    const col = WEEKS - 1 - Math.floor(i / 7);
+    const thisSundayMs = dt.getTime() - dow * 86400000;
+    const weeksAgo = Math.round((endSundayMs - thisSundayMs) / (7 * 86400000));
+    const col = WEEKS - 1 - weeksAgo;
     if (col >= 0 && col < WEEKS) cols[col][dow] = d;
   }
 
