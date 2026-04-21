@@ -149,6 +149,7 @@ export default function PdfUploaderPage() {
   };
 
   const busy = phase !== 'idle' && phase !== 'done' && phase !== 'error';
+  const canSubmit = handle.trim().length > 0 && appPassword.length > 0 && !!file && !busy;
 
   return (
     <>
@@ -232,7 +233,7 @@ export default function PdfUploaderPage() {
           </label>
 
           <div className="actions">
-            <button type="submit" disabled={busy} className="go">
+            <button type="submit" disabled={!canSubmit} className="go">
               {busy ? `${PHASE_LABEL[phase]}…` : 'post to bluesky'}
             </button>
             <span className="t-faint">
@@ -349,7 +350,9 @@ const CSS = `
 
   .dropzone {
     position: relative;
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     min-height: 240px;
     padding: var(--sp-5);
     border: 1px dashed var(--color-border-bright);
@@ -366,7 +369,7 @@ const CSS = `
     cursor: pointer;
     width: 100%; height: 100%;
   }
-  .dz-body { display: flex; flex-direction: column; gap: 6px; padding: var(--sp-6) 0; align-items: center; }
+  .dz-body { display: flex; flex-direction: column; gap: 6px; align-items: center; }
   .dz-icon { font-size: 40px; color: var(--color-accent); text-shadow: 0 0 12px var(--accent-glow); line-height: 1; }
   .dz-ttl { font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--color-fg); }
   .dz-sub { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--color-fg-faint); }
@@ -397,8 +400,8 @@ const CSS = `
     text-transform: lowercase;
     letter-spacing: 0.06em;
   }
-  .go:hover { background: color-mix(in oklch, var(--color-accent) 16%, var(--color-bg-panel)); }
-  .go:disabled { opacity: 0.5; cursor: wait; }
+  .go:hover:not(:disabled) { background: color-mix(in oklch, var(--color-accent) 16%, var(--color-bg-panel)); }
+  .go:disabled { opacity: 0.4; cursor: not-allowed; }
   .ph { color: var(--color-fg); font-weight: 400; }
   .ph.ph-error { color: var(--color-alert); }
   .ph.ph-done { color: var(--color-accent); }
