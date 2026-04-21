@@ -25,7 +25,11 @@ export type OgSlug =
   | 'labs'
   | 'uses'
   | 'design-system'
+  | 'bookmarks'
+  | 'library'
+  | 'homelab'
   | 'globe'
+  | 'guestbook'
   // per-lab cards share a common glyph family:
   | 'lab/css-battles'
   | 'lab/verse-reveal'
@@ -65,7 +69,11 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   labs: { title: 'labs.', subtitle: 'experiments, demos, tools', glyph: '⚗', slug: '/labs' },
   uses: { title: 'uses.', subtitle: 'the full rig', glyph: '◈', slug: '/uses' },
   'design-system': { title: 'design.sys.', subtitle: 'tokens, elements, patterns', glyph: '◰', slug: '/design-system' },
+  bookmarks: { title: 'bookmarks.', subtitle: 'articles, talks, papers worth keeping', glyph: '❖', slug: '/bookmarks' },
+  library: { title: 'library.', subtitle: 'physical media shelf', glyph: '▥', slug: '/library' },
+  homelab: { title: 'homelab.', subtitle: 'rack, services, uptime', glyph: '⌸', slug: '/homelab' },
   globe: { title: 'globe.', subtitle: 'places lived, visited, passed through', glyph: '◯', slug: '/globe' },
+  guestbook: { title: 'guestbook.', subtitle: 'signed entries via atproto', glyph: '✒', slug: '/guestbook' },
   'lab/css-battles': { title: 'css battles.', subtitle: 'daily prompts from cssbattle.dev', glyph: '□', slug: '/labs/css-battles' },
   'lab/verse-reveal': { title: 'verse reveal.', subtitle: 'staggered ascii text effect', glyph: 'A', slug: '/labs/verse-reveal' },
   'lab/infinite-canvas': { title: 'infinite canvas.', subtitle: 'canvas2d pan + zoom', glyph: '⊞', slug: '/labs/infinite-canvas' },
@@ -96,9 +104,10 @@ export function buildOgSvg(input: OgSlug | OgEntry): string {
   const entry = typeof input === 'string' ? (ENTRIES[input] ?? ENTRIES.home) : input;
   const { title, subtitle, glyph, slug } = entry;
 
-  // phosphor accent — the same color the site uses
-  const ACCENT = 'oklch(0.86 0.19 145)';
-  const ACCENT_DIM = 'oklch(0.55 0.13 145)';
+  // phosphor accent — hex equivalents of the site's oklch tokens, since
+  // resvg rasterizes this server-side and its oklch support is patchy.
+  const ACCENT = '#6aeaa0';
+  const ACCENT_DIM = '#3f8463';
   const FG = '#e6e6e6';
   const FG_DIM = '#9a9a9a';
   const FG_FAINT = '#555555';
@@ -107,18 +116,14 @@ export function buildOgSvg(input: OgSlug | OgEntry): string {
 
   const pad = 72; // outer padding from each edge — content uses the rest
 
+  // no <filter> — resvg skips feGaussianBlur chains silently, which meant
+  // the corner brackets + accent text were dropping out of the rendered png.
+  // a flat, filter-free template renders identically across every surface.
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="ui-monospace, 'JetBrains Mono', 'Courier New', monospace">
   <defs>
     <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
       <circle cx="1" cy="1" r="1" fill="${FG_FAINT}" opacity="0.3"/>
     </pattern>
-    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="10" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
   </defs>
 
   <!-- background -->
@@ -126,7 +131,7 @@ export function buildOgSvg(input: OgSlug | OgEntry): string {
   <rect width="${W}" height="${H}" fill="url(#dots)"/>
 
   <!-- corner brackets anchored to the image corners -->
-  <g stroke="${ACCENT}" stroke-width="2" fill="none" filter="url(#softGlow)">
+  <g stroke="${ACCENT}" stroke-width="2" fill="none">
     <path d="M ${pad - 24} ${pad} L ${pad - 24} ${pad - 24} L ${pad} ${pad - 24}"/>
     <path d="M ${W - pad} ${H - pad + 24} L ${W - pad + 24} ${H - pad + 24} L ${W - pad + 24} ${H - pad}"/>
   </g>
@@ -136,7 +141,7 @@ export function buildOgSvg(input: OgSlug | OgEntry): string {
   <text x="${pad}" y="${pad + 52}" fill="${FG_FAINT}" font-size="16" letter-spacing="3">~ / ${escape(slug.replace(/^\//, '') || '')}</text>
 
   <!-- glyph (top-right) -->
-  <text x="${W - pad}" y="${pad + 92}" text-anchor="end" fill="${ACCENT}" font-size="132" opacity="0.95" filter="url(#softGlow)">${escape(glyph)}</text>
+  <text x="${W - pad}" y="${pad + 92}" text-anchor="end" fill="${ACCENT}" font-size="132" opacity="0.95">${escape(glyph)}</text>
 
   <!-- title (center-left, full bleed) -->
   <text x="${pad}" y="${H / 2 + 48}" fill="${FG}" font-size="148" font-weight="500" letter-spacing="-3">${escape(title)}</text>

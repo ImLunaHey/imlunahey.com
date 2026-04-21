@@ -24,7 +24,7 @@ export function ogMeta(input: OgMetaInput): Array<Record<string, string>> {
     { property: 'og:image', content: image },
     { property: 'og:image:width', content: '1200' },
     { property: 'og:image:height', content: '630' },
-    { property: 'og:image:type', content: 'image/svg+xml' },
+    { property: 'og:image:type', content: 'image/png' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:site', content: `@${SITE.handle}` },
     { name: 'twitter:title', content: title },

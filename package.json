@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "start": "node .output/server/index.mjs",
     "test": "vitest",
-    "test:browser": "vitest --workspace=vitest.workspace.ts"
+    "test:browser": "vitest --workspace=vitest.workspace.ts",
+    "guestbook:marker": "tsx scripts/guestbook-marker.ts"
   },
   "dependencies": {
     "@ariakit/react": "^0.4.17",
@@ -29,9 +30,10 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@faker-js/faker": "^9.7.0",
-    "@fontsource-variable/doto": "^5.2.6",
+    "@fontsource-variable/doto": "^5.2.10",
     "@fontsource-variable/jetbrains-mono": "^5.2.5",
     "@radix-ui/react-hover-card": "^1.1.6",
+    "@resvg/resvg-wasm": "^2.6.2",
     "@tailwindcss/vite": "^4.2.2",
     "@tanstack/query-sync-storage-persister": "^5.69.0",
     "@tanstack/react-query": "^5.68.0",
