@@ -60,6 +60,14 @@ const LABS: Lab[] = [
     year: '2024',
     ready: true,
   },
+  {
+    slug: 'screenshot-maker',
+    title: 'screenshot maker',
+    desc: 'wrap an image in a background, shadow, frame, patterns, and text. pure canvas2d.',
+    tags: ['canvas', 'tool'],
+    year: '2023',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {
