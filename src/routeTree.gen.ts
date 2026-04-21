@@ -23,6 +23,7 @@ import { Route as MainBlogIndexRouteImport } from './routes/_main/blog/index'
 import { Route as MainWatchingRkeyRouteImport } from './routes/_main/watching/$rkey'
 import { Route as MainProjectsNameRouteImport } from './routes/_main/projects/$name'
 import { Route as MainLabsVerseRevealRouteImport } from './routes/_main/labs/verse-reveal'
+import { Route as MainLabsInfiniteCanvasRouteImport } from './routes/_main/labs/infinite-canvas'
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
 import { Route as MainLabsCssBattlesIndexRouteImport } from './routes/_main/labs/css-battles/index'
@@ -97,6 +98,11 @@ const MainLabsVerseRevealRoute = MainLabsVerseRevealRouteImport.update({
   path: '/labs/verse-reveal',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsInfiniteCanvasRoute = MainLabsInfiniteCanvasRouteImport.update({
+  id: '/labs/infinite-canvas',
+  path: '/labs/infinite-canvas',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainGamesRkeyRoute = MainGamesRkeyRouteImport.update({
   id: '/games/$rkey',
   path: '/games/$rkey',
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/uses': typeof MainUsesRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
+  '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/labs/verse-reveal': typeof MainLabsVerseRevealRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/': typeof MainIndexRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
+  '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/labs/verse-reveal': typeof MainLabsVerseRevealRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/_main/': typeof MainIndexRoute
   '/_main/blog/$rkey': typeof MainBlogRkeyRoute
   '/_main/games/$rkey': typeof MainGamesRkeyRoute
+  '/_main/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/_main/labs/verse-reveal': typeof MainLabsVerseRevealRoute
   '/_main/projects/$name': typeof MainProjectsNameRoute
   '/_main/watching/$rkey': typeof MainWatchingRkeyRoute
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/uses'
     | '/blog/$rkey'
     | '/games/$rkey'
+    | '/labs/infinite-canvas'
     | '/labs/verse-reveal'
     | '/projects/$name'
     | '/watching/$rkey'
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/'
     | '/blog/$rkey'
     | '/games/$rkey'
+    | '/labs/infinite-canvas'
     | '/labs/verse-reveal'
     | '/projects/$name'
     | '/watching/$rkey'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/_main/'
     | '/_main/blog/$rkey'
     | '/_main/games/$rkey'
+    | '/_main/labs/infinite-canvas'
     | '/_main/labs/verse-reveal'
     | '/_main/projects/$name'
     | '/_main/watching/$rkey'
@@ -342,6 +354,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsVerseRevealRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/infinite-canvas': {
+      id: '/_main/labs/infinite-canvas'
+      path: '/labs/infinite-canvas'
+      fullPath: '/labs/infinite-canvas'
+      preLoaderRoute: typeof MainLabsInfiniteCanvasRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/games/$rkey': {
       id: '/_main/games/$rkey'
       path: '/games/$rkey'
@@ -381,6 +400,7 @@ interface MainRouteChildren {
   MainIndexRoute: typeof MainIndexRoute
   MainBlogRkeyRoute: typeof MainBlogRkeyRoute
   MainGamesRkeyRoute: typeof MainGamesRkeyRoute
+  MainLabsInfiniteCanvasRoute: typeof MainLabsInfiniteCanvasRoute
   MainLabsVerseRevealRoute: typeof MainLabsVerseRevealRoute
   MainProjectsNameRoute: typeof MainProjectsNameRoute
   MainWatchingRkeyRoute: typeof MainWatchingRkeyRoute
@@ -401,6 +421,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainIndexRoute: MainIndexRoute,
   MainBlogRkeyRoute: MainBlogRkeyRoute,
   MainGamesRkeyRoute: MainGamesRkeyRoute,
+  MainLabsInfiniteCanvasRoute: MainLabsInfiniteCanvasRoute,
   MainLabsVerseRevealRoute: MainLabsVerseRevealRoute,
   MainProjectsNameRoute: MainProjectsNameRoute,
   MainWatchingRkeyRoute: MainWatchingRkeyRoute,

@@ -28,6 +28,14 @@ const LABS: Lab[] = [
     year: '2023',
     ready: true,
   },
+  {
+    slug: 'infinite-canvas',
+    title: 'infinite canvas',
+    desc: 'pan + zoom canvas with spatial-hash culling and offscreen caching. 400 synthetic nodes.',
+    tags: ['canvas', 'react'],
+    year: '2024',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {
