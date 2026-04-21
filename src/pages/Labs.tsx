@@ -124,6 +124,14 @@ const LABS: Lab[] = [
     year: '2026',
     ready: true,
   },
+  {
+    slug: 'jwt',
+    title: 'jwt',
+    desc: 'decode any json web token in-browser — header, payload, signature, and a live countdown on the expiry.',
+    tags: ['tool'],
+    year: '2026',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {

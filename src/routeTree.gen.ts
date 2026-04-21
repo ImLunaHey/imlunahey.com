@@ -28,6 +28,7 @@ import { Route as MainLabsScreenshotMakerRouteImport } from './routes/_main/labs
 import { Route as MainLabsPdfUploaderRouteImport } from './routes/_main/labs/pdf-uploader'
 import { Route as MainLabsPaletteRouteImport } from './routes/_main/labs/palette'
 import { Route as MainLabsListCleanerRouteImport } from './routes/_main/labs/list-cleaner'
+import { Route as MainLabsJwtRouteImport } from './routes/_main/labs/jwt'
 import { Route as MainLabsJetstreamRouteImport } from './routes/_main/labs/jetstream'
 import { Route as MainLabsInfiniteCanvasRouteImport } from './routes/_main/labs/infinite-canvas'
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
@@ -139,6 +140,11 @@ const MainLabsListCleanerRoute = MainLabsListCleanerRouteImport.update({
   path: '/labs/list-cleaner',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsJwtRoute = MainLabsJwtRouteImport.update({
+  id: '/labs/jwt',
+  path: '/labs/jwt',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsJetstreamRoute = MainLabsJetstreamRouteImport.update({
   id: '/labs/jetstream',
   path: '/labs/jetstream',
@@ -232,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/games/$rkey': typeof MainGamesRkeyRoute
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/labs/jetstream': typeof MainLabsJetstreamRoute
+  '/labs/jwt': typeof MainLabsJwtRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/labs/palette': typeof MainLabsPaletteRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
@@ -268,6 +275,7 @@ export interface FileRoutesByTo {
   '/games/$rkey': typeof MainGamesRkeyRoute
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/labs/jetstream': typeof MainLabsJetstreamRoute
+  '/labs/jwt': typeof MainLabsJwtRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/labs/palette': typeof MainLabsPaletteRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
@@ -306,6 +314,7 @@ export interface FileRoutesById {
   '/_main/games/$rkey': typeof MainGamesRkeyRoute
   '/_main/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/_main/labs/jetstream': typeof MainLabsJetstreamRoute
+  '/_main/labs/jwt': typeof MainLabsJwtRoute
   '/_main/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/_main/labs/palette': typeof MainLabsPaletteRoute
   '/_main/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
@@ -344,6 +353,7 @@ export interface FileRouteTypes {
     | '/games/$rkey'
     | '/labs/infinite-canvas'
     | '/labs/jetstream'
+    | '/labs/jwt'
     | '/labs/list-cleaner'
     | '/labs/palette'
     | '/labs/pdf-uploader'
@@ -380,6 +390,7 @@ export interface FileRouteTypes {
     | '/games/$rkey'
     | '/labs/infinite-canvas'
     | '/labs/jetstream'
+    | '/labs/jwt'
     | '/labs/list-cleaner'
     | '/labs/palette'
     | '/labs/pdf-uploader'
@@ -417,6 +428,7 @@ export interface FileRouteTypes {
     | '/_main/games/$rkey'
     | '/_main/labs/infinite-canvas'
     | '/_main/labs/jetstream'
+    | '/_main/labs/jwt'
     | '/_main/labs/list-cleaner'
     | '/_main/labs/palette'
     | '/_main/labs/pdf-uploader'
@@ -583,6 +595,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsListCleanerRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/jwt': {
+      id: '/_main/labs/jwt'
+      path: '/labs/jwt'
+      fullPath: '/labs/jwt'
+      preLoaderRoute: typeof MainLabsJwtRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/jetstream': {
       id: '/_main/labs/jetstream'
       path: '/labs/jetstream'
@@ -708,6 +727,7 @@ interface MainRouteChildren {
   MainGamesRkeyRoute: typeof MainGamesRkeyRoute
   MainLabsInfiniteCanvasRoute: typeof MainLabsInfiniteCanvasRoute
   MainLabsJetstreamRoute: typeof MainLabsJetstreamRoute
+  MainLabsJwtRoute: typeof MainLabsJwtRoute
   MainLabsListCleanerRoute: typeof MainLabsListCleanerRoute
   MainLabsPaletteRoute: typeof MainLabsPaletteRoute
   MainLabsPdfUploaderRoute: typeof MainLabsPdfUploaderRoute
@@ -745,6 +765,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainGamesRkeyRoute: MainGamesRkeyRoute,
   MainLabsInfiniteCanvasRoute: MainLabsInfiniteCanvasRoute,
   MainLabsJetstreamRoute: MainLabsJetstreamRoute,
+  MainLabsJwtRoute: MainLabsJwtRoute,
   MainLabsListCleanerRoute: MainLabsListCleanerRoute,
   MainLabsPaletteRoute: MainLabsPaletteRoute,
   MainLabsPdfUploaderRoute: MainLabsPdfUploaderRoute,
