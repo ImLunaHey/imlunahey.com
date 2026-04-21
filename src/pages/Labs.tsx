@@ -52,6 +52,14 @@ const LABS: Lab[] = [
     year: '2024',
     ready: true,
   },
+  {
+    slug: 'feed',
+    title: 'feed',
+    desc: 'read any bluesky actor feed via public.api. pins, reposts, images, infinite scroll.',
+    tags: ['atproto', 'bluesky'],
+    year: '2024',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {

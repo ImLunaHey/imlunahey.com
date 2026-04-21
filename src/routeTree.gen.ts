@@ -27,8 +27,10 @@ import { Route as MainLabsPdfUploaderRouteImport } from './routes/_main/labs/pdf
 import { Route as MainLabsInfiniteCanvasRouteImport } from './routes/_main/labs/infinite-canvas'
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
+import { Route as MainLabsFeedIndexRouteImport } from './routes/_main/labs/feed/index'
 import { Route as MainLabsCssBattlesIndexRouteImport } from './routes/_main/labs/css-battles/index'
 import { Route as MainLabsCarExplorerIndexRouteImport } from './routes/_main/labs/car-explorer/index'
+import { Route as MainLabsFeedSplatRouteImport } from './routes/_main/labs/feed/$'
 import { Route as MainLabsCssBattlesDateRouteImport } from './routes/_main/labs/css-battles/$date'
 import { Route as MainLabsCarExplorerSplatRouteImport } from './routes/_main/labs/car-explorer/$'
 
@@ -121,6 +123,11 @@ const MainBlogRkeyRoute = MainBlogRkeyRouteImport.update({
   path: '/blog/$rkey',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsFeedIndexRoute = MainLabsFeedIndexRouteImport.update({
+  id: '/labs/feed/',
+  path: '/labs/feed/',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsCssBattlesIndexRoute = MainLabsCssBattlesIndexRouteImport.update({
   id: '/labs/css-battles/',
   path: '/labs/css-battles/',
@@ -132,6 +139,11 @@ const MainLabsCarExplorerIndexRoute =
     path: '/labs/car-explorer/',
     getParentRoute: () => MainRoute,
   } as any)
+const MainLabsFeedSplatRoute = MainLabsFeedSplatRouteImport.update({
+  id: '/labs/feed/$',
+  path: '/labs/feed/$',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsCssBattlesDateRoute = MainLabsCssBattlesDateRouteImport.update({
   id: '/labs/css-battles/$date',
   path: '/labs/css-battles/$date',
@@ -164,8 +176,10 @@ export interface FileRoutesByFullPath {
   '/watching/': typeof MainWatchingIndexRoute
   '/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
+  '/labs/feed/$': typeof MainLabsFeedSplatRoute
   '/labs/car-explorer/': typeof MainLabsCarExplorerIndexRoute
   '/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
+  '/labs/feed/': typeof MainLabsFeedIndexRoute
 }
 export interface FileRoutesByTo {
   '/design-system': typeof MainDesignSystemRoute
@@ -187,8 +201,10 @@ export interface FileRoutesByTo {
   '/watching': typeof MainWatchingIndexRoute
   '/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
+  '/labs/feed/$': typeof MainLabsFeedSplatRoute
   '/labs/car-explorer': typeof MainLabsCarExplorerIndexRoute
   '/labs/css-battles': typeof MainLabsCssBattlesIndexRoute
+  '/labs/feed': typeof MainLabsFeedIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -212,8 +228,10 @@ export interface FileRoutesById {
   '/_main/watching/': typeof MainWatchingIndexRoute
   '/_main/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/_main/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
+  '/_main/labs/feed/$': typeof MainLabsFeedSplatRoute
   '/_main/labs/car-explorer/': typeof MainLabsCarExplorerIndexRoute
   '/_main/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
+  '/_main/labs/feed/': typeof MainLabsFeedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -237,8 +255,10 @@ export interface FileRouteTypes {
     | '/watching/'
     | '/labs/car-explorer/$'
     | '/labs/css-battles/$date'
+    | '/labs/feed/$'
     | '/labs/car-explorer/'
     | '/labs/css-battles/'
+    | '/labs/feed/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/design-system'
@@ -260,8 +280,10 @@ export interface FileRouteTypes {
     | '/watching'
     | '/labs/car-explorer/$'
     | '/labs/css-battles/$date'
+    | '/labs/feed/$'
     | '/labs/car-explorer'
     | '/labs/css-battles'
+    | '/labs/feed'
   id:
     | '__root__'
     | '/_main'
@@ -284,8 +306,10 @@ export interface FileRouteTypes {
     | '/_main/watching/'
     | '/_main/labs/car-explorer/$'
     | '/_main/labs/css-battles/$date'
+    | '/_main/labs/feed/$'
     | '/_main/labs/car-explorer/'
     | '/_main/labs/css-battles/'
+    | '/_main/labs/feed/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -420,6 +444,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainBlogRkeyRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/feed/': {
+      id: '/_main/labs/feed/'
+      path: '/labs/feed'
+      fullPath: '/labs/feed/'
+      preLoaderRoute: typeof MainLabsFeedIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/css-battles/': {
       id: '/_main/labs/css-battles/'
       path: '/labs/css-battles'
@@ -432,6 +463,13 @@ declare module '@tanstack/react-router' {
       path: '/labs/car-explorer'
       fullPath: '/labs/car-explorer/'
       preLoaderRoute: typeof MainLabsCarExplorerIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/feed/$': {
+      id: '/_main/labs/feed/$'
+      path: '/labs/feed/$'
+      fullPath: '/labs/feed/$'
+      preLoaderRoute: typeof MainLabsFeedSplatRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/css-battles/$date': {
@@ -471,8 +509,10 @@ interface MainRouteChildren {
   MainWatchingIndexRoute: typeof MainWatchingIndexRoute
   MainLabsCarExplorerSplatRoute: typeof MainLabsCarExplorerSplatRoute
   MainLabsCssBattlesDateRoute: typeof MainLabsCssBattlesDateRoute
+  MainLabsFeedSplatRoute: typeof MainLabsFeedSplatRoute
   MainLabsCarExplorerIndexRoute: typeof MainLabsCarExplorerIndexRoute
   MainLabsCssBattlesIndexRoute: typeof MainLabsCssBattlesIndexRoute
+  MainLabsFeedIndexRoute: typeof MainLabsFeedIndexRoute
 }
 
 const MainRouteChildren: MainRouteChildren = {
@@ -495,8 +535,10 @@ const MainRouteChildren: MainRouteChildren = {
   MainWatchingIndexRoute: MainWatchingIndexRoute,
   MainLabsCarExplorerSplatRoute: MainLabsCarExplorerSplatRoute,
   MainLabsCssBattlesDateRoute: MainLabsCssBattlesDateRoute,
+  MainLabsFeedSplatRoute: MainLabsFeedSplatRoute,
   MainLabsCarExplorerIndexRoute: MainLabsCarExplorerIndexRoute,
   MainLabsCssBattlesIndexRoute: MainLabsCssBattlesIndexRoute,
+  MainLabsFeedIndexRoute: MainLabsFeedIndexRoute,
 }
 
 const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
