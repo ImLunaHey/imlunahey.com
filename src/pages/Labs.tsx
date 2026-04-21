@@ -36,6 +36,14 @@ const LABS: Lab[] = [
     year: '2024',
     ready: true,
   },
+  {
+    slug: 'pdf-uploader',
+    title: 'pdf uploader',
+    desc: 'post a pdf to your bluesky pds as a com.imlunahey.pdf record with a 16:9 preview.',
+    tags: ['atproto', 'bluesky'],
+    year: '2024',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {
