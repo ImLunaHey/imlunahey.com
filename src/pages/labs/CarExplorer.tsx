@@ -9,16 +9,79 @@ import {
   WebDidDocumentResolver,
   WellKnownHandleResolver,
 } from '@atcute/identity-resolver';
-import { json } from '@codemirror/lang-json';
+import { json as jsonLang } from '@codemirror/lang-json';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { EditorView } from '@codemirror/view';
+import { tags as t } from '@lezer/highlight';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { tokyoNight } from '@uiw/codemirror-theme-tokyo-night';
 import CodeMirror from '@uiw/react-codemirror';
 import { jsonSchema } from 'codemirror-json-schema';
 import { memo, useRef, useState } from 'react';
 import { useLexiconSchema } from '../../hooks/use-lexicon-schema';
 import { fetchLexicon } from '../../lib/fetch-lexicon';
+
+// ─── phosphor codemirror theme ─────────────────────────────────────────────
+
+const cmChrome = EditorView.theme(
+  {
+    '&': {
+      backgroundColor: 'var(--color-bg-panel)',
+      color: 'var(--color-fg)',
+      fontFamily: 'var(--font-mono)',
+      fontSize: '12px',
+    },
+    '.cm-content': { padding: '10px 0', caretColor: 'var(--color-accent)' },
+    '.cm-line': { padding: '0 12px' },
+    '.cm-gutters': {
+      backgroundColor: 'var(--color-bg-panel)',
+      color: 'var(--color-fg-ghost)',
+      borderRight: '1px solid var(--color-border)',
+    },
+    '.cm-lineNumbers .cm-gutterElement': { padding: '0 10px 0 12px' },
+    '.cm-activeLineGutter': { backgroundColor: 'transparent', color: 'var(--color-fg-faint)' },
+    '.cm-activeLine': { backgroundColor: 'transparent' },
+    '&.cm-focused': { outline: 'none' },
+    '&.cm-focused .cm-selectionBackground, ::selection, .cm-selectionBackground': {
+      backgroundColor: 'color-mix(in oklch, var(--color-accent) 28%, transparent)',
+    },
+    '.cm-cursor': { borderLeftColor: 'var(--color-accent)' },
+    '.cm-foldGutter .cm-gutterElement': { color: 'var(--color-fg-faint)', cursor: 'pointer' },
+    '.cm-foldPlaceholder': {
+      backgroundColor: 'var(--color-bg-raised)',
+      border: '1px solid var(--color-border-bright)',
+      color: 'var(--color-accent)',
+      padding: '0 6px',
+    },
+    '.cm-tooltip': {
+      backgroundColor: 'var(--color-bg-raised)',
+      border: '1px solid var(--color-border-bright)',
+      color: 'var(--color-fg)',
+      fontFamily: 'var(--font-mono)',
+      fontSize: '11px',
+    },
+    '.cm-tooltip.cm-tooltip-hover': { padding: '4px 8px' },
+    '.cm-diagnostic': { padding: '2px 6px', fontSize: '11px' },
+    '.cm-diagnostic-error': { borderLeft: '2px solid var(--color-alert)' },
+    '.cm-diagnostic-warning': { borderLeft: '2px solid var(--color-warn)' },
+  },
+  { dark: true },
+);
+
+const cmHighlight = HighlightStyle.define([
+  { tag: t.propertyName, color: 'oklch(0.78 0.11 210)' },
+  { tag: t.string, color: 'oklch(0.82 0.13 85)' },
+  { tag: t.number, color: 'var(--color-accent)' },
+  { tag: [t.bool, t.null, t.keyword, t.atom], color: 'oklch(0.78 0.16 315)' },
+  { tag: t.brace, color: 'var(--color-fg-faint)' },
+  { tag: t.bracket, color: 'var(--color-fg-faint)' },
+  { tag: t.punctuation, color: 'var(--color-fg-faint)' },
+  { tag: t.comment, color: 'var(--color-fg-faint)', fontStyle: 'italic' },
+  { tag: t.invalid, color: 'var(--color-alert)' },
+]);
+
+const phosphorCm = [cmChrome, syntaxHighlighting(cmHighlight)];
 
 // ─── resolvers (module-scope: only one instance per page) ──────────────────
 
@@ -125,6 +188,9 @@ function useCar(handle: string | null) {
     enabled: !!handle,
     retry: false,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
   });
 
   const did = didQuery.data;
@@ -183,14 +249,22 @@ function useCar(handle: string | null) {
     enabled: !!did,
     retry: false,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
   });
 
   return {
     did,
     data: carQuery.data,
     isLoading: didQuery.isLoading || carQuery.isLoading,
+    isFetching: didQuery.isFetching || carQuery.isFetching,
     error: didQuery.error ?? carQuery.error,
     progress,
+    refetch: async () => {
+      await didQuery.refetch();
+      await carQuery.refetch();
+    },
   };
 }
 
@@ -204,13 +278,18 @@ export default function CarExplorerPage() {
   const navigate = useNavigate();
 
   const [input, setInput] = useState(handle ?? '');
-  const { did, data, isLoading, error, progress } = useCar(handle);
+  const { did, data, isFetching, error, progress, refetch } = useCar(handle);
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const val = input.trim().replace(/^@/, '');
     if (!val) return;
-    navigate({ to: `/labs/car-explorer/${val}` as never });
+    if (val === handle) {
+      // same handle → force-refresh cached car
+      void refetch();
+    } else {
+      navigate({ to: `/labs/car-explorer/${val}` as never });
+    }
   };
 
   const download = () => {
@@ -275,8 +354,8 @@ export default function CarExplorerPage() {
               autoComplete="off"
               spellCheck={false}
             />
-            <button type="submit" className="car-go" disabled={!input.trim()}>
-              explore →
+            <button type="submit" className="car-go" disabled={!input.trim() || isFetching}>
+              {isFetching ? 'fetching…' : input.trim() === handle ? 'refresh ↻' : 'explore →'}
             </button>
             {data && handle ? (
               <button type="button" className="car-dl" onClick={download} title="download repo as json">
@@ -309,7 +388,7 @@ export default function CarExplorerPage() {
           ) : null}
         </header>
 
-        {isLoading ? <ProgressPanel progress={progress} /> : null}
+        {isFetching ? <ProgressPanel progress={progress} /> : null}
 
         {error ? (
           <section className="err">
@@ -495,6 +574,45 @@ function RecordList({
   );
 }
 
+function RecordBody({ record, schema }: { record: unknown; schema: object }) {
+  const json = JSON.stringify(record, null, 2);
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(json);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch {
+      /* ignore */
+    }
+  };
+  return (
+    <div className="cb rec-cb">
+      <div className="cb-top">
+        <span>
+          <b>record.json</b>
+        </span>
+        <button type="button" className={'cb-copy' + (copied ? ' flash' : '')} onClick={copy}>
+          {copied ? 'copied' : 'copy'}
+        </button>
+      </div>
+      <CodeMirror
+        className="cb-pre"
+        value={json}
+        extensions={[jsonLang(), jsonSchema(schema), ...phosphorCm]}
+        readOnly
+        basicSetup={{
+          lineNumbers: false,
+          foldGutter: false,
+          highlightActiveLine: false,
+          highlightActiveLineGutter: false,
+          highlightSelectionMatches: false,
+        }}
+      />
+    </div>
+  );
+}
+
 const Record = memo(function Record({
   rkey,
   record,
@@ -520,15 +638,7 @@ const Record = memo(function Record({
         <span className="rec-type">{$type ?? <span className="t-faint">(no $type)</span>}</span>
       </button>
       {open ? (
-        <div className="rec-body">
-          <CodeMirror
-            value={JSON.stringify(record, null, 2)}
-            extensions={[json(), jsonSchema(schema ?? { type: 'object' })]}
-            theme={tokyoNight}
-            readOnly
-            basicSetup={{ lineNumbers: true, foldGutter: true, highlightActiveLine: false }}
-          />
-        </div>
+        <RecordBody record={record} schema={schema ?? { type: 'object' }} />
       ) : null}
     </div>
   );
@@ -755,9 +865,50 @@ const CSS = `
   .rec-caret { color: var(--color-accent); width: 12px; flex-shrink: 0; }
   .rec-rkey { color: var(--color-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
   .rec-type { color: var(--color-fg-faint); font-size: var(--fs-xs); white-space: nowrap; }
-  .rec-body { border-top: 1px solid var(--color-border); }
-  .rec-body .cm-editor { font-size: 12px; }
-  .rec-body .cm-scroller { max-height: 380px; }
+  .rec-body { border-top: 1px solid var(--color-border); padding: var(--sp-3) var(--sp-3) var(--sp-4); }
+
+  /* same chrome as src/components/CodeBlock.tsx so this matches design-system, verse-reveal, css-battles */
+  .rec-cb.cb {
+    --sh-identifier: var(--color-fg);
+    --sh-keyword:    oklch(0.78 0.16 315);
+    --sh-string:     oklch(0.82 0.13 85);
+    --sh-class:      oklch(0.85 0.14 65);
+    --sh-property:   oklch(0.78 0.11 210);
+    --sh-entity:     var(--color-accent);
+    --sh-jsxliterals:oklch(0.78 0.11 210);
+    --sh-sign:       var(--color-fg-faint);
+    --sh-comment:    var(--color-fg-faint);
+    --sh-break:      var(--color-fg);
+    --sh-space:      transparent;
+
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-panel);
+  }
+  .rec-cb .cb-top {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--color-border);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-fg-faint);
+    background: linear-gradient(to bottom, #0c0c0c, #070707);
+  }
+  .rec-cb .cb-top b { color: var(--color-accent-dim); font-weight: 400; }
+  .rec-cb .cb-copy {
+    border: 1px solid var(--color-border-bright);
+    background: transparent;
+    color: var(--color-fg-dim);
+    font: inherit; font-size: 10px;
+    padding: 2px 10px; cursor: pointer;
+    text-transform: lowercase;
+    font-family: var(--font-mono);
+  }
+  .rec-cb .cb-copy:hover { color: var(--color-accent); border-color: var(--color-accent-dim); }
+  .rec-cb .cb-copy.flash { color: var(--color-accent); border-color: var(--color-accent); background: var(--color-bg-raised); }
+  .rec-cb.cb-pre, .rec-cb .cb-pre { max-height: 380px; }
+  .rec-cb .cm-editor { background: var(--color-bg-panel); }
+  .rec-cb .cm-scroller { max-height: 380px; font-family: var(--font-mono); font-size: 12px; }
+  .rec-cb .cm-gutters { display: none !important; }
 
   .car-footer {
     display: flex; justify-content: space-between;
