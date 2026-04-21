@@ -8,9 +8,11 @@ type Props = {
   filename?: string;
   /** Hide the top bar with filename + copy button. */
   bare?: boolean;
+  /** Override the highlighter. Defaults to `tsx` (sugar-high); `json` uses a key-aware tokenizer. */
+  language?: 'tsx' | 'json';
 };
 
-export function CodeBlock({ code, filename, bare }: Props) {
+export function CodeBlock({ code, filename, bare, language = 'tsx' }: Props) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -35,10 +37,97 @@ export function CodeBlock({ code, filename, bare }: Props) {
         </div>
       )}
       <pre className="cb-pre">
-        <code className="cb-code" dangerouslySetInnerHTML={{ __html: highlight(code) }} />
+        <code
+          className="cb-code"
+          dangerouslySetInnerHTML={{ __html: language === 'json' ? highlightJson(code) : highlight(code) }}
+        />
       </pre>
     </div>
   );
+}
+
+// minimal json tokenizer — emits spans styled by the same --sh-* css vars
+// sugar-high uses, so the two highlighters share the phosphor palette.
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"]/g, (c) => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : '&quot;'));
+}
+
+function highlightJson(src: string): string {
+  const out: string[] = [];
+  const push = (varName: string, text: string) => {
+    out.push(`<span style="color:var(--sh-${varName})">${escapeHtml(text)}</span>`);
+  };
+
+  let i = 0;
+  const len = src.length;
+  while (i < len) {
+    const ch = src[i];
+
+    if (ch === ' ' || ch === '\n' || ch === '\t' || ch === '\r') {
+      let j = i;
+      while (j < len && (src[j] === ' ' || src[j] === '\n' || src[j] === '\t' || src[j] === '\r')) j++;
+      out.push(escapeHtml(src.slice(i, j)));
+      i = j;
+      continue;
+    }
+
+    if (ch === '{' || ch === '}' || ch === '[' || ch === ']' || ch === ',' || ch === ':') {
+      push('sign', ch);
+      i++;
+      continue;
+    }
+
+    if (ch === '"') {
+      let j = i + 1;
+      while (j < len) {
+        if (src[j] === '\\' && j + 1 < len) {
+          j += 2;
+          continue;
+        }
+        if (src[j] === '"') break;
+        j++;
+      }
+      j++; // consume closing quote (if present)
+      const str = src.slice(i, j);
+      // peek: is next non-whitespace a colon? then this is a key
+      let k = j;
+      while (k < len && (src[k] === ' ' || src[k] === '\n' || src[k] === '\t' || src[k] === '\r')) k++;
+      const isKey = src[k] === ':';
+      push(isKey ? 'property' : 'string', str);
+      i = j;
+      continue;
+    }
+
+    if (ch === '-' || (ch >= '0' && ch <= '9')) {
+      let j = i;
+      if (src[j] === '-') j++;
+      while (j < len && ((src[j] >= '0' && src[j] <= '9') || src[j] === '.' || src[j] === 'e' || src[j] === 'E' || src[j] === '+' || src[j] === '-')) j++;
+      push('entity', src.slice(i, j));
+      i = j;
+      continue;
+    }
+
+    if (src.startsWith('true', i)) {
+      push('keyword', 'true');
+      i += 4;
+      continue;
+    }
+    if (src.startsWith('false', i)) {
+      push('keyword', 'false');
+      i += 5;
+      continue;
+    }
+    if (src.startsWith('null', i)) {
+      push('keyword', 'null');
+      i += 4;
+      continue;
+    }
+
+    out.push(escapeHtml(ch));
+    i++;
+  }
+
+  return out.join('');
 }
 
 // phosphor-green palette for sugar-high tokens

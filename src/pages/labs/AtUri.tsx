@@ -591,7 +591,7 @@ function GenericRecord({
 function RawPane({ raw, filename }: { raw: unknown; filename: string }) {
   return (
     <section className="raw">
-      <CodeBlock code={JSON.stringify(raw, null, 2)} filename={filename} />
+      <CodeBlock code={JSON.stringify(raw, null, 2)} filename={filename} language="json" />
     </section>
   );
 }

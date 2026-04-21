@@ -351,7 +351,7 @@ function Timeline({
               ) : null}
               {isOpen ? (
                 <div className="tl-raw">
-                  <CodeBlock code={JSON.stringify(op, null, 2)} filename={`op-${i + 1}.json`} />
+                  <CodeBlock code={JSON.stringify(op, null, 2)} filename={`op-${i + 1}.json`} language="json" />
                 </div>
               ) : null}
             </div>

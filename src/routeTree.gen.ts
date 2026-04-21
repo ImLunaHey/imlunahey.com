@@ -31,11 +31,13 @@ import { Route as MainLabsInfiniteCanvasRouteImport } from './routes/_main/labs/
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
 import { Route as MainLabsPlcLogIndexRouteImport } from './routes/_main/labs/plc-log/index'
+import { Route as MainLabsLexiconIndexRouteImport } from './routes/_main/labs/lexicon/index'
 import { Route as MainLabsFeedIndexRouteImport } from './routes/_main/labs/feed/index'
 import { Route as MainLabsCssBattlesIndexRouteImport } from './routes/_main/labs/css-battles/index'
 import { Route as MainLabsCarExplorerIndexRouteImport } from './routes/_main/labs/car-explorer/index'
 import { Route as MainLabsAtUriIndexRouteImport } from './routes/_main/labs/at-uri/index'
 import { Route as MainLabsPlcLogSplatRouteImport } from './routes/_main/labs/plc-log/$'
+import { Route as MainLabsLexiconNsidRouteImport } from './routes/_main/labs/lexicon/$nsid'
 import { Route as MainLabsFeedSplatRouteImport } from './routes/_main/labs/feed/$'
 import { Route as MainLabsCssBattlesDateRouteImport } from './routes/_main/labs/css-battles/$date'
 import { Route as MainLabsCarExplorerSplatRouteImport } from './routes/_main/labs/car-explorer/$'
@@ -150,6 +152,11 @@ const MainLabsPlcLogIndexRoute = MainLabsPlcLogIndexRouteImport.update({
   path: '/labs/plc-log/',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsLexiconIndexRoute = MainLabsLexiconIndexRouteImport.update({
+  id: '/labs/lexicon/',
+  path: '/labs/lexicon/',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsFeedIndexRoute = MainLabsFeedIndexRouteImport.update({
   id: '/labs/feed/',
   path: '/labs/feed/',
@@ -174,6 +181,11 @@ const MainLabsAtUriIndexRoute = MainLabsAtUriIndexRouteImport.update({
 const MainLabsPlcLogSplatRoute = MainLabsPlcLogSplatRouteImport.update({
   id: '/labs/plc-log/$',
   path: '/labs/plc-log/$',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsLexiconNsidRoute = MainLabsLexiconNsidRouteImport.update({
+  id: '/labs/lexicon/$nsid',
+  path: '/labs/lexicon/$nsid',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsFeedSplatRoute = MainLabsFeedSplatRouteImport.update({
@@ -223,11 +235,13 @@ export interface FileRoutesByFullPath {
   '/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
   '/labs/feed/$': typeof MainLabsFeedSplatRoute
+  '/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
   '/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
   '/labs/at-uri/': typeof MainLabsAtUriIndexRoute
   '/labs/car-explorer/': typeof MainLabsCarExplorerIndexRoute
   '/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
   '/labs/feed/': typeof MainLabsFeedIndexRoute
+  '/labs/lexicon/': typeof MainLabsLexiconIndexRoute
   '/labs/plc-log/': typeof MainLabsPlcLogIndexRoute
 }
 export interface FileRoutesByTo {
@@ -255,11 +269,13 @@ export interface FileRoutesByTo {
   '/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
   '/labs/feed/$': typeof MainLabsFeedSplatRoute
+  '/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
   '/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
   '/labs/at-uri': typeof MainLabsAtUriIndexRoute
   '/labs/car-explorer': typeof MainLabsCarExplorerIndexRoute
   '/labs/css-battles': typeof MainLabsCssBattlesIndexRoute
   '/labs/feed': typeof MainLabsFeedIndexRoute
+  '/labs/lexicon': typeof MainLabsLexiconIndexRoute
   '/labs/plc-log': typeof MainLabsPlcLogIndexRoute
 }
 export interface FileRoutesById {
@@ -289,11 +305,13 @@ export interface FileRoutesById {
   '/_main/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/_main/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
   '/_main/labs/feed/$': typeof MainLabsFeedSplatRoute
+  '/_main/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
   '/_main/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
   '/_main/labs/at-uri/': typeof MainLabsAtUriIndexRoute
   '/_main/labs/car-explorer/': typeof MainLabsCarExplorerIndexRoute
   '/_main/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
   '/_main/labs/feed/': typeof MainLabsFeedIndexRoute
+  '/_main/labs/lexicon/': typeof MainLabsLexiconIndexRoute
   '/_main/labs/plc-log/': typeof MainLabsPlcLogIndexRoute
 }
 export interface FileRouteTypes {
@@ -323,11 +341,13 @@ export interface FileRouteTypes {
     | '/labs/car-explorer/$'
     | '/labs/css-battles/$date'
     | '/labs/feed/$'
+    | '/labs/lexicon/$nsid'
     | '/labs/plc-log/$'
     | '/labs/at-uri/'
     | '/labs/car-explorer/'
     | '/labs/css-battles/'
     | '/labs/feed/'
+    | '/labs/lexicon/'
     | '/labs/plc-log/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -355,11 +375,13 @@ export interface FileRouteTypes {
     | '/labs/car-explorer/$'
     | '/labs/css-battles/$date'
     | '/labs/feed/$'
+    | '/labs/lexicon/$nsid'
     | '/labs/plc-log/$'
     | '/labs/at-uri'
     | '/labs/car-explorer'
     | '/labs/css-battles'
     | '/labs/feed'
+    | '/labs/lexicon'
     | '/labs/plc-log'
   id:
     | '__root__'
@@ -388,11 +410,13 @@ export interface FileRouteTypes {
     | '/_main/labs/car-explorer/$'
     | '/_main/labs/css-battles/$date'
     | '/_main/labs/feed/$'
+    | '/_main/labs/lexicon/$nsid'
     | '/_main/labs/plc-log/$'
     | '/_main/labs/at-uri/'
     | '/_main/labs/car-explorer/'
     | '/_main/labs/css-battles/'
     | '/_main/labs/feed/'
+    | '/_main/labs/lexicon/'
     | '/_main/labs/plc-log/'
   fileRoutesById: FileRoutesById
 }
@@ -556,6 +580,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsPlcLogIndexRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/lexicon/': {
+      id: '/_main/labs/lexicon/'
+      path: '/labs/lexicon'
+      fullPath: '/labs/lexicon/'
+      preLoaderRoute: typeof MainLabsLexiconIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/feed/': {
       id: '/_main/labs/feed/'
       path: '/labs/feed'
@@ -589,6 +620,13 @@ declare module '@tanstack/react-router' {
       path: '/labs/plc-log/$'
       fullPath: '/labs/plc-log/$'
       preLoaderRoute: typeof MainLabsPlcLogSplatRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/lexicon/$nsid': {
+      id: '/_main/labs/lexicon/$nsid'
+      path: '/labs/lexicon/$nsid'
+      fullPath: '/labs/lexicon/$nsid'
+      preLoaderRoute: typeof MainLabsLexiconNsidRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/feed/$': {
@@ -647,11 +685,13 @@ interface MainRouteChildren {
   MainLabsCarExplorerSplatRoute: typeof MainLabsCarExplorerSplatRoute
   MainLabsCssBattlesDateRoute: typeof MainLabsCssBattlesDateRoute
   MainLabsFeedSplatRoute: typeof MainLabsFeedSplatRoute
+  MainLabsLexiconNsidRoute: typeof MainLabsLexiconNsidRoute
   MainLabsPlcLogSplatRoute: typeof MainLabsPlcLogSplatRoute
   MainLabsAtUriIndexRoute: typeof MainLabsAtUriIndexRoute
   MainLabsCarExplorerIndexRoute: typeof MainLabsCarExplorerIndexRoute
   MainLabsCssBattlesIndexRoute: typeof MainLabsCssBattlesIndexRoute
   MainLabsFeedIndexRoute: typeof MainLabsFeedIndexRoute
+  MainLabsLexiconIndexRoute: typeof MainLabsLexiconIndexRoute
   MainLabsPlcLogIndexRoute: typeof MainLabsPlcLogIndexRoute
 }
 
@@ -680,11 +720,13 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsCarExplorerSplatRoute: MainLabsCarExplorerSplatRoute,
   MainLabsCssBattlesDateRoute: MainLabsCssBattlesDateRoute,
   MainLabsFeedSplatRoute: MainLabsFeedSplatRoute,
+  MainLabsLexiconNsidRoute: MainLabsLexiconNsidRoute,
   MainLabsPlcLogSplatRoute: MainLabsPlcLogSplatRoute,
   MainLabsAtUriIndexRoute: MainLabsAtUriIndexRoute,
   MainLabsCarExplorerIndexRoute: MainLabsCarExplorerIndexRoute,
   MainLabsCssBattlesIndexRoute: MainLabsCssBattlesIndexRoute,
   MainLabsFeedIndexRoute: MainLabsFeedIndexRoute,
+  MainLabsLexiconIndexRoute: MainLabsLexiconIndexRoute,
   MainLabsPlcLogIndexRoute: MainLabsPlcLogIndexRoute,
 }
 

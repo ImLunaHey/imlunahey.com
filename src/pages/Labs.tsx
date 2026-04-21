@@ -100,6 +100,14 @@ const LABS: Lab[] = [
     year: '2026',
     ready: true,
   },
+  {
+    slug: 'lexicon',
+    title: 'lexicon',
+    desc: 'resolve any atproto nsid and render its schema — defs, properties, params, refs — with cross-lexicon jumps.',
+    tags: ['atproto'],
+    year: '2026',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {

@@ -392,7 +392,7 @@ function EventRow({ ev, expanded, onToggle }: { ev: Event; expanded: boolean; on
       </button>
       {expanded ? (
         <div className="row-body">
-          <CodeBlock code={JSON.stringify(ev, null, 2)} bare />
+          <CodeBlock code={JSON.stringify(ev, null, 2)} bare language="json" />
         </div>
       ) : null}
     </article>
