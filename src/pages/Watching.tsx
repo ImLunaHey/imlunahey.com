@@ -1,10 +1,9 @@
-import { Await, getRouteApi, Link } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
-import type { Watch, PopfeedData } from '../server/popfeed';
+import { getPopfeedWatches, type Watch, type PopfeedData } from '../server/popfeed';
 
 type Filter = 'all' | 'movie' | 'tv_show';
-
-const watchingRoute = getRouteApi('/_main/watching/');
 
 function fmtDate(iso: string): string {
   return iso.slice(0, 10);
@@ -19,7 +18,7 @@ function kindLabel(kind: string): string {
 const isTv = (k: string) => k === 'tv_show' || k === 'tvShow' || k === 'episode';
 
 export default function WatchingPage() {
-  const { watches } = watchingRoute.useLoaderData();
+  const { data: watches } = useQuery({ queryKey: ['popfeed', 'watches'], queryFn: () => getPopfeedWatches() });
 
   return (
     <>
@@ -41,14 +40,10 @@ export default function WatchingPage() {
               . movies, tv, and the occasional episode — rated out of 10.
             </p>
           </div>
-          <Await promise={watches} fallback={<HeaderCountsSkel />}>
-            {(data) => <HeaderCounts data={data} />}
-          </Await>
+          {watches ? <HeaderCounts data={watches} /> : <HeaderCountsSkel />}
         </header>
 
-        <Await promise={watches} fallback={<GridSkel />}>
-          {(data) => <Body items={data.items} />}
-        </Await>
+        {watches ? <Body items={watches.items} /> : <GridSkel />}
 
         <footer className="watching-footer">
           <span>

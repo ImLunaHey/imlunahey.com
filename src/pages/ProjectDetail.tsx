@@ -1,17 +1,18 @@
-import { Await, getRouteApi, Link, Navigate, useParams } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { Link, Navigate, useParams } from '@tanstack/react-router';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Repo } from '../data';
 import { formatUpdated } from '../lib/format';
-import { ErrorBoundary } from '../components/ErrorBoundary';
+import { getRecentCommits } from '../server/commits';
+import { getReadme } from '../server/readme';
+import { getAllRepos } from '../server/repos';
 
 const LANG_CLS: Record<string, string> = {
   typescript: 'lang-ts',
   rust: 'lang-rs',
   go: 'lang-go',
 };
-
-const detailRoute = getRouteApi('/_main/projects/$name');
 
 function commitRelative(iso: string): string {
   const ms = Date.now() - new Date(iso).getTime();
@@ -42,19 +43,36 @@ function rewriteReadmeUrl(owner: string, name: string) {
 export default function ProjectDetailPage() {
   const params = useParams({ strict: false }) as { name?: string };
   const name = params.name;
-  const { repoData, readme, commits } = detailRoute.useLoaderData();
+  const { data: repoData } = useQuery({ queryKey: ['repos'], queryFn: () => getAllRepos() });
+
+  const repo = repoData && name ? repoData.repos.find((r) => r.name === name) : undefined;
+
+  const { data: readme } = useQuery({
+    queryKey: ['readme', repo?.owner, repo?.name],
+    queryFn: () => getReadme({ data: { owner: repo!.owner, name: repo!.name } }),
+    enabled: !!repo,
+  });
+  const { data: commits } = useQuery({
+    queryKey: ['commits', repo?.owner, repo?.name],
+    queryFn: () => getRecentCommits({ data: { owner: repo!.owner, name: repo!.name } }),
+    enabled: !!repo,
+  });
 
   return (
     <>
       <style>{CSS}</style>
-      <Await promise={repoData} fallback={<HeaderSkel />}>
-        {(d) => {
-          const repo = name ? d.repos.find((r) => r.name === name) : undefined;
-          if (!repo) return <Navigate to={'/not-found' as never} replace />;
-          const related = d.repos.filter((r) => r.lang === repo.lang && r.name !== repo.name).slice(0, 3);
-          return <Content repo={repo} related={related} readme={readme} commits={commits} />;
-        }}
-      </Await>
+      {repoData === undefined ? (
+        <HeaderSkel />
+      ) : !repo ? (
+        <Navigate to={'/not-found' as never} replace />
+      ) : (
+        <Content
+          repo={repo}
+          related={repoData.repos.filter((r) => r.lang === repo.lang && r.name !== repo.name).slice(0, 3)}
+          readme={readme}
+          commits={commits}
+        />
+      )}
     </>
   );
 }
@@ -79,8 +97,8 @@ function Content({
 }: {
   repo: Repo;
   related: Repo[];
-  readme: Promise<string | null>;
-  commits: Promise<{ sha: string; msg: string; date: string }[]>;
+  readme: string | null | undefined;
+  commits: { sha: string; msg: string; date: string }[] | undefined;
 }) {
   return (
     <>
@@ -147,33 +165,24 @@ function Content({
 
         <div className="body">
           <article className="readme">
-            <ErrorBoundary fallback={<p className="t-faint">readme unavailable.</p>}>
-              <Await
-                promise={readme}
-                fallback={
-                  <>
-                    <div className="skel" style={{ width: '35%', height: 20, marginBottom: 12 }} />
-                    <div className="skel" style={{ width: '100%', marginBottom: 8 }} />
-                    <div className="skel" style={{ width: '95%', marginBottom: 8 }} />
-                    <div className="skel" style={{ width: '88%', marginBottom: 8 }} />
-                    <div className="skel" style={{ width: '70%' }} />
-                  </>
-                }
-              >
-                {(md) =>
-                  md ? (
-                    <Markdown remarkPlugins={[remarkGfm]} urlTransform={rewriteReadmeUrl(repo.owner, repo.name)}>
-                      {stripLeadingH1(md)}
-                    </Markdown>
-                  ) : (
-                    <>
-                      <h2>readme</h2>
-                      <p>no readme in this repo. the github page is the canonical view.</p>
-                    </>
-                  )
-                }
-              </Await>
-            </ErrorBoundary>
+            {readme === undefined ? (
+              <>
+                <div className="skel" style={{ width: '35%', height: 20, marginBottom: 12 }} />
+                <div className="skel" style={{ width: '100%', marginBottom: 8 }} />
+                <div className="skel" style={{ width: '95%', marginBottom: 8 }} />
+                <div className="skel" style={{ width: '88%', marginBottom: 8 }} />
+                <div className="skel" style={{ width: '70%' }} />
+              </>
+            ) : readme ? (
+              <Markdown remarkPlugins={[remarkGfm]} urlTransform={rewriteReadmeUrl(repo.owner, repo.name)}>
+                {stripLeadingH1(readme)}
+              </Markdown>
+            ) : (
+              <>
+                <h2>readme</h2>
+                <p>no readme in this repo. the github page is the canonical view.</p>
+              </>
+            )}
             {repo.writeup ? (
               <Link to={`/blog/${repo.writeup}` as never} className="writeup-callout">
                 <div className="icon">¶</div>
@@ -222,46 +231,37 @@ function Content({
               </dl>
             </div>
 
-            <ErrorBoundary fallback={null}>
-              <Await
-                promise={commits}
-                fallback={
-                  <div className="side-box">
-                    <h3>── recent commits</h3>
-                    <div className="commits-list">
-                      {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="c">
-                          <span className="skel" style={{ width: 80, height: 10 }} />
-                        </div>
-                      ))}
+            {commits === undefined ? (
+              <div className="side-box">
+                <h3>── recent commits</h3>
+                <div className="commits-list">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="c">
+                      <span className="skel" style={{ width: 80, height: 10 }} />
                     </div>
-                  </div>
-                }
-              >
-                {(list) =>
-                  list.length > 0 ? (
-                    <div className="side-box">
-                      <h3>── recent commits</h3>
-                      <div className="commits-list">
-                        {list.map((c) => (
-                          <a
-                            key={c.sha}
-                            className="c"
-                            href={`https://github.com/${repo.owner}/${repo.name}/commit/${c.sha}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <span className="sha">{c.sha}</span>
-                            <span className="msg">{c.msg}</span>
-                            <span className="when" suppressHydrationWarning>{commitRelative(c.date)}</span>
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null
-                }
-              </Await>
-            </ErrorBoundary>
+                  ))}
+                </div>
+              </div>
+            ) : commits.length > 0 ? (
+              <div className="side-box">
+                <h3>── recent commits</h3>
+                <div className="commits-list">
+                  {commits.map((c) => (
+                    <a
+                      key={c.sha}
+                      className="c"
+                      href={`https://github.com/${repo.owner}/${repo.name}/commit/${c.sha}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <span className="sha">{c.sha}</span>
+                      <span className="msg">{c.msg}</span>
+                      <span className="when" suppressHydrationWarning>{commitRelative(c.date)}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </aside>
         </div>
 

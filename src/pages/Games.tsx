@@ -1,15 +1,14 @@
-import { Await, getRouteApi, Link } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { useMemo } from 'react';
-import type { Watch, PopfeedData } from '../server/popfeed';
-
-const gamesRoute = getRouteApi('/_main/games/');
+import { getPopfeedGames, type Watch, type PopfeedData } from '../server/popfeed';
 
 function fmtDate(iso: string): string {
   return iso.slice(0, 10);
 }
 
 export default function GamesPage() {
-  const { games } = gamesRoute.useLoaderData();
+  const { data: games } = useQuery({ queryKey: ['popfeed', 'games'], queryFn: () => getPopfeedGames() });
 
   return (
     <>
@@ -31,14 +30,10 @@ export default function GamesPage() {
               . rated out of 10.
             </p>
           </div>
-          <Await promise={games} fallback={<HeaderCountsSkel />}>
-            {(data) => <HeaderCounts data={data} />}
-          </Await>
+          {games ? <HeaderCounts data={games} /> : <HeaderCountsSkel />}
         </header>
 
-        <Await promise={games} fallback={<GridSkel />}>
-          {(data) => <Body items={data.items} />}
-        </Await>
+        {games ? <Body items={games.items} /> : <GridSkel />}
 
         <footer className="games-footer">
           <span>

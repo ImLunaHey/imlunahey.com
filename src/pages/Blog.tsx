@@ -1,8 +1,7 @@
-import { Await, getRouteApi, Link } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { useMemo } from 'react';
-import type { BlogData, BlogEntry } from '../server/whitewind';
-
-const blogRoute = getRouteApi('/_main/blog/');
+import { getBlogEntries, type BlogData, type BlogEntry } from '../server/whitewind';
 
 function fmtDate(iso: string): string {
   return iso.slice(0, 10);
@@ -18,7 +17,7 @@ function groupByYear(posts: BlogEntry[]) {
 }
 
 export default function BlogPage() {
-  const { blog } = blogRoute.useLoaderData();
+  const { data: blog } = useQuery({ queryKey: ['blog'], queryFn: () => getBlogEntries() });
 
   return (
     <>
@@ -37,14 +36,10 @@ export default function BlogPage() {
               i&rsquo;d say it. stored on atproto via whitewind.
             </p>
           </div>
-          <Await promise={blog} fallback={<HeaderCountsSkel />}>
-            {(data) => <HeaderCounts data={data} />}
-          </Await>
+          {blog ? <HeaderCounts data={blog} /> : <HeaderCountsSkel />}
         </header>
 
-        <Await promise={blog} fallback={<ListSkel />}>
-          {(data) => <List entries={data.entries} />}
-        </Await>
+        {blog ? <List entries={blog.entries} /> : <ListSkel />}
 
         <footer className="writing-footer">
           <span>

@@ -1,10 +1,9 @@
-import { Await, getRouteApi, Link } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { GalleryData, GalleryItem, GalleryKind } from '../server/gallery';
+import { getGallery, type GalleryData, type GalleryItem, type GalleryKind } from '../server/gallery';
 
 type Filter = 'all' | GalleryKind;
-
-const galleryRoute = getRouteApi('/_main/gallery');
 
 function thumbUrl(publicUrl: string, key: string, width = 400): string {
   const origin = publicUrl.replace(/\/$/, '');
@@ -29,7 +28,7 @@ function fmtDate(iso: string): string {
 type LbState = { publicUrl: string; list: GalleryItem[]; index: number };
 
 export default function GalleryPage() {
-  const { gallery } = galleryRoute.useLoaderData();
+  const { data: gallery } = useQuery({ queryKey: ['gallery'], queryFn: () => getGallery() });
   const [lb, setLb] = useState<LbState | null>(null);
 
   useEffect(() => {
@@ -63,14 +62,10 @@ export default function GalleryPage() {
               photos and midjourney sessions. click any tile for the full image; keyboard nav works in the lightbox.
             </p>
           </div>
-          <Await promise={gallery} fallback={<CountsSkel />}>
-            {(d) => <Counts data={d} />}
-          </Await>
+          {gallery ? <Counts data={gallery} /> : <CountsSkel />}
         </header>
 
-        <Await promise={gallery} fallback={<BodySkel />}>
-          {(d) => <Body data={d} openLb={setLb} />}
-        </Await>
+        {gallery ? <Body data={gallery} openLb={setLb} /> : <BodySkel />}
 
         <footer className="gallery-footer">
           <span>

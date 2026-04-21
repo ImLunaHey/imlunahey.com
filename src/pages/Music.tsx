@@ -1,7 +1,6 @@
-import { Await, getRouteApi, Link } from '@tanstack/react-router';
-import { LASTFM_PROFILE_URL, type LastFmTrack, type MusicData } from '../server/lastfm';
-
-const musicRoute = getRouteApi('/_main/music');
+import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
+import { getRecentTracks, LASTFM_PROFILE_URL, type LastFmTrack, type MusicData } from '../server/lastfm';
 
 function fmtRel(iso: string | null): string {
   if (!iso) return 'now';
@@ -14,7 +13,11 @@ function fmtRel(iso: string | null): string {
 }
 
 export default function MusicPage() {
-  const { music } = musicRoute.useLoaderData();
+  const { data: music } = useQuery({
+    queryKey: ['lastfm', 'tracks'],
+    queryFn: () => getRecentTracks(),
+    refetchInterval: 20_000,
+  });
 
   return (
     <>
@@ -36,14 +39,10 @@ export default function MusicPage() {
               .
             </p>
           </div>
-          <Await promise={music} fallback={<HeaderCountsSkel />}>
-            {(data) => <HeaderCounts data={data} />}
-          </Await>
+          {music ? <HeaderCounts data={music} /> : <HeaderCountsSkel />}
         </header>
 
-        <Await promise={music} fallback={<BodySkel />}>
-          {(data) => <Body data={data} />}
-        </Await>
+        {music ? <Body data={music} /> : <BodySkel />}
 
         <footer className="music-footer">
           <span>

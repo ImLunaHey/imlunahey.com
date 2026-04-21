@@ -1,35 +1,21 @@
-import { useEffect, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { getRecentTrack, type LastFmTrack } from '../server/lastfm';
+import { getRecentTrack } from '../server/lastfm';
 
 const POLL_MS = 20_000;
 
-export function LiveMusicPanel({ initial }: { initial: LastFmTrack | null }) {
-  const [track, setTrack] = useState<LastFmTrack | null>(initial);
-  const aborted = useRef(false);
+export function LiveMusicPanel({ skeleton }: { skeleton: React.ReactNode }) {
+  const { data: track, isPending } = useQuery({
+    queryKey: ['lastfm', 'recent'],
+    queryFn: () => getRecentTrack(),
+    refetchInterval: POLL_MS,
+    refetchIntervalInBackground: false,
+    staleTime: POLL_MS,
+  });
 
-  useEffect(() => {
-    aborted.current = false;
-    let timer: ReturnType<typeof setTimeout> | null = null;
+  if (isPending) return <>{skeleton}</>;
 
-    const tick = async () => {
-      try {
-        const next = await getRecentTrack();
-        if (!aborted.current) setTrack(next);
-      } catch {
-        // keep last known value on error
-      }
-      if (!aborted.current) timer = setTimeout(tick, POLL_MS);
-    };
-
-    timer = setTimeout(tick, POLL_MS);
-    return () => {
-      aborted.current = true;
-      if (timer) clearTimeout(timer);
-    };
-  }, []);
-
-  if (track === null) {
+  if (track === null || track === undefined) {
     return (
       <div className="music-wrap idle">
         <div className="music-top">

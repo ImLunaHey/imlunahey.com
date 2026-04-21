@@ -1,22 +1,17 @@
-import { Await, getRouteApi, Link } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { USES_META, USES_SECTIONS } from '../data';
-
-const usesRoute = getRouteApi('/_main/uses');
-
-function GithubNote({ promise, fallback }: { promise: Promise<number | null>; fallback: string }) {
-  return (
-    <Await promise={promise} fallback={fallback}>
-      {(n) => (n != null ? `${n} public repos.` : fallback)}
-    </Await>
-  );
-}
+import { getPublicRepoCount } from '../server/uses';
 
 export default function UsesPage() {
   const totalItems = useMemo(() => USES_SECTIONS.reduce((sum, s) => sum + s.items.length, 0), []);
   const [activeId, setActiveId] = useState<string>(USES_SECTIONS[0]?.id ?? '');
   const sectionsRef = useRef<HTMLDivElement | null>(null);
-  const { publicRepos } = usesRoute.useLoaderData();
+  const { data: publicRepos } = useQuery({
+    queryKey: ['github', 'public-repo-count'],
+    queryFn: () => getPublicRepoCount(),
+  });
 
   useEffect(() => {
     const root = sectionsRef.current;
@@ -103,11 +98,11 @@ export default function UsesPage() {
                         <td className="nm">{it.name}</td>
                         <td className="tg">{it.config}</td>
                         <td className="note">
-                          {it.name === 'github' ? (
-                            <GithubNote promise={publicRepos} fallback={it.note ?? 'public repos.'} />
-                          ) : (
-                            (it.note ?? '')
-                          )}
+                          {it.name === 'github'
+                            ? publicRepos != null
+                              ? `${publicRepos} public repos.`
+                              : (it.note ?? 'public repos.')
+                            : (it.note ?? '')}
                         </td>
                       </tr>
                     ))}

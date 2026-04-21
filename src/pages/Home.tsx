@@ -1,11 +1,15 @@
-import { Await, getRouteApi, Link } from '@tanstack/react-router';
-import { ErrorBoundary } from '../components/ErrorBoundary';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { LiveMusicPanel } from '../components/LiveMusicPanel';
 import { ABOUT, SITE, SOCIALS, SOURCES, STATUS, USES } from '../data';
-import { LASTFM_PROFILE_URL } from '../server/lastfm';
 import { formatUpdated } from '../lib/format';
-
-const homeRoute = getRouteApi('/_main/');
+import { getBskyPosts } from '../server/bluesky';
+import { getContributions } from '../server/contributions';
+import { getRecentTrack, LASTFM_PROFILE_URL } from '../server/lastfm';
+import { getPopfeedWatches } from '../server/popfeed';
+import { getAllRepos } from '../server/repos';
+import { getWeather } from '../server/weather';
+import { getBlogEntries } from '../server/whitewind';
 
 const fmtDate = (iso: string) => {
   const d = new Date(iso);
@@ -115,7 +119,22 @@ const langCls: Record<string, string> = {
 };
 
 export default function HomePage() {
-  const { repoData, contribs, bskyPosts, lastTrack, blog, weather, watches } = homeRoute.useLoaderData();
+  const { data: repoData } = useQuery({ queryKey: ['repos'], queryFn: () => getAllRepos() });
+  const { data: contribs } = useQuery({ queryKey: ['contribs'], queryFn: () => getContributions() });
+  const { data: bskyPosts } = useQuery({ queryKey: ['bsky', 'posts'], queryFn: () => getBskyPosts() });
+  const { data: lastTrack } = useQuery({ queryKey: ['lastfm', 'recent'], queryFn: () => getRecentTrack() });
+  const { data: blog } = useQuery({ queryKey: ['blog'], queryFn: () => getBlogEntries() });
+  const { data: weather } = useQuery({ queryKey: ['weather'], queryFn: () => getWeather() });
+  const { data: watches } = useQuery({ queryKey: ['popfeed', 'watches'], queryFn: () => getPopfeedWatches() });
+
+  const latestActive = repoData
+    ? repoData.repos
+        .filter((r) => r.status === 'active')
+        .reduce<(typeof repoData.repos)[number] | undefined>(
+          (min, r) => (min === undefined || r.updated < min.updated ? r : min),
+          undefined,
+        )
+    : undefined;
 
   return (
     <>
@@ -126,37 +145,29 @@ export default function HomePage() {
           <span>
             <span className="ok">●</span> <b>online</b>
           </span>
-          <Await promise={repoData} fallback={<CmdBarSkel />}>
-            {(d) => {
-              const latest = d.repos
-                .filter((r) => r.status === 'active')
-                .reduce<(typeof d.repos)[number] | undefined>(
-                  (min, r) => (min === undefined || r.updated < min.updated ? r : min),
-                  undefined,
-                );
-              return (
-                <>
-                  <span>
-                    <b>repos</b> {d.stats.repos}
-                  </span>
-                  <span>
-                    <b>stars</b> {d.stats.stars.toLocaleString()}
-                  </span>
-                  <span>
-                    <b>commits</b> {d.stats.commits.toLocaleString()}
-                  </span>
-                  <span>
-                    <b>langs</b> {d.stats.languages}
-                  </span>
-                  {latest ? (
-                    <span>
-                      <b>last push</b> {formatUpdated(latest.updated)}
-                    </span>
-                  ) : null}
-                </>
-              );
-            }}
-          </Await>
+          {repoData ? (
+            <>
+              <span>
+                <b>repos</b> {repoData.stats.repos}
+              </span>
+              <span>
+                <b>stars</b> {repoData.stats.stars.toLocaleString()}
+              </span>
+              <span>
+                <b>commits</b> {repoData.stats.commits.toLocaleString()}
+              </span>
+              <span>
+                <b>langs</b> {repoData.stats.languages}
+              </span>
+              {latestActive ? (
+                <span>
+                  <b>last push</b> {formatUpdated(latestActive.updated)}
+                </span>
+              ) : null}
+            </>
+          ) : (
+            <CmdBarSkel />
+          )}
         </div>
 
         {/* hero */}
@@ -241,99 +252,57 @@ export default function HomePage() {
                   </div>
                 </div>
                 <dl className="now-grid">
-                  <ErrorBoundary fallback={null}>
-                    <Await promise={repoData} fallback={null}>
-                      {(d) => {
-                        const latest = d.repos
-                          .filter((r) => r.status === 'active')
-                          .reduce<(typeof d.repos)[number] | undefined>(
-                            (min, r) => (min === undefined || r.updated < min.updated ? r : min),
-                            undefined,
-                          );
-                        return latest ? (
-                          <div style={{ display: 'contents' }}>
-                            <dt>// building</dt>
-                            <dd>
-                              <span className="bullet">→</span>
-                              <Link to={`/projects/${latest.name}` as never} className="glow-link">
-                                {latest.name}
-                              </Link>
-                            </dd>
-                          </div>
-                        ) : null;
-                      }}
-                    </Await>
-                  </ErrorBoundary>
-                  <ErrorBoundary fallback={null}>
-                    <Await promise={blog} fallback={null}>
-                      {(b) =>
-                        b.entries[0] ? (
-                          <div style={{ display: 'contents' }}>
-                            <dt>// writing</dt>
-                            <dd>
-                              <span className="bullet">→</span>
-                              <Link to={`/blog/${b.entries[0].rkey}` as never} className="glow-link">
-                                {b.entries[0].title.toLowerCase()}
-                              </Link>
-                            </dd>
-                          </div>
-                        ) : null
-                      }
-                    </Await>
-                  </ErrorBoundary>
-                  <ErrorBoundary fallback={null}>
-                    <Await promise={lastTrack} fallback={null}>
-                      {(t) =>
-                        t && t.nowPlaying ? (
-                          <div style={{ display: 'contents' }}>
-                            <dt>// listening</dt>
-                            <dd>
-                              <span className="bullet">→</span>
-                              <a href={t.url} target="_blank" rel="noopener noreferrer" className="glow-link">
-                                {`${t.artist} — ${t.track}`.toLowerCase()}
-                              </a>
-                            </dd>
-                          </div>
-                        ) : null
-                      }
-                    </Await>
-                  </ErrorBoundary>
-                  <ErrorBoundary fallback={null}>
-                    <Await promise={watches} fallback={null}>
-                      {(w) =>
-                        w.items[0] ? (
-                          <div style={{ display: 'contents' }}>
-                            <dt>// watching</dt>
-                            <dd>
-                              <span className="bullet">→</span>
-                              {w.items[0].title.toLowerCase()}
-                            </dd>
-                          </div>
-                        ) : null
-                      }
-                    </Await>
-                  </ErrorBoundary>
-                  <ErrorBoundary fallback={null}>
-                    <Await promise={repoData} fallback={null}>
-                      {(d) => {
-                        const latest = d.repos
-                          .filter((r) => r.status === 'active')
-                          .reduce<(typeof d.repos)[number] | undefined>(
-                            (min, r) => (min === undefined || r.updated < min.updated ? r : min),
-                            undefined,
-                          );
-                        return latest ? (
-                          <div style={{ display: 'contents' }}>
-                            <dt>// last commit</dt>
-                            <dd>
-                              <span className="bullet">→</span>
-                              {`${latest.name} · ${formatUpdated(latest.updated)}`}
-                            </dd>
-                          </div>
-                        ) : null;
-                      }}
-                    </Await>
-                  </ErrorBoundary>
+                  {latestActive ? (
+                    <div style={{ display: 'contents' }}>
+                      <dt>// building</dt>
+                      <dd>
+                        <span className="bullet">→</span>
+                        <Link to={`/projects/${latestActive.name}` as never} className="glow-link">
+                          {latestActive.name}
+                        </Link>
+                      </dd>
+                    </div>
+                  ) : null}
+                  {blog?.entries[0] ? (
+                    <div style={{ display: 'contents' }}>
+                      <dt>// writing</dt>
+                      <dd>
+                        <span className="bullet">→</span>
+                        <Link to={`/blog/${blog.entries[0].rkey}` as never} className="glow-link">
+                          {blog.entries[0].title.toLowerCase()}
+                        </Link>
+                      </dd>
+                    </div>
+                  ) : null}
+                  {lastTrack && lastTrack.nowPlaying ? (
+                    <div style={{ display: 'contents' }}>
+                      <dt>// listening</dt>
+                      <dd>
+                        <span className="bullet">→</span>
+                        <a href={lastTrack.url} target="_blank" rel="noopener noreferrer" className="glow-link">
+                          {`${lastTrack.artist} — ${lastTrack.track}`.toLowerCase()}
+                        </a>
+                      </dd>
+                    </div>
+                  ) : null}
+                  {watches?.items[0] ? (
+                    <div style={{ display: 'contents' }}>
+                      <dt>// watching</dt>
+                      <dd>
+                        <span className="bullet">→</span>
+                        {watches.items[0].title.toLowerCase()}
+                      </dd>
+                    </div>
+                  ) : null}
+                  {latestActive ? (
+                    <div style={{ display: 'contents' }}>
+                      <dt>// last commit</dt>
+                      <dd>
+                        <span className="bullet">→</span>
+                        {`${latestActive.name} · ${formatUpdated(latestActive.updated)}`}
+                      </dd>
+                    </div>
+                  ) : null}
                 </dl>
               </div>
             </div>
@@ -343,31 +312,25 @@ export default function HomePage() {
           <div className="c-vitals-sm">
             <div className="vitals-sm">
               <div className="vitals-cell">
-                <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>weather unavailable</div>}>
-                  <Await promise={weather} fallback={<div className="skel" style={{ width: 80, height: 28 }} />}>
-                    {(w) =>
-                      w ? (
-                        <>
-                          <div>
-                            <span className="lb">weather</span>
-                            <div className="big accent">{w.tempC}°</div>
-                          </div>
-                          <span className="sub">
-                            {w.code} · london
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <div>
-                            <span className="lb">weather</span>
-                            <div className="big accent">—</div>
-                          </div>
-                          <span className="sub">offline · london</span>
-                        </>
-                      )
-                    }
-                  </Await>
-                </ErrorBoundary>
+                {weather ? (
+                  <>
+                    <div>
+                      <span className="lb">weather</span>
+                      <div className="big accent">{weather.tempC}°</div>
+                    </div>
+                    <span className="sub">{weather.code} · london</span>
+                  </>
+                ) : weather === null ? (
+                  <>
+                    <div>
+                      <span className="lb">weather</span>
+                      <div className="big accent">—</div>
+                    </div>
+                    <span className="sub">offline · london</span>
+                  </>
+                ) : (
+                  <div className="skel" style={{ width: 80, height: 28 }} />
+                )}
               </div>
               <div className="vitals-cell">
                 <div>
@@ -384,21 +347,12 @@ export default function HomePage() {
             <div className="panel-head">
               <span className="dot" />
               <span className="ttl">./now_playing</span>
-              <a
-                className="src-tag"
-                href={LASTFM_PROFILE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a className="src-tag" href={LASTFM_PROFILE_URL} target="_blank" rel="noopener noreferrer">
                 // last.fm
               </a>
             </div>
             <div className="panel-body">
-              <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>music panel errored.</div>}>
-                <Await promise={lastTrack} fallback={<MusicSkel />}>
-                  {(t) => <LiveMusicPanel initial={t} />}
-                </Await>
-              </ErrorBoundary>
+              <LiveMusicPanel skeleton={<MusicSkel />} />
             </div>
           </div>
         </section>
@@ -427,47 +381,35 @@ export default function HomePage() {
               <span className="src-tag">// get_author_feed</span>
             </div>
             <div className="panel-body tight">
-              <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>bluesky unavailable.</div>}>
-              <Await promise={bskyPosts} fallback={<BskySkel />}>
-                {(posts) =>
-                  posts.length === 0 ? (
-                    <div className="bsky-post">
-                      <div className="txt">no recent posts.</div>
+              {bskyPosts === undefined ? (
+                <BskySkel />
+              ) : bskyPosts.length === 0 ? (
+                <div className="bsky-post">
+                  <div className="txt">no recent posts.</div>
+                </div>
+              ) : (
+                bskyPosts.map((p) => (
+                  <a key={p.url} href={p.url} target="_blank" rel="noopener noreferrer" className="bsky-post">
+                    <div className="txt">{p.text}</div>
+                    <div className="meta">
+                      <span className="t-faint">@{p.handle}</span>
+                      <span suppressHydrationWarning>{fmtDate(p.ts)}</span>
+                      <span>
+                        <b>♥</b> {p.likes}
+                      </span>
+                      <span>
+                        <b>↩</b> {p.replies}
+                      </span>
+                      <span>
+                        <b>↻</b> {p.reposts}
+                      </span>
+                      <span style={{ marginLeft: 'auto' }} className="t-accent">
+                        read →
+                      </span>
                     </div>
-                  ) : (
-                    <>
-                      {posts.map((p) => (
-                        <a
-                          key={p.url}
-                          href={p.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bsky-post"
-                        >
-                          <div className="txt">{p.text}</div>
-                          <div className="meta">
-                            <span className="t-faint">@{p.handle}</span>
-                            <span suppressHydrationWarning>{fmtDate(p.ts)}</span>
-                            <span>
-                              <b>♥</b> {p.likes}
-                            </span>
-                            <span>
-                              <b>↩</b> {p.replies}
-                            </span>
-                            <span>
-                              <b>↻</b> {p.reposts}
-                            </span>
-                            <span style={{ marginLeft: 'auto' }} className="t-accent">
-                              read →
-                            </span>
-                          </div>
-                        </a>
-                      ))}
-                    </>
-                  )
-                }
-              </Await>
-              </ErrorBoundary>
+                  </a>
+                ))
+              )}
             </div>
           </div>
 
@@ -479,27 +421,23 @@ export default function HomePage() {
               <span className="src-tag">// whtwnd</span>
             </div>
             <div className="panel-body tight">
-              <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>blog unavailable.</div>}>
-                <Await promise={blog} fallback={<BlogSkel />}>
-                  {(b) =>
-                    b.entries.length === 0 ? (
-                      <div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>no posts yet.</div>
-                    ) : (
-                      <>
-                        {b.entries.slice(0, 6).map((e) => (
-                          <Link key={e.rkey} to={`/blog/${e.rkey}` as never} className="blog-row">
-                            <div>
-                              <span className="dt">{e.createdAt.slice(0, 10)}</span>
-                              <span className="tt">{e.title}</span>
-                            </div>
-                            <span className="rt">{e.readMin}m read</span>
-                          </Link>
-                        ))}
-                      </>
-                    )
-                  }
-                </Await>
-              </ErrorBoundary>
+              {blog === undefined ? (
+                <BlogSkel />
+              ) : blog.entries.length === 0 ? (
+                <div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>
+                  no posts yet.
+                </div>
+              ) : (
+                blog.entries.slice(0, 6).map((e) => (
+                  <Link key={e.rkey} to={`/blog/${e.rkey}` as never} className="blog-row">
+                    <div>
+                      <span className="dt">{e.createdAt.slice(0, 10)}</span>
+                      <span className="tt">{e.title}</span>
+                    </div>
+                    <span className="rt">{e.readMin}m read</span>
+                  </Link>
+                ))
+              )}
             </div>
           </div>
         </section>
@@ -525,66 +463,62 @@ export default function HomePage() {
               <span className="src-tag">// users/imlunahey/events</span>
             </div>
             <div className="panel-body">
-              <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>contributions unavailable.</div>}>
-              <Await promise={contribs} fallback={<ContribSkel />}>
-                {(c) =>
-                  c ? (
-                    <>
-                      <div className="contrib-top">
-                        <div>
-                          <span className="big">{c.totalContributions.toLocaleString()}</span>
-                          <span className="t-faint" style={{ fontSize: 'var(--fs-xs)', marginLeft: 8 }}>
-                            contributions · past 365 days
-                          </span>
-                        </div>
-                        <div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>
-                          longest streak · <span className="t-accent">{c.longestStreak}d</span>
-                        </div>
-                      </div>
-                      <div className="contrib">
-                        {c.weeks.map((wk, wi) => (
-                          <div key={wi} className="wk">
-                            {wk.map((d) => (
-                              <div
-                                key={d.date}
-                                className={`d${d.level ? ' l' + d.level : ''}`}
-                                data-tip={`${d.count} contribution${d.count === 1 ? '' : 's'} · ${d.date}`}
-                              />
-                            ))}
-                          </div>
+              {contribs === undefined ? (
+                <ContribSkel />
+              ) : contribs ? (
+                <>
+                  <div className="contrib-top">
+                    <div>
+                      <span className="big">{contribs.totalContributions.toLocaleString()}</span>
+                      <span className="t-faint" style={{ fontSize: 'var(--fs-xs)', marginLeft: 8 }}>
+                        contributions · past 365 days
+                      </span>
+                    </div>
+                    <div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>
+                      longest streak · <span className="t-accent">{contribs.longestStreak}d</span>
+                    </div>
+                  </div>
+                  <div className="contrib">
+                    {contribs.weeks.map((wk, wi) => (
+                      <div key={wi} className="wk">
+                        {wk.map((d) => (
+                          <div
+                            key={d.date}
+                            className={`d${d.level ? ' l' + d.level : ''}`}
+                            data-tip={`${d.count} contribution${d.count === 1 ? '' : 's'} · ${d.date}`}
+                          />
                         ))}
                       </div>
-                      <div className="contrib-legend">
-                        <span>{fmtMonthYear(c.rangeStart)}</span>
-                        <div className="scale">
-                          <span>less</span>
-                          <span className="sq" />
-                          <span
-                            className="sq"
-                            style={{ background: 'color-mix(in oklch, var(--color-accent) 28%, var(--color-bg))' }}
-                          />
-                          <span
-                            className="sq"
-                            style={{ background: 'color-mix(in oklch, var(--color-accent) 55%, var(--color-bg))' }}
-                          />
-                          <span
-                            className="sq"
-                            style={{ background: 'color-mix(in oklch, var(--color-accent) 80%, var(--color-bg))' }}
-                          />
-                          <span className="sq" style={{ background: 'var(--color-accent)' }} />
-                          <span>more</span>
-                        </div>
-                        <span>{fmtMonthYear(c.rangeEnd)}</span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>
-                      github contributions unavailable. set GITHUB_TOKEN.
+                    ))}
+                  </div>
+                  <div className="contrib-legend">
+                    <span>{fmtMonthYear(contribs.rangeStart)}</span>
+                    <div className="scale">
+                      <span>less</span>
+                      <span className="sq" />
+                      <span
+                        className="sq"
+                        style={{ background: 'color-mix(in oklch, var(--color-accent) 28%, var(--color-bg))' }}
+                      />
+                      <span
+                        className="sq"
+                        style={{ background: 'color-mix(in oklch, var(--color-accent) 55%, var(--color-bg))' }}
+                      />
+                      <span
+                        className="sq"
+                        style={{ background: 'color-mix(in oklch, var(--color-accent) 80%, var(--color-bg))' }}
+                      />
+                      <span className="sq" style={{ background: 'var(--color-accent)' }} />
+                      <span>more</span>
                     </div>
-                  )
-                }
-              </Await>
-              </ErrorBoundary>
+                    <span>{fmtMonthYear(contribs.rangeEnd)}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>
+                  github contributions unavailable. set GITHUB_TOKEN.
+                </div>
+              )}
             </div>
           </div>
 
@@ -596,38 +530,28 @@ export default function HomePage() {
               <span className="src-tag">// users/imlunahey/repos</span>
             </div>
             <div className="panel-body tight">
-              <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>projects unavailable.</div>}>
-                <Await promise={repoData} fallback={<PinnedSkel />}>
-                  {(d) => {
-                    const recent = [...d.repos]
-                      .filter((r) => r.status === 'active')
-                      .sort((a, b) => a.updated - b.updated)
-                      .slice(0, 12);
-                    return (
-                      <>
-                        {recent.map((r) => (
-                          <Link
-                            key={`${r.owner}/${r.name}`}
-                            to={`/projects/${r.name}` as never}
-                            className="proj-row"
-                          >
-                            <div>
-                              <div className="pn">{r.name}</div>
-                              <div className="pd">// {r.desc}</div>
-                            </div>
-                            <div className="pm">
-                              <div>
-                                <span className={langCls[r.lang] || ''}>●</span> {r.lang}
-                              </div>
-                              <div>★ {r.stars}</div>
-                            </div>
-                          </Link>
-                        ))}
-                      </>
-                    );
-                  }}
-                </Await>
-              </ErrorBoundary>
+              {repoData === undefined ? (
+                <PinnedSkel />
+              ) : (
+                [...repoData.repos]
+                  .filter((r) => r.status === 'active')
+                  .sort((a, b) => a.updated - b.updated)
+                  .slice(0, 12)
+                  .map((r) => (
+                    <Link key={`${r.owner}/${r.name}`} to={`/projects/${r.name}` as never} className="proj-row">
+                      <div>
+                        <div className="pn">{r.name}</div>
+                        <div className="pd">// {r.desc}</div>
+                      </div>
+                      <div className="pm">
+                        <div>
+                          <span className={langCls[r.lang] || ''}>●</span> {r.lang}
+                        </div>
+                        <div>★ {r.stars}</div>
+                      </div>
+                    </Link>
+                  ))
+              )}
             </div>
           </div>
 
@@ -639,46 +563,52 @@ export default function HomePage() {
               <span className="src-tag">// popfeed.social</span>
             </div>
             <div className="panel-body">
-              <ErrorBoundary fallback={<div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>popfeed unavailable.</div>}>
-                <Await promise={watches} fallback={<WatchingSkel />}>
-                  {(w) => (
+              {watches === undefined ? (
+                <WatchingSkel />
+              ) : (
+                <>
+                  <div
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}
+                  >
+                    <span className="label">recently watched</span>
+                    <span className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>
+                      {watches.items.length} review{watches.items.length === 1 ? '' : 's'}
+                      {watches.thisYear > 0 ? ` · ${watches.thisYear} this year` : ''}
+                    </span>
+                  </div>
+                  {watches.items.length === 0 ? (
+                    <div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>
+                      no reviews yet.
+                    </div>
+                  ) : (
                     <>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-                        <span className="label">recently watched</span>
-                        <span className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>
-                          {w.items.length} review{w.items.length === 1 ? '' : 's'}
-                          {w.thisYear > 0 ? ` · ${w.thisYear} this year` : ''}
-                        </span>
+                      <div className="watch-grid">
+                        {watches.items.slice(0, 9).map((it) => {
+                          const style = it.poster
+                            ? {
+                                backgroundImage: `url(${it.poster})`,
+                                backgroundSize: 'cover' as const,
+                                backgroundPosition: 'center',
+                              }
+                            : undefined;
+                          return (
+                            <Link
+                              key={it.rkey}
+                              to={`/watching/${it.rkey}` as never}
+                              className="poster"
+                              style={style}
+                              aria-label={it.title}
+                            />
+                          );
+                        })}
                       </div>
-                      {w.items.length === 0 ? (
-                        <div className="t-faint" style={{ fontSize: 'var(--fs-xs)' }}>no reviews yet.</div>
-                      ) : (
-                        <>
-                          <div className="watch-grid">
-                            {w.items.slice(0, 9).map((it) => {
-                              const style = it.poster
-                                ? { backgroundImage: `url(${it.poster})`, backgroundSize: 'cover' as const, backgroundPosition: 'center' }
-                                : undefined;
-                              return (
-                                <Link
-                                  key={it.rkey}
-                                  to={`/watching/${it.rkey}` as never}
-                                  className="poster"
-                                  style={style}
-                                  aria-label={it.title}
-                                />
-                              );
-                            })}
-                          </div>
-                          <Link to={'/watching' as never} className="see-all">
-                            all reviews →
-                          </Link>
-                        </>
-                      )}
+                      <Link to={'/watching' as never} className="see-all">
+                        all reviews →
+                      </Link>
                     </>
                   )}
-                </Await>
-              </ErrorBoundary>
+                </>
+              )}
             </div>
           </div>
         </section>

@@ -1,12 +1,8 @@
-import { Await, getRouteApi, Link, Navigate, useParams } from '@tanstack/react-router';
-import type { Watch } from '../server/popfeed';
+import { useQuery } from '@tanstack/react-query';
+import { Link, Navigate, useParams } from '@tanstack/react-router';
+import { getPopfeedGames, getPopfeedWatches, type Watch } from '../server/popfeed';
 
 type Kind = 'watch' | 'game';
-
-const KIND_ROUTE = {
-  watch: '/_main/watching/$rkey',
-  game: '/_main/games/$rkey',
-} as const;
 
 function kindLabel(kind: string): string {
   if (kind === 'movie') return 'movie';
@@ -17,20 +13,24 @@ function kindLabel(kind: string): string {
 }
 
 export default function ReviewDetailPage({ kind, backTo }: { kind: Kind; backTo: string }) {
-  const route = getRouteApi(KIND_ROUTE[kind]);
-  const { data } = route.useLoaderData();
   const params = useParams({ strict: false }) as { rkey?: string };
+  const { data } = useQuery({
+    queryKey: kind === 'watch' ? ['popfeed', 'watches'] : ['popfeed', 'games'],
+    queryFn: () => (kind === 'watch' ? getPopfeedWatches() : getPopfeedGames()),
+  });
 
   return (
     <>
       <style>{CSS}</style>
-      <Await promise={data} fallback={<ReviewSkel backTo={backTo} />}>
-        {(d) => {
-          const item = d.items.find((i) => i.rkey === params.rkey);
+      {data === undefined ? (
+        <ReviewSkel backTo={backTo} />
+      ) : (
+        (() => {
+          const item = data.items.find((i) => i.rkey === params.rkey);
           if (!item) return <Navigate to={'/not-found' as never} replace />;
           return <ReviewContent item={item} backTo={backTo} />;
-        }}
-      </Await>
+        })()
+      )}
     </>
   );
 }

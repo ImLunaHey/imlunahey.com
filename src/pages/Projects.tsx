@@ -1,8 +1,9 @@
-import { Await, getRouteApi, Link, useNavigate } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
 import type { Repo } from '../data';
 import { formatUpdated } from '../lib/format';
-import type { ProjectStats } from '../server/repos';
+import { getAllRepos, type ProjectStats } from '../server/repos';
 
 type Filter = string;
 type SortKey = 'name' | 'lang' | 'stars' | 'forks' | 'commits' | 'updated' | 'status';
@@ -32,10 +33,8 @@ const DEFAULT_DIR: Record<SortKey, 1 | -1> = {
   commits: -1,
 };
 
-const projectsRoute = getRouteApi('/_main/projects/');
-
 export default function ProjectsPage() {
-  const { repoData } = projectsRoute.useLoaderData();
+  const { data: repoData } = useQuery({ queryKey: ['repos'], queryFn: () => getAllRepos() });
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('updated');
@@ -65,14 +64,14 @@ export default function ProjectsPage() {
             open source, experiments, abandoned drafts. some live in production, most live in my recent-folder. filter,
             sort, click to see install commands.
           </p>
-          <Await promise={repoData} fallback={<CountsSkel />}>
-            {(d) => <Counts stats={d.stats} />}
-          </Await>
+          {repoData ? <Counts stats={repoData.stats} /> : <CountsSkel />}
         </header>
 
-        <Await promise={repoData} fallback={<PinnedSkel />}>
-          {(d) => <PinnedSection repos={d.repos} stats={d.stats} />}
-        </Await>
+        {repoData ? (
+          <PinnedSection repos={repoData.repos} stats={repoData.stats} />
+        ) : (
+          <PinnedSkel />
+        )}
 
         <div className="section-hd">
           <h2>
@@ -102,18 +101,18 @@ export default function ProjectsPage() {
           />
         </div>
 
-        <Await promise={repoData} fallback={<TableSkel />}>
-          {(d) => (
-            <RepoTable
-              repos={d.repos}
-              filter={filter}
-              search={search}
-              sortKey={sortKey}
-              sortDir={sortDir}
-              toggleSort={toggleSort}
-            />
-          )}
-        </Await>
+        {repoData ? (
+          <RepoTable
+            repos={repoData.repos}
+            filter={filter}
+            search={search}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            toggleSort={toggleSort}
+          />
+        ) : (
+          <TableSkel />
+        )}
 
         <footer className="projects-footer">
           <span>

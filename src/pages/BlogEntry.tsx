@@ -1,5 +1,6 @@
 import { AppBskyFeedDefs, AppBskyFeedPost } from '@atcute/client/lexicons';
-import { Await, getRouteApi, Link, Navigate, useParams } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { Link, Navigate, useParams } from '@tanstack/react-router';
 import { useBlogEntry } from '../hooks/use-blog-entry';
 import { useBlogEntryComments } from '../hooks/use-blog-entry-comments';
 import { useProfile } from '../hooks/use-profile';
@@ -8,8 +9,7 @@ import { useViewCount } from '../hooks/use-view-count';
 import { MarkdownPreview } from '../components/MarkdownPreview';
 import { RelativeTime } from '../components/RelativeTime';
 import { SITE } from '../data';
-
-const entryRoute = getRouteApi('/_main/blog/$rkey');
+import { getBlogEntries } from '../server/whitewind';
 
 const AUTHOR_DID = 'did:plc:k6acu4chiwkixvdedcmdgmal';
 
@@ -104,7 +104,7 @@ const Entry = ({ rkey }: { rkey: string }) => {
   const { data: readTime } = useReadTime({ rkey });
   const { data: views } = useViewCount({ rkey });
   const { data: profile } = useProfile({ actor: AUTHOR_DID });
-  const { blog } = entryRoute.useLoaderData();
+  const { data: blog } = useQuery({ queryKey: ['blog'], queryFn: () => getBlogEntries() });
 
   if (blogEntryError) return <Navigate replace to={'/not-found' as never} />;
   if (blogEntryLoading) {
@@ -165,24 +165,24 @@ const Entry = ({ rkey }: { rkey: string }) => {
         </dl>
       </div>
 
-      <Await promise={blog} fallback={null}>
-        {(b) => {
-          const related = b.entries.filter((e) => e.rkey !== rkey).slice(0, 3);
-          if (related.length === 0) return null;
-          return (
-            <div className="related">
-              <div className="related-head">── also reading</div>
-              {related.map((r) => (
-                <Link key={r.rkey} to={`/blog/${r.rkey}` as never}>
-                  <span className="dt">{r.createdAt.slice(0, 10)}</span>
-                  <span>{r.title}</span>
-                  <span className="rt">{r.readMin}m</span>
-                </Link>
-              ))}
-            </div>
-          );
-        }}
-      </Await>
+      {blog
+        ? (() => {
+            const related = blog.entries.filter((e) => e.rkey !== rkey).slice(0, 3);
+            if (related.length === 0) return null;
+            return (
+              <div className="related">
+                <div className="related-head">── also reading</div>
+                {related.map((r) => (
+                  <Link key={r.rkey} to={`/blog/${r.rkey}` as never}>
+                    <span className="dt">{r.createdAt.slice(0, 10)}</span>
+                    <span>{r.title}</span>
+                    <span className="rt">{r.readMin}m</span>
+                  </Link>
+                ))}
+              </div>
+            );
+          })()
+        : null}
 
       <div className="reply-prompt">
         leave a thought · reply on bluesky to{' '}
