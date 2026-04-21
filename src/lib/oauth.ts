@@ -11,11 +11,12 @@ import {
 import type { Session } from '@atcute/oauth-browser-client';
 
 /**
- * OAuth scope for the guestbook. `transition:generic` grants write access
- * to custom collections (needed to createRecord on com.imlunahey.guestbook.entry).
- * Bluesky will eventually replace this with per-collection scopes.
+ * OAuth scope for the guestbook. `atproto` is the base scope; the nsid
+ * grants write access scoped to just this collection, so we only get
+ * permission to createRecord on com.imlunahey.guestbook.entry (not the
+ * whole repo).
  */
-export const OAUTH_SCOPE = 'atproto transition:generic';
+export const OAUTH_SCOPE = 'atproto com.imlunahey.guestbook.entry';
 
 /**
  * In prod the client_id is the URL of our hosted metadata JSON.

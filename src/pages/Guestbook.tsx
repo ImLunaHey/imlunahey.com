@@ -338,14 +338,12 @@ function EntryRow({ entry }: { entry: GuestbookEntry }) {
         <p className="entry-text">{entry.text}</p>
         <footer className="entry-ft">
           <span className="entry-uri">{entry.uri}</span>
-          <a
+          <Link
             className="entry-link"
-            href={`https://atp.tools/${entry.uri.replace('at://', '')}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            to={`/labs/at-uri/${entry.uri.replace('at://', '')}` as never}
           >
             view record →
-          </a>
+          </Link>
         </footer>
       </div>
     </article>
