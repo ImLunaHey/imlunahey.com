@@ -11,12 +11,13 @@ import {
 import type { Session } from '@atcute/oauth-browser-client';
 
 /**
- * OAuth scope for the guestbook. `atproto` is the base scope; the nsid
- * grants write access scoped to just this collection, so we only get
- * permission to createRecord on com.imlunahey.guestbook.entry (not the
- * whole repo).
+ * OAuth scope for the guestbook.
+ *   atproto — base scope, required for any identity-bound access
+ *   repo:<nsid>?action=create — write access scoped to exactly one
+ *     collection and one action (createRecord), nothing else in the
+ *     repo is touchable with this token.
  */
-export const OAUTH_SCOPE = 'atproto com.imlunahey.guestbook.entry';
+export const OAUTH_SCOPE = 'atproto repo:com.imlunahey.guestbook.entry?action=create';
 
 /**
  * In prod the client_id is the URL of our hosted metadata JSON.
