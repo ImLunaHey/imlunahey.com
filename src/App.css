@@ -122,7 +122,10 @@ a:hover {
     var(--color-bg-raised) 100%
   );
   background-size: 200% 100%;
-  animation: shimmer 1.8s infinite linear;
+  opacity: 0;
+  animation:
+    skel-reveal 0s 200ms forwards,
+    shimmer 1.8s 200ms infinite linear;
 }
 @keyframes shimmer {
   0% {
@@ -130,6 +133,11 @@ a:hover {
   }
   100% {
     background-position: -200% 0;
+  }
+}
+@keyframes skel-reveal {
+  to {
+    opacity: 1;
   }
 }
 
