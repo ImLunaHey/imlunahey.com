@@ -3,9 +3,56 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { feature } from 'topojson-client';
 import type { FeatureCollection, MultiPolygon, Polygon } from 'geojson';
 import type { Topology, GeometryCollection } from 'topojson-specification';
+import { geoGraticule10, geoOrthographic, geoPath } from 'd3-geo';
 // 110m resolution ≈ 110kb gzipped. Loads once, cached by the module graph.
 import worldTopo from 'world-atlas/countries-110m.json';
 import { PLACES, type Place, type PlaceKind } from '../data';
+
+// Heuristic parser for the free-form `when` strings in data.ts.
+// Takes the left side of any range ('1996 → jun 2016' → parse just '1996')
+// so hints only apply to the start year. Returns +∞ for unparseable entries
+// (e.g. 'multiple') so those sink to the bottom of the list.
+const MONTH_HINTS: Array<[RegExp, number]> = [
+  [/\bjan(?:uary)?\b/, 0],
+  [/\bfeb(?:ruary)?\b/, 1],
+  [/\bmar(?:ch)?\b/, 2],
+  [/\bapr(?:il)?\b/, 3],
+  [/\bmay\b/, 4],
+  [/\bjune?\b/, 5],
+  [/\bjuly?\b/, 6],
+  [/\baug(?:ust)?\b/, 7],
+  [/\bsep(?:t(?:ember)?)?\b/, 8],
+  [/\boct(?:ober)?\b/, 9],
+  [/\bnov(?:ember)?\b/, 10],
+  [/\bdec(?:ember)?\b/, 11],
+  [/\bnew\s*year'?s?\b/, 0],
+  [/\bspring\b/, 3],
+  [/\bsummer\b/, 6],
+  [/\b(?:autumn|fall)\b/, 9],
+  [/\bwinter\b/, 0],
+  [/\bchristmas\b/, 11],
+  [/\bxmas\b/, 11],
+  [/\beaster\b/, 3],
+];
+
+function whenStart(when: string): number {
+  const s = when.toLowerCase();
+  const rangeIdx = s.search(/→|->|–|—|\bto\b|\buntil\b/);
+  const startPart = rangeIdx >= 0 ? s.slice(0, rangeIdx) : s;
+
+  const yearMatch = startPart.match(/(19|20)\d{2}/);
+  if (!yearMatch) return Number.POSITIVE_INFINITY;
+  const year = parseInt(yearMatch[0], 10);
+
+  let month = 0;
+  for (const [re, m] of MONTH_HINTS) {
+    if (re.test(startPart)) {
+      month = m;
+      break;
+    }
+  }
+  return new Date(year, month, 1).getTime();
+}
 
 const KIND_LABEL: Record<PlaceKind, string> = {
   lived: 'lived',
@@ -19,101 +66,23 @@ const KIND_COLOR: Record<PlaceKind, string> = {
   passed: 'var(--color-fg-faint)',
 };
 
-// Orthographic projection of (lat, lon) onto a unit circle, rotated by (λ0, φ0).
-// Returns {x, y, visible} where x,y are in [-1, 1] from sphere center.
-function project(lat: number, lon: number, λ0deg: number, φ0deg: number) {
-  const DEG = Math.PI / 180;
-  const φ = lat * DEG;
-  const λ = lon * DEG;
-  const φ0 = φ0deg * DEG;
-  const λ0 = λ0deg * DEG;
-
-  const cosC = Math.sin(φ0) * Math.sin(φ) + Math.cos(φ0) * Math.cos(φ) * Math.cos(λ - λ0);
-  const x = Math.cos(φ) * Math.sin(λ - λ0);
-  const y = Math.cos(φ0) * Math.sin(φ) - Math.sin(φ0) * Math.cos(φ) * Math.cos(λ - λ0);
-  return { x, y, visible: cosC > 0 };
-}
-
-// Convert the topojson FeatureCollection once at module load, so rotation
-// renders cheap on each frame (just project + stringify).
+// Convert the topojson FeatureCollection once at module load.
 const WORLD = feature(
   worldTopo as unknown as Topology,
   (worldTopo as unknown as Topology).objects.countries as GeometryCollection,
 ) as FeatureCollection<Polygon | MultiPolygon>;
+const GRATICULE = geoGraticule10();
 
-function projectRing(ring: number[][], λ0: number, φ0: number, R: number, CX: number, CY: number): string {
-  let d = '';
-  let penDown = false;
-  for (const [lon, lat] of ring) {
-    const p = project(lat, lon, λ0, φ0);
-    if (!p.visible) {
-      penDown = false;
-      continue;
-    }
-    const px = CX + p.x * R;
-    const py = CY - p.y * R;
-    d += (penDown ? ' L ' : ' M ') + px.toFixed(1) + ' ' + py.toFixed(1);
-    penDown = true;
-  }
-  return d;
-}
-
-function countries(λ0: number, φ0: number, R: number, CX: number, CY: number): string {
-  let d = '';
-  for (const f of WORLD.features) {
-    const geom = f.geometry;
-    if (geom.type === 'Polygon') {
-      for (const ring of geom.coordinates) d += ' ' + projectRing(ring, λ0, φ0, R, CX, CY);
-    } else if (geom.type === 'MultiPolygon') {
-      for (const poly of geom.coordinates) {
-        for (const ring of poly) d += ' ' + projectRing(ring, λ0, φ0, R, CX, CY);
-      }
-    }
-  }
-  return d;
-}
-
-function graticule(λ0: number, φ0: number, R: number, CX: number, CY: number): string {
-  const segs: string[] = [];
-  const step = 6; // deg per sample along the line
-
-  // meridians every 30 deg
-  for (let lonDeg = -180; lonDeg < 180; lonDeg += 30) {
-    let penDown = false;
-    let d = '';
-    for (let latDeg = -90; latDeg <= 90; latDeg += step) {
-      const p = project(latDeg, lonDeg, λ0, φ0);
-      if (!p.visible) {
-        penDown = false;
-        continue;
-      }
-      const px = CX + p.x * R;
-      const py = CY - p.y * R;
-      d += (penDown ? ' L ' : ' M ') + px.toFixed(1) + ' ' + py.toFixed(1);
-      penDown = true;
-    }
-    if (d) segs.push(d);
-  }
-
-  // parallels every 30 deg
-  for (let latDeg = -60; latDeg <= 60; latDeg += 30) {
-    let penDown = false;
-    let d = '';
-    for (let lonDeg = -180; lonDeg <= 180; lonDeg += step) {
-      const p = project(latDeg, lonDeg, λ0, φ0);
-      if (!p.visible) {
-        penDown = false;
-        continue;
-      }
-      const px = CX + p.x * R;
-      const py = CY - p.y * R;
-      d += (penDown ? ' L ' : ' M ') + px.toFixed(1) + ' ' + py.toFixed(1);
-      penDown = true;
-    }
-    if (d) segs.push(d);
-  }
-
-  return segs.join(' ');
+// d3-geo's forward projection always returns coordinates, even for points on
+// the back hemisphere — `clipAngle` only affects path generation. We need an
+// explicit visibility check for pins (the `cos c > 0` test for orthographic).
+function isVisible(lon: number, lat: number, λ0deg: number, φ0deg: number): boolean {
+  const DEG = Math.PI / 180;
+  const φ = lat * DEG;
+  const λ = lon * DEG;
+  const φc = φ0deg * DEG;
+  const λc = λ0deg * DEG;
+  return Math.sin(φc) * Math.sin(φ) + Math.cos(φc) * Math.cos(φ) * Math.cos(λ - λc) > 0;
 }
 
 export default function GlobePage() {
@@ -181,14 +150,34 @@ export default function GlobePage() {
   const R = 240;
   const CX = 320;
   const CY = 320;
-  const grat = useMemo(() => graticule(λ0, φ0, R, CX, CY), [λ0, φ0]);
-  const land = useMemo(() => countries(λ0, φ0, R, CX, CY), [λ0, φ0]);
+
+  // d3-geo handles sphere clipping so polygons crossing the horizon render
+  // with proper great-circle boundaries instead of getting "closed" with
+  // straight lines (the old bug near the edge of the visible hemisphere).
+  const projection = useMemo(
+    () =>
+      geoOrthographic()
+        .scale(R)
+        .translate([CX, CY])
+        .rotate([-λ0, -φ0])
+        .clipAngle(90),
+    [λ0, φ0],
+  );
+  const pathGen = useMemo(() => geoPath(projection), [projection]);
+  const land = useMemo(() => pathGen(WORLD) ?? '', [pathGen]);
+  const grat = useMemo(() => pathGen(GRATICULE) ?? '', [pathGen]);
 
   const counts = useMemo(() => {
     const m: Record<PlaceKind, number> = { lived: 0, visited: 0, passed: 0 };
     for (const p of PLACES) m[p.kind]++;
     return m;
   }, []);
+
+  // newest first — easier to scan "where have i been recently"
+  const sortedPlaces = useMemo(
+    () => [...PLACES].sort((a, b) => whenStart(b.when) - whenStart(a.when)),
+    [],
+  );
 
   function onPointerDown(e: React.PointerEvent<SVGSVGElement>) {
     (e.target as SVGSVGElement).setPointerCapture?.(e.pointerId);
@@ -283,10 +272,10 @@ export default function GlobePage() {
                   ranges). duplicate keys caused react to orphan dom nodes,
                   which looked like pin trails as the globe rotated. */}
               {PLACES.map((p, i) => {
-                const proj = project(p.lat, p.lon, λ0, φ0);
-                if (!proj.visible) return null;
-                const px = CX + proj.x * R;
-                const py = CY - proj.y * R;
+                if (!isVisible(p.lon, p.lat, λ0, φ0)) return null;
+                const proj = projection([p.lon, p.lat]);
+                if (!proj) return null;
+                const [px, py] = proj;
                 const color = KIND_COLOR[p.kind];
                 const isHovered = hovered?.name === p.name;
                 const baseR = p.kind === 'lived' ? 4 : 3;
@@ -341,9 +330,8 @@ export default function GlobePage() {
                 <span className="t-faint">drag · hover · click to centre</span>
               </div>
               <ul className="place-list">
-              {PLACES.map((p, i) => {
-                const proj = project(p.lat, p.lon, λ0, φ0);
-                const back = !proj.visible;
+              {sortedPlaces.map((p, i) => {
+                const back = !isVisible(p.lon, p.lat, λ0, φ0);
                 return (
                   <li
                     key={`${i}-${p.name}`}
