@@ -84,6 +84,14 @@ const LABS: Lab[] = [
     year: '2026',
     ready: true,
   },
+  {
+    slug: 'plc-log',
+    title: 'plc log',
+    desc: 'every did:plc operation — handle changes, pds migrations, key rotations — as an audited timeline with diffs.',
+    tags: ['atproto', 'identity'],
+    year: '2026',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {

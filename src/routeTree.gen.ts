@@ -30,9 +30,11 @@ import { Route as MainLabsJetstreamRouteImport } from './routes/_main/labs/jetst
 import { Route as MainLabsInfiniteCanvasRouteImport } from './routes/_main/labs/infinite-canvas'
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
+import { Route as MainLabsPlcLogIndexRouteImport } from './routes/_main/labs/plc-log/index'
 import { Route as MainLabsFeedIndexRouteImport } from './routes/_main/labs/feed/index'
 import { Route as MainLabsCssBattlesIndexRouteImport } from './routes/_main/labs/css-battles/index'
 import { Route as MainLabsCarExplorerIndexRouteImport } from './routes/_main/labs/car-explorer/index'
+import { Route as MainLabsPlcLogSplatRouteImport } from './routes/_main/labs/plc-log/$'
 import { Route as MainLabsFeedSplatRouteImport } from './routes/_main/labs/feed/$'
 import { Route as MainLabsCssBattlesDateRouteImport } from './routes/_main/labs/css-battles/$date'
 import { Route as MainLabsCarExplorerSplatRouteImport } from './routes/_main/labs/car-explorer/$'
@@ -141,6 +143,11 @@ const MainBlogRkeyRoute = MainBlogRkeyRouteImport.update({
   path: '/blog/$rkey',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsPlcLogIndexRoute = MainLabsPlcLogIndexRouteImport.update({
+  id: '/labs/plc-log/',
+  path: '/labs/plc-log/',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsFeedIndexRoute = MainLabsFeedIndexRouteImport.update({
   id: '/labs/feed/',
   path: '/labs/feed/',
@@ -157,6 +164,11 @@ const MainLabsCarExplorerIndexRoute =
     path: '/labs/car-explorer/',
     getParentRoute: () => MainRoute,
   } as any)
+const MainLabsPlcLogSplatRoute = MainLabsPlcLogSplatRouteImport.update({
+  id: '/labs/plc-log/$',
+  path: '/labs/plc-log/$',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsFeedSplatRoute = MainLabsFeedSplatRouteImport.update({
   id: '/labs/feed/$',
   path: '/labs/feed/$',
@@ -198,9 +210,11 @@ export interface FileRoutesByFullPath {
   '/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
   '/labs/feed/$': typeof MainLabsFeedSplatRoute
+  '/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
   '/labs/car-explorer/': typeof MainLabsCarExplorerIndexRoute
   '/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
   '/labs/feed/': typeof MainLabsFeedIndexRoute
+  '/labs/plc-log/': typeof MainLabsPlcLogIndexRoute
 }
 export interface FileRoutesByTo {
   '/design-system': typeof MainDesignSystemRoute
@@ -226,9 +240,11 @@ export interface FileRoutesByTo {
   '/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
   '/labs/feed/$': typeof MainLabsFeedSplatRoute
+  '/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
   '/labs/car-explorer': typeof MainLabsCarExplorerIndexRoute
   '/labs/css-battles': typeof MainLabsCssBattlesIndexRoute
   '/labs/feed': typeof MainLabsFeedIndexRoute
+  '/labs/plc-log': typeof MainLabsPlcLogIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -256,9 +272,11 @@ export interface FileRoutesById {
   '/_main/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/_main/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
   '/_main/labs/feed/$': typeof MainLabsFeedSplatRoute
+  '/_main/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
   '/_main/labs/car-explorer/': typeof MainLabsCarExplorerIndexRoute
   '/_main/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
   '/_main/labs/feed/': typeof MainLabsFeedIndexRoute
+  '/_main/labs/plc-log/': typeof MainLabsPlcLogIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -286,9 +304,11 @@ export interface FileRouteTypes {
     | '/labs/car-explorer/$'
     | '/labs/css-battles/$date'
     | '/labs/feed/$'
+    | '/labs/plc-log/$'
     | '/labs/car-explorer/'
     | '/labs/css-battles/'
     | '/labs/feed/'
+    | '/labs/plc-log/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/design-system'
@@ -314,9 +334,11 @@ export interface FileRouteTypes {
     | '/labs/car-explorer/$'
     | '/labs/css-battles/$date'
     | '/labs/feed/$'
+    | '/labs/plc-log/$'
     | '/labs/car-explorer'
     | '/labs/css-battles'
     | '/labs/feed'
+    | '/labs/plc-log'
   id:
     | '__root__'
     | '/_main'
@@ -343,9 +365,11 @@ export interface FileRouteTypes {
     | '/_main/labs/car-explorer/$'
     | '/_main/labs/css-battles/$date'
     | '/_main/labs/feed/$'
+    | '/_main/labs/plc-log/$'
     | '/_main/labs/car-explorer/'
     | '/_main/labs/css-battles/'
     | '/_main/labs/feed/'
+    | '/_main/labs/plc-log/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -501,6 +525,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainBlogRkeyRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/plc-log/': {
+      id: '/_main/labs/plc-log/'
+      path: '/labs/plc-log'
+      fullPath: '/labs/plc-log/'
+      preLoaderRoute: typeof MainLabsPlcLogIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/feed/': {
       id: '/_main/labs/feed/'
       path: '/labs/feed'
@@ -520,6 +551,13 @@ declare module '@tanstack/react-router' {
       path: '/labs/car-explorer'
       fullPath: '/labs/car-explorer/'
       preLoaderRoute: typeof MainLabsCarExplorerIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/plc-log/$': {
+      id: '/_main/labs/plc-log/$'
+      path: '/labs/plc-log/$'
+      fullPath: '/labs/plc-log/$'
+      preLoaderRoute: typeof MainLabsPlcLogSplatRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/feed/$': {
@@ -570,9 +608,11 @@ interface MainRouteChildren {
   MainLabsCarExplorerSplatRoute: typeof MainLabsCarExplorerSplatRoute
   MainLabsCssBattlesDateRoute: typeof MainLabsCssBattlesDateRoute
   MainLabsFeedSplatRoute: typeof MainLabsFeedSplatRoute
+  MainLabsPlcLogSplatRoute: typeof MainLabsPlcLogSplatRoute
   MainLabsCarExplorerIndexRoute: typeof MainLabsCarExplorerIndexRoute
   MainLabsCssBattlesIndexRoute: typeof MainLabsCssBattlesIndexRoute
   MainLabsFeedIndexRoute: typeof MainLabsFeedIndexRoute
+  MainLabsPlcLogIndexRoute: typeof MainLabsPlcLogIndexRoute
 }
 
 const MainRouteChildren: MainRouteChildren = {
@@ -599,9 +639,11 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsCarExplorerSplatRoute: MainLabsCarExplorerSplatRoute,
   MainLabsCssBattlesDateRoute: MainLabsCssBattlesDateRoute,
   MainLabsFeedSplatRoute: MainLabsFeedSplatRoute,
+  MainLabsPlcLogSplatRoute: MainLabsPlcLogSplatRoute,
   MainLabsCarExplorerIndexRoute: MainLabsCarExplorerIndexRoute,
   MainLabsCssBattlesIndexRoute: MainLabsCssBattlesIndexRoute,
   MainLabsFeedIndexRoute: MainLabsFeedIndexRoute,
+  MainLabsPlcLogIndexRoute: MainLabsPlcLogIndexRoute,
 }
 
 const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
