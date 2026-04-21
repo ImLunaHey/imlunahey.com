@@ -53,6 +53,7 @@ export function InfiniteCanvas({ nodes }: { nodes: Node[] }) {
   useEffect(() => {
     const ctx = canvasRef.current?.getContext('2d');
     if (!ctx) return;
+    if (dims.w === 0 || dims.h === 0) return;
 
     ctx.clearRect(0, 0, dims.w, dims.h);
 
