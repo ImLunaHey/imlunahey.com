@@ -76,6 +76,14 @@ const LABS: Lab[] = [
     year: '2024',
     ready: true,
   },
+  {
+    slug: 'jetstream',
+    title: 'jetstream',
+    desc: 'live atproto firehose — every commit, identity, and account event streamed with sub-second latency.',
+    tags: ['atproto', 'live'],
+    year: '2026',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {
