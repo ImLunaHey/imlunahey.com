@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, Navigate, useParams } from '@tanstack/react-router';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { highlight } from 'sugar-high';
 import type { Repo } from '../data';
 import { formatUpdated } from '../lib/format';
 import { getRecentCommits } from '../server/commits';
@@ -174,7 +175,25 @@ function Content({
                 <div className="skel" style={{ width: '70%' }} />
               </>
             ) : readme ? (
-              <Markdown remarkPlugins={[remarkGfm]} urlTransform={rewriteReadmeUrl(repo.owner, repo.name)}>
+              <Markdown
+                remarkPlugins={[remarkGfm]}
+                urlTransform={rewriteReadmeUrl(repo.owner, repo.name)}
+                components={{
+                  // fenced code blocks get sugar-high highlighting. inline
+                  // code (no language-* class, not inside a <pre>) falls
+                  // through to the default <code> render.
+                  code: ({ className, children, ...props }) => {
+                    const isBlock = /language-/.test(className ?? '');
+                    if (!isBlock) return <code className={className} {...props}>{children}</code>;
+                    return (
+                      <code
+                        className={className}
+                        dangerouslySetInnerHTML={{ __html: highlight(String(children).replace(/\n$/, '')) }}
+                      />
+                    );
+                  },
+                }}
+              >
                 {stripLeadingH1(readme)}
               </Markdown>
             ) : (
@@ -379,7 +398,49 @@ const CSS = `
     margin-bottom: var(--sp-3); text-wrap: pretty;
     overflow-wrap: break-word;
   }
-  .readme code.inline { background: var(--color-bg-raised); border: 1px solid var(--color-border); padding: 1px 6px; font-size: 12px; color: var(--color-accent); font-family: var(--font-mono); }
+  /* inline code — react-markdown emits a bare <code> with no class, so
+     target the element directly and undo the styling inside <pre> below. */
+  .readme code {
+    background: var(--color-bg-raised);
+    border: 1px solid var(--color-border);
+    padding: 1px 6px;
+    font-size: 12px;
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+  }
+  /* fenced code blocks — the block itself, not the inline <code> inside.
+     css vars here drive the sugar-high tokens (phosphor palette, same as
+     the CodeBlock component used elsewhere on the site). */
+  .readme pre {
+    --sh-identifier: var(--color-fg);
+    --sh-keyword:    oklch(0.78 0.16 315);
+    --sh-string:     oklch(0.82 0.13 85);
+    --sh-class:      oklch(0.85 0.14 65);
+    --sh-property:   oklch(0.78 0.11 210);
+    --sh-entity:     var(--color-accent);
+    --sh-jsxliterals:oklch(0.78 0.11 210);
+    --sh-sign:       var(--color-fg-faint);
+    --sh-comment:    var(--color-fg-faint);
+    --sh-break:      var(--color-fg);
+    --sh-space:      transparent;
+
+    margin: var(--sp-5) 0 var(--sp-6);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-panel);
+    padding: var(--sp-4);
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-fg);
+  }
+  .readme pre code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
   .readme a { color: var(--color-accent); }
   .readme a:hover { text-decoration: underline; }
 

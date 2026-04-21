@@ -312,6 +312,19 @@ const CSS = `
     font-family: var(--font-mono);
   }
   .shell-post article pre {
+    /* sugar-high palette — same phosphor tokens as CodeBlock + readme */
+    --sh-identifier: var(--color-fg);
+    --sh-keyword:    oklch(0.78 0.16 315);
+    --sh-string:     oklch(0.82 0.13 85);
+    --sh-class:      oklch(0.85 0.14 65);
+    --sh-property:   oklch(0.78 0.11 210);
+    --sh-entity:     var(--color-accent);
+    --sh-jsxliterals:oklch(0.78 0.11 210);
+    --sh-sign:       var(--color-fg-faint);
+    --sh-comment:    var(--color-fg-faint);
+    --sh-break:      var(--color-fg);
+    --sh-space:      transparent;
+
     margin: var(--sp-5) 0 var(--sp-6);
     border: 1px solid var(--color-border);
     background: var(--color-bg-panel);
@@ -321,7 +334,7 @@ const CSS = `
     line-height: 1.6;
     color: var(--color-fg);
   }
-  .shell-post article pre code { background: transparent; border: 0; padding: 0; color: var(--color-fg); }
+  .shell-post article pre code { background: transparent; border: 0; padding: 0; color: inherit; font-size: inherit; }
   .shell-post article img {
     display: block;
     max-width: 100%;
