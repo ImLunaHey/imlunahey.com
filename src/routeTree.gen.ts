@@ -17,12 +17,15 @@ import { Route as MainGalleryRouteImport } from './routes/_main/gallery'
 import { Route as MainDesignSystemRouteImport } from './routes/_main/design-system'
 import { Route as MainWatchingIndexRouteImport } from './routes/_main/watching/index'
 import { Route as MainProjectsIndexRouteImport } from './routes/_main/projects/index'
+import { Route as MainLabsIndexRouteImport } from './routes/_main/labs/index'
 import { Route as MainGamesIndexRouteImport } from './routes/_main/games/index'
 import { Route as MainBlogIndexRouteImport } from './routes/_main/blog/index'
 import { Route as MainWatchingRkeyRouteImport } from './routes/_main/watching/$rkey'
 import { Route as MainProjectsNameRouteImport } from './routes/_main/projects/$name'
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
+import { Route as MainLabsCssBattlesIndexRouteImport } from './routes/_main/labs/css-battles/index'
+import { Route as MainLabsCssBattlesDateRouteImport } from './routes/_main/labs/css-battles/$date'
 
 const MainRoute = MainRouteImport.update({
   id: '/_main',
@@ -63,6 +66,11 @@ const MainProjectsIndexRoute = MainProjectsIndexRouteImport.update({
   path: '/projects/',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsIndexRoute = MainLabsIndexRouteImport.update({
+  id: '/labs/',
+  path: '/labs/',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainGamesIndexRoute = MainGamesIndexRouteImport.update({
   id: '/games/',
   path: '/games/',
@@ -93,6 +101,16 @@ const MainBlogRkeyRoute = MainBlogRkeyRouteImport.update({
   path: '/blog/$rkey',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsCssBattlesIndexRoute = MainLabsCssBattlesIndexRouteImport.update({
+  id: '/labs/css-battles/',
+  path: '/labs/css-battles/',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsCssBattlesDateRoute = MainLabsCssBattlesDateRouteImport.update({
+  id: '/labs/css-battles/$date',
+  path: '/labs/css-battles/$date',
+  getParentRoute: () => MainRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
@@ -106,8 +124,11 @@ export interface FileRoutesByFullPath {
   '/watching/$rkey': typeof MainWatchingRkeyRoute
   '/blog/': typeof MainBlogIndexRoute
   '/games/': typeof MainGamesIndexRoute
+  '/labs/': typeof MainLabsIndexRoute
   '/projects/': typeof MainProjectsIndexRoute
   '/watching/': typeof MainWatchingIndexRoute
+  '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
+  '/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
 }
 export interface FileRoutesByTo {
   '/design-system': typeof MainDesignSystemRoute
@@ -121,8 +142,11 @@ export interface FileRoutesByTo {
   '/watching/$rkey': typeof MainWatchingRkeyRoute
   '/blog': typeof MainBlogIndexRoute
   '/games': typeof MainGamesIndexRoute
+  '/labs': typeof MainLabsIndexRoute
   '/projects': typeof MainProjectsIndexRoute
   '/watching': typeof MainWatchingIndexRoute
+  '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
+  '/labs/css-battles': typeof MainLabsCssBattlesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -138,8 +162,11 @@ export interface FileRoutesById {
   '/_main/watching/$rkey': typeof MainWatchingRkeyRoute
   '/_main/blog/': typeof MainBlogIndexRoute
   '/_main/games/': typeof MainGamesIndexRoute
+  '/_main/labs/': typeof MainLabsIndexRoute
   '/_main/projects/': typeof MainProjectsIndexRoute
   '/_main/watching/': typeof MainWatchingIndexRoute
+  '/_main/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
+  '/_main/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -155,8 +182,11 @@ export interface FileRouteTypes {
     | '/watching/$rkey'
     | '/blog/'
     | '/games/'
+    | '/labs/'
     | '/projects/'
     | '/watching/'
+    | '/labs/css-battles/$date'
+    | '/labs/css-battles/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/design-system'
@@ -170,8 +200,11 @@ export interface FileRouteTypes {
     | '/watching/$rkey'
     | '/blog'
     | '/games'
+    | '/labs'
     | '/projects'
     | '/watching'
+    | '/labs/css-battles/$date'
+    | '/labs/css-battles'
   id:
     | '__root__'
     | '/_main'
@@ -186,8 +219,11 @@ export interface FileRouteTypes {
     | '/_main/watching/$rkey'
     | '/_main/blog/'
     | '/_main/games/'
+    | '/_main/labs/'
     | '/_main/projects/'
     | '/_main/watching/'
+    | '/_main/labs/css-battles/$date'
+    | '/_main/labs/css-battles/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -252,6 +288,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainProjectsIndexRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/': {
+      id: '/_main/labs/'
+      path: '/labs'
+      fullPath: '/labs/'
+      preLoaderRoute: typeof MainLabsIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/games/': {
       id: '/_main/games/'
       path: '/games'
@@ -294,6 +337,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainBlogRkeyRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/css-battles/': {
+      id: '/_main/labs/css-battles/'
+      path: '/labs/css-battles'
+      fullPath: '/labs/css-battles/'
+      preLoaderRoute: typeof MainLabsCssBattlesIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/css-battles/$date': {
+      id: '/_main/labs/css-battles/$date'
+      path: '/labs/css-battles/$date'
+      fullPath: '/labs/css-battles/$date'
+      preLoaderRoute: typeof MainLabsCssBattlesDateRouteImport
+      parentRoute: typeof MainRoute
+    }
   }
 }
 
@@ -309,8 +366,11 @@ interface MainRouteChildren {
   MainWatchingRkeyRoute: typeof MainWatchingRkeyRoute
   MainBlogIndexRoute: typeof MainBlogIndexRoute
   MainGamesIndexRoute: typeof MainGamesIndexRoute
+  MainLabsIndexRoute: typeof MainLabsIndexRoute
   MainProjectsIndexRoute: typeof MainProjectsIndexRoute
   MainWatchingIndexRoute: typeof MainWatchingIndexRoute
+  MainLabsCssBattlesDateRoute: typeof MainLabsCssBattlesDateRoute
+  MainLabsCssBattlesIndexRoute: typeof MainLabsCssBattlesIndexRoute
 }
 
 const MainRouteChildren: MainRouteChildren = {
@@ -325,8 +385,11 @@ const MainRouteChildren: MainRouteChildren = {
   MainWatchingRkeyRoute: MainWatchingRkeyRoute,
   MainBlogIndexRoute: MainBlogIndexRoute,
   MainGamesIndexRoute: MainGamesIndexRoute,
+  MainLabsIndexRoute: MainLabsIndexRoute,
   MainProjectsIndexRoute: MainProjectsIndexRoute,
   MainWatchingIndexRoute: MainWatchingIndexRoute,
+  MainLabsCssBattlesDateRoute: MainLabsCssBattlesDateRoute,
+  MainLabsCssBattlesIndexRoute: MainLabsCssBattlesIndexRoute,
 }
 
 const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
