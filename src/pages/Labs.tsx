@@ -116,6 +116,14 @@ const LABS: Lab[] = [
     year: '2026',
     ready: true,
   },
+  {
+    slug: 'palette',
+    title: 'palette',
+    desc: 'drop an image, extract its dominant colors via k-means. hex + oklch, copyable, css export.',
+    tags: ['canvas', 'tool'],
+    year: '2026',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {

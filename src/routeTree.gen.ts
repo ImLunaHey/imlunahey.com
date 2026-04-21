@@ -26,6 +26,7 @@ import { Route as MainLabsVerseRevealRouteImport } from './routes/_main/labs/ver
 import { Route as MainLabsTidRouteImport } from './routes/_main/labs/tid'
 import { Route as MainLabsScreenshotMakerRouteImport } from './routes/_main/labs/screenshot-maker'
 import { Route as MainLabsPdfUploaderRouteImport } from './routes/_main/labs/pdf-uploader'
+import { Route as MainLabsPaletteRouteImport } from './routes/_main/labs/palette'
 import { Route as MainLabsListCleanerRouteImport } from './routes/_main/labs/list-cleaner'
 import { Route as MainLabsJetstreamRouteImport } from './routes/_main/labs/jetstream'
 import { Route as MainLabsInfiniteCanvasRouteImport } from './routes/_main/labs/infinite-canvas'
@@ -128,6 +129,11 @@ const MainLabsPdfUploaderRoute = MainLabsPdfUploaderRouteImport.update({
   path: '/labs/pdf-uploader',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsPaletteRoute = MainLabsPaletteRouteImport.update({
+  id: '/labs/palette',
+  path: '/labs/palette',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsListCleanerRoute = MainLabsListCleanerRouteImport.update({
   id: '/labs/list-cleaner',
   path: '/labs/list-cleaner',
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/labs/jetstream': typeof MainLabsJetstreamRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
+  '/labs/palette': typeof MainLabsPaletteRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/labs/tid': typeof MainLabsTidRoute
@@ -262,6 +269,7 @@ export interface FileRoutesByTo {
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/labs/jetstream': typeof MainLabsJetstreamRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
+  '/labs/palette': typeof MainLabsPaletteRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/labs/tid': typeof MainLabsTidRoute
@@ -299,6 +307,7 @@ export interface FileRoutesById {
   '/_main/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/_main/labs/jetstream': typeof MainLabsJetstreamRoute
   '/_main/labs/list-cleaner': typeof MainLabsListCleanerRoute
+  '/_main/labs/palette': typeof MainLabsPaletteRoute
   '/_main/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/_main/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/_main/labs/tid': typeof MainLabsTidRoute
@@ -336,6 +345,7 @@ export interface FileRouteTypes {
     | '/labs/infinite-canvas'
     | '/labs/jetstream'
     | '/labs/list-cleaner'
+    | '/labs/palette'
     | '/labs/pdf-uploader'
     | '/labs/screenshot-maker'
     | '/labs/tid'
@@ -371,6 +381,7 @@ export interface FileRouteTypes {
     | '/labs/infinite-canvas'
     | '/labs/jetstream'
     | '/labs/list-cleaner'
+    | '/labs/palette'
     | '/labs/pdf-uploader'
     | '/labs/screenshot-maker'
     | '/labs/tid'
@@ -407,6 +418,7 @@ export interface FileRouteTypes {
     | '/_main/labs/infinite-canvas'
     | '/_main/labs/jetstream'
     | '/_main/labs/list-cleaner'
+    | '/_main/labs/palette'
     | '/_main/labs/pdf-uploader'
     | '/_main/labs/screenshot-maker'
     | '/_main/labs/tid'
@@ -557,6 +569,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsPdfUploaderRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/palette': {
+      id: '/_main/labs/palette'
+      path: '/labs/palette'
+      fullPath: '/labs/palette'
+      preLoaderRoute: typeof MainLabsPaletteRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/list-cleaner': {
       id: '/_main/labs/list-cleaner'
       path: '/labs/list-cleaner'
@@ -690,6 +709,7 @@ interface MainRouteChildren {
   MainLabsInfiniteCanvasRoute: typeof MainLabsInfiniteCanvasRoute
   MainLabsJetstreamRoute: typeof MainLabsJetstreamRoute
   MainLabsListCleanerRoute: typeof MainLabsListCleanerRoute
+  MainLabsPaletteRoute: typeof MainLabsPaletteRoute
   MainLabsPdfUploaderRoute: typeof MainLabsPdfUploaderRoute
   MainLabsScreenshotMakerRoute: typeof MainLabsScreenshotMakerRoute
   MainLabsTidRoute: typeof MainLabsTidRoute
@@ -726,6 +746,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsInfiniteCanvasRoute: MainLabsInfiniteCanvasRoute,
   MainLabsJetstreamRoute: MainLabsJetstreamRoute,
   MainLabsListCleanerRoute: MainLabsListCleanerRoute,
+  MainLabsPaletteRoute: MainLabsPaletteRoute,
   MainLabsPdfUploaderRoute: MainLabsPdfUploaderRoute,
   MainLabsScreenshotMakerRoute: MainLabsScreenshotMakerRoute,
   MainLabsTidRoute: MainLabsTidRoute,
