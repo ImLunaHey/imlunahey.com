@@ -18,6 +18,7 @@ import { Route as MainHealthRouteImport } from './routes/_main/health'
 import { Route as MainGlobeRouteImport } from './routes/_main/globe'
 import { Route as MainGalleryRouteImport } from './routes/_main/gallery'
 import { Route as MainDesignSystemRouteImport } from './routes/_main/design-system'
+import { Route as MainAiRouteImport } from './routes/_main/ai'
 import { Route as MainWatchingIndexRouteImport } from './routes/_main/watching/index'
 import { Route as MainProjectsIndexRouteImport } from './routes/_main/projects/index'
 import { Route as MainLabsIndexRouteImport } from './routes/_main/labs/index'
@@ -93,6 +94,11 @@ const MainGalleryRoute = MainGalleryRouteImport.update({
 const MainDesignSystemRoute = MainDesignSystemRouteImport.update({
   id: '/design-system',
   path: '/design-system',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainAiRoute = MainAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
   getParentRoute: () => MainRoute,
 } as any)
 const MainWatchingIndexRoute = MainWatchingIndexRouteImport.update({
@@ -260,6 +266,7 @@ const MainLabsAtUriSplatRoute = MainLabsAtUriSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
+  '/ai': typeof MainAiRoute
   '/design-system': typeof MainDesignSystemRoute
   '/gallery': typeof MainGalleryRoute
   '/globe': typeof MainGlobeRoute
@@ -301,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/labs/plc-log/': typeof MainLabsPlcLogIndexRoute
 }
 export interface FileRoutesByTo {
+  '/ai': typeof MainAiRoute
   '/design-system': typeof MainDesignSystemRoute
   '/gallery': typeof MainGalleryRoute
   '/globe': typeof MainGlobeRoute
@@ -345,6 +353,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_main': typeof MainRouteWithChildren
+  '/_main/ai': typeof MainAiRoute
   '/_main/design-system': typeof MainDesignSystemRoute
   '/_main/gallery': typeof MainGalleryRoute
   '/_main/globe': typeof MainGlobeRoute
@@ -390,6 +399,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/ai'
     | '/design-system'
     | '/gallery'
     | '/globe'
@@ -431,6 +441,7 @@ export interface FileRouteTypes {
     | '/labs/plc-log/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/ai'
     | '/design-system'
     | '/gallery'
     | '/globe'
@@ -474,6 +485,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_main'
+    | '/_main/ai'
     | '/_main/design-system'
     | '/_main/gallery'
     | '/_main/globe'
@@ -584,6 +596,13 @@ declare module '@tanstack/react-router' {
       path: '/design-system'
       fullPath: '/design-system'
       preLoaderRoute: typeof MainDesignSystemRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/ai': {
+      id: '/_main/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof MainAiRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/watching/': {
@@ -814,6 +833,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface MainRouteChildren {
+  MainAiRoute: typeof MainAiRoute
   MainDesignSystemRoute: typeof MainDesignSystemRoute
   MainGalleryRoute: typeof MainGalleryRoute
   MainGlobeRoute: typeof MainGlobeRoute
@@ -856,6 +876,7 @@ interface MainRouteChildren {
 }
 
 const MainRouteChildren: MainRouteChildren = {
+  MainAiRoute: MainAiRoute,
   MainDesignSystemRoute: MainDesignSystemRoute,
   MainGalleryRoute: MainGalleryRoute,
   MainGlobeRoute: MainGlobeRoute,
