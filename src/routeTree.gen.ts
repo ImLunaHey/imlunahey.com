@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MainRouteImport } from './routes/_main'
 import { Route as MainIndexRouteImport } from './routes/_main/index'
+import { Route as OgSplatRouteImport } from './routes/og/$'
 import { Route as MainUsesRouteImport } from './routes/_main/uses'
 import { Route as MainMusicRouteImport } from './routes/_main/music'
 import { Route as MainGalleryRouteImport } from './routes/_main/gallery'
@@ -55,6 +56,11 @@ const MainIndexRoute = MainIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainRoute,
+} as any)
+const OgSplatRoute = OgSplatRouteImport.update({
+  id: '/og/$',
+  path: '/og/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MainUsesRoute = MainUsesRouteImport.update({
   id: '/uses',
@@ -240,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/gallery': typeof MainGalleryRoute
   '/music': typeof MainMusicRoute
   '/uses': typeof MainUsesRoute
+  '/og/$': typeof OgSplatRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
   '/labs/cron': typeof MainLabsCronRoute
@@ -277,6 +284,7 @@ export interface FileRoutesByTo {
   '/gallery': typeof MainGalleryRoute
   '/music': typeof MainMusicRoute
   '/uses': typeof MainUsesRoute
+  '/og/$': typeof OgSplatRoute
   '/': typeof MainIndexRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
@@ -317,6 +325,7 @@ export interface FileRoutesById {
   '/_main/gallery': typeof MainGalleryRoute
   '/_main/music': typeof MainMusicRoute
   '/_main/uses': typeof MainUsesRoute
+  '/og/$': typeof OgSplatRoute
   '/_main/': typeof MainIndexRoute
   '/_main/blog/$rkey': typeof MainBlogRkeyRoute
   '/_main/games/$rkey': typeof MainGamesRkeyRoute
@@ -358,6 +367,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/music'
     | '/uses'
+    | '/og/$'
     | '/blog/$rkey'
     | '/games/$rkey'
     | '/labs/cron'
@@ -395,6 +405,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/music'
     | '/uses'
+    | '/og/$'
     | '/'
     | '/blog/$rkey'
     | '/games/$rkey'
@@ -434,6 +445,7 @@ export interface FileRouteTypes {
     | '/_main/gallery'
     | '/_main/music'
     | '/_main/uses'
+    | '/og/$'
     | '/_main/'
     | '/_main/blog/$rkey'
     | '/_main/games/$rkey'
@@ -470,6 +482,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   MainRoute: typeof MainRouteWithChildren
+  OgSplatRoute: typeof OgSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -487,6 +500,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof MainIndexRouteImport
       parentRoute: typeof MainRoute
+    }
+    '/og/$': {
+      id: '/og/$'
+      path: '/og/$'
+      fullPath: '/og/$'
+      preLoaderRoute: typeof OgSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_main/uses': {
       id: '/_main/uses'
@@ -818,6 +838,7 @@ const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   MainRoute: MainRouteWithChildren,
+  OgSplatRoute: OgSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

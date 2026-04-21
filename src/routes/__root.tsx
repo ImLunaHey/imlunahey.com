@@ -4,7 +4,9 @@ import '../App.css';
 import { Favicon } from '../components/Favicon';
 import { QueryProvider } from '../components/QueryProvider';
 import { DevTools } from '../components/DevTools';
+import { SITE } from '../data';
 import NotFoundPage from '../pages/NotFound';
+import { ogMeta } from '../lib/og-meta';
 
 export const Route = createRootRoute({
   head: () => ({
@@ -12,6 +14,13 @@ export const Route = createRootRoute({
       { charSet: 'UTF-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1.0' },
       { title: 'luna' },
+      { name: 'description', content: `${SITE.name} · software engineer in ${SITE.location}.` },
+      ...ogMeta({
+        slug: 'home',
+        title: 'luna',
+        description: `${SITE.name} · software engineer in ${SITE.location}.`,
+        url: `https://${SITE.domain}`,
+      }),
     ],
     scripts: [
       {
