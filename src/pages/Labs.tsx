@@ -92,6 +92,14 @@ const LABS: Lab[] = [
     year: '2026',
     ready: true,
   },
+  {
+    slug: 'at-uri',
+    title: 'at-uri',
+    desc: 'paste any at:// uri — profile, post, list, or custom record — and see it resolved, typed, and cross-linked.',
+    tags: ['atproto'],
+    year: '2026',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {
