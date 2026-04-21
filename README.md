@@ -1,54 +1,100 @@
-# React + TypeScript + Vite
+# imlunahey.com
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Personal site / data-dashboard. Pulls recent work, writing, scrobbles,
+reviews and watching history from various APIs and renders them into a
+phosphor-green terminal aesthetic.
 
-Currently, two official plugins are available:
+Live: [imlunahey.com](https://imlunahey.com)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Stack
 
-## Expanding the ESLint configuration
+- [TanStack Start](https://tanstack.com/start) (React 19 + Vite + file-based router)
+- [Tailwind v4](https://tailwindcss.com) for design tokens; most components use plain CSS via `<style>` blocks
+- [React Query](https://tanstack.com/query) for client-side data fetching (all pages render the shell instantly, data streams in after hydration)
+- Deployed to [Cloudflare Workers](https://workers.cloudflare.com) via `@cloudflare/vite-plugin`
+- Optional Cloudflare R2 for the gallery (see `docs/gallery-setup.md`)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Data sources
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+| Section | Source |
+| --- | --- |
+| `/` recent repos, commit counts, contribution heatmap | GitHub REST + GraphQL |
+| `/blog` writing | [WhiteWind](https://whtwnd.com) (`com.whtwnd.blog.entry` on atproto) |
+| `/projects` and `/projects/$name` | GitHub |
+| `/watching` movies & tv, `/games` | [Popfeed](https://popfeed.social) (`social.popfeed.feed.review`) |
+| `/music` scrobbles + live now-playing | last.fm `user.getrecenttracks` |
+| NOW panel weather | [Open-Meteo](https://open-meteo.com) (no key) |
+| `/gallery` | R2 bucket + Cloudflare Image Resizing |
+
+Every server-side fetch goes through a shared in-memory `cached(key, ttl)`
+helper (`src/server/cache.ts`) with stale-on-error fallback, so external APIs
+get hit at most once per TTL per worker isolate.
+
+## Local dev
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The dev server runs on `http://localhost:3000` (vite + tanstack-start).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Environment variables
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+Create `.env.local`:
+
 ```
+GITHUB_TOKEN=<github PAT with public_repo + read:user>
+LASTFM_API_KEY=<last.fm api key>
+R2_PUBLIC_URL=<optional — https://your-r2-bucket.domain>
+```
+
+Without these, the corresponding panels render "unavailable" states
+instead of crashing.
+
+## Commands
+
+| Command | Notes |
+| --- | --- |
+| `npm run dev` | Local dev server |
+| `npm run build` | Production build (client + worker + prerender) |
+| `npm run typecheck` | `tsc -b` |
+| `npm run lint` | ESLint |
+| `npm test` | Vitest |
+| `npm run start` | Run the built worker locally |
+
+## Deploy
+
+The build outputs a Cloudflare Worker at `dist/server/`. `wrangler.jsonc`
+points at `@tanstack/react-start/server-entry`, with `nodejs_compat`
+enabled for the atproto/SSR deps.
+
+Set secrets in the CF dashboard (or `wrangler secret put`):
+
+- `GITHUB_TOKEN`
+- `LASTFM_API_KEY`
+- `R2_PUBLIC_URL` (optional)
+
+## Layout
+
+```
+src/
+  pages/            # route components (Home, Blog, Projects, …)
+  routes/           # file-based router shells — just map urls → page components
+  components/       # shared UI (NavBar, Layout, ErrorBoundary, LiveMusicPanel, …)
+  server/           # createServerFn endpoints: github, lastfm, popfeed, whtwnd, …
+  lib/              # small utils (format, markdown helpers)
+  data.ts           # static config: SITE, USES, SOCIALS, GITHUB_ACCOUNTS, …
+  _legacy/          # parked experiments (studio, bluesky tools, infinite-canvas, …)
+                    # excluded from the routeTree + typecheck; kept for future migration
+```
+
+## Why client-side data fetching
+
+Earlier versions ran SSR with deferred loader promises + `<Await>` streaming.
+TanStack Start's SSR pipeline buffers the whole response until all
+promises resolve, so cold loads blocked on the slowest upstream (~2–3 s of
+blank page). Stripping the loaders and moving every data source to
+`useQuery` gives TTFB ≈ 20 ms and a shell-first paint. The caches still
+live on the server, behind the same `createServerFn` endpoints — the
+client just hits them via RPC.
