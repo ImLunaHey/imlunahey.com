@@ -28,6 +28,7 @@ import { Route as MainLabsTidRouteImport } from './routes/_main/labs/tid'
 import { Route as MainLabsScreenshotMakerRouteImport } from './routes/_main/labs/screenshot-maker'
 import { Route as MainLabsPdfUploaderRouteImport } from './routes/_main/labs/pdf-uploader'
 import { Route as MainLabsPaletteRouteImport } from './routes/_main/labs/palette'
+import { Route as MainLabsOgPreviewRouteImport } from './routes/_main/labs/og-preview'
 import { Route as MainLabsListCleanerRouteImport } from './routes/_main/labs/list-cleaner'
 import { Route as MainLabsJwtRouteImport } from './routes/_main/labs/jwt'
 import { Route as MainLabsJetstreamRouteImport } from './routes/_main/labs/jetstream'
@@ -142,6 +143,11 @@ const MainLabsPaletteRoute = MainLabsPaletteRouteImport.update({
   path: '/labs/palette',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsOgPreviewRoute = MainLabsOgPreviewRouteImport.update({
+  id: '/labs/og-preview',
+  path: '/labs/og-preview',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsListCleanerRoute = MainLabsListCleanerRouteImport.update({
   id: '/labs/list-cleaner',
   path: '/labs/list-cleaner',
@@ -254,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/labs/jetstream': typeof MainLabsJetstreamRoute
   '/labs/jwt': typeof MainLabsJwtRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
+  '/labs/og-preview': typeof MainLabsOgPreviewRoute
   '/labs/palette': typeof MainLabsPaletteRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
@@ -293,6 +300,7 @@ export interface FileRoutesByTo {
   '/labs/jetstream': typeof MainLabsJetstreamRoute
   '/labs/jwt': typeof MainLabsJwtRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
+  '/labs/og-preview': typeof MainLabsOgPreviewRoute
   '/labs/palette': typeof MainLabsPaletteRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
@@ -334,6 +342,7 @@ export interface FileRoutesById {
   '/_main/labs/jetstream': typeof MainLabsJetstreamRoute
   '/_main/labs/jwt': typeof MainLabsJwtRoute
   '/_main/labs/list-cleaner': typeof MainLabsListCleanerRoute
+  '/_main/labs/og-preview': typeof MainLabsOgPreviewRoute
   '/_main/labs/palette': typeof MainLabsPaletteRoute
   '/_main/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/_main/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
@@ -375,6 +384,7 @@ export interface FileRouteTypes {
     | '/labs/jetstream'
     | '/labs/jwt'
     | '/labs/list-cleaner'
+    | '/labs/og-preview'
     | '/labs/palette'
     | '/labs/pdf-uploader'
     | '/labs/screenshot-maker'
@@ -414,6 +424,7 @@ export interface FileRouteTypes {
     | '/labs/jetstream'
     | '/labs/jwt'
     | '/labs/list-cleaner'
+    | '/labs/og-preview'
     | '/labs/palette'
     | '/labs/pdf-uploader'
     | '/labs/screenshot-maker'
@@ -454,6 +465,7 @@ export interface FileRouteTypes {
     | '/_main/labs/jetstream'
     | '/_main/labs/jwt'
     | '/_main/labs/list-cleaner'
+    | '/_main/labs/og-preview'
     | '/_main/labs/palette'
     | '/_main/labs/pdf-uploader'
     | '/_main/labs/screenshot-maker'
@@ -620,6 +632,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsPaletteRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/og-preview': {
+      id: '/_main/labs/og-preview'
+      path: '/labs/og-preview'
+      fullPath: '/labs/og-preview'
+      preLoaderRoute: typeof MainLabsOgPreviewRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/list-cleaner': {
       id: '/_main/labs/list-cleaner'
       path: '/labs/list-cleaner'
@@ -769,6 +788,7 @@ interface MainRouteChildren {
   MainLabsJetstreamRoute: typeof MainLabsJetstreamRoute
   MainLabsJwtRoute: typeof MainLabsJwtRoute
   MainLabsListCleanerRoute: typeof MainLabsListCleanerRoute
+  MainLabsOgPreviewRoute: typeof MainLabsOgPreviewRoute
   MainLabsPaletteRoute: typeof MainLabsPaletteRoute
   MainLabsPdfUploaderRoute: typeof MainLabsPdfUploaderRoute
   MainLabsScreenshotMakerRoute: typeof MainLabsScreenshotMakerRoute
@@ -808,6 +828,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsJetstreamRoute: MainLabsJetstreamRoute,
   MainLabsJwtRoute: MainLabsJwtRoute,
   MainLabsListCleanerRoute: MainLabsListCleanerRoute,
+  MainLabsOgPreviewRoute: MainLabsOgPreviewRoute,
   MainLabsPaletteRoute: MainLabsPaletteRoute,
   MainLabsPdfUploaderRoute: MainLabsPdfUploaderRoute,
   MainLabsScreenshotMakerRoute: MainLabsScreenshotMakerRoute,

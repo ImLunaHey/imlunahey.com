@@ -140,6 +140,14 @@ const LABS: Lab[] = [
     year: '2026',
     ready: true,
   },
+  {
+    slug: 'og-preview',
+    title: 'og preview',
+    desc: 'paste any url, see how its og/twitter meta would render in bluesky, x, discord, and slack unfurls.',
+    tags: ['tool', 'meta'],
+    year: '2026',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {

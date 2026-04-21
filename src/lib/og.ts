@@ -41,7 +41,8 @@ export type OgSlug =
   | 'lab/tid'
   | 'lab/palette'
   | 'lab/jwt'
-  | 'lab/cron';
+  | 'lab/cron'
+  | 'lab/og-preview';
 
 type OgEntry = {
   title: string;
@@ -79,6 +80,7 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/palette': { title: 'palette.', subtitle: 'image → dominant colours', glyph: '◐', slug: '/labs/palette' },
   'lab/jwt': { title: 'jwt.', subtitle: 'decode json web tokens', glyph: '⎔', slug: '/labs/jwt' },
   'lab/cron': { title: 'cron.', subtitle: 'expression to english + fires', glyph: '◴', slug: '/labs/cron' },
+  'lab/og-preview': { title: 'og preview.', subtitle: 'how your card looks in every feed', glyph: '▤', slug: '/labs/og-preview' },
 };
 
 const W = 1200;
