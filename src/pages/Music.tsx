@@ -240,8 +240,22 @@ const CSS = `
 
   @media (max-width: 640px) {
     .page-hd { grid-template-columns: 1fr; }
-    .page-hd .counts { text-align: left; }
+    .page-hd .counts {
+      text-align: left;
+      display: flex; flex-wrap: wrap; gap: var(--sp-3);
+      line-height: 1.4;
+    }
     .row { grid-template-columns: 40px minmax(0, 1fr) 60px; }
     .r-album { display: none; }
+  }
+  @media (max-width: 560px) {
+    .shell-music { padding: 0 var(--sp-4); }
+    .page-hd { padding-top: 48px; }
+    /* now-playing art shrinks + tightens padding so the track title has
+       room to wrap or truncate sensibly */
+    .now-panel { padding: var(--sp-4); }
+    .now-art { width: 72px; height: 72px; }
+    .now-track { font-size: var(--fs-lg); }
+    .now-artist { font-size: var(--fs-sm); }
   }
 `;

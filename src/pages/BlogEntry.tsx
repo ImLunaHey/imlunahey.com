@@ -390,6 +390,40 @@ const CSS = `
   .comment-images img { max-width: 180px; border: 1px solid var(--color-border); }
   .comment-replies { padding-left: var(--sp-4); border-left: 1px dashed var(--color-border); margin-left: 6px; }
 
+  @media (max-width: 560px) {
+    .shell-post { padding: 0 var(--sp-4); }
+    .post-hd { padding-top: var(--sp-6); }
+
+    /* whoami dl: drop the fixed label column so values have room */
+    .whoami .vitals { grid-template-columns: auto 1fr; gap: 4px var(--sp-3); }
+
+    /* related: date + read-time on top row, title on its own row below */
+    .related a {
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        "dt rt"
+        "tt tt";
+      gap: 2px var(--sp-3);
+    }
+    .related a .dt { grid-area: dt; }
+    .related a .rt { grid-area: rt; }
+    .related a > span:not(.dt):not(.rt) { grid-area: tt; }
+
+    /* comment header wraps when names/handles run long */
+    .comment-head { flex-wrap: wrap; }
+    .comment-head .when { margin-left: 0; }
+
+    /* shrink article headings a touch so big ## titles don't overflow */
+    .shell-post article h1 { font-size: 28px; }
+    .shell-post article h2 { font-size: 24px; }
+    .shell-post article h2::before { font-size: 15px; }
+    .shell-post article h3 { font-size: 20px; }
+    .shell-post article pre { padding: var(--sp-3); font-size: 12px; }
+    .shell-post article { font-size: 14px; line-height: 1.7; }
+
+    .comment-images img { max-width: 140px; }
+  }
+
   .post-footer {
     border-top: 1px solid var(--color-border);
     margin-top: var(--sp-8);

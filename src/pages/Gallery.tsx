@@ -529,4 +529,32 @@ const CSS = `
     max-height: 120px;
     overflow-y: auto;
   }
+
+  @media (max-width: 560px) {
+    .shell-gallery { padding: 0 var(--sp-4); }
+    .page-hd {
+      grid-template-columns: 1fr;
+      padding-top: 48px;
+      gap: var(--sp-4);
+    }
+    .page-hd .counts {
+      text-align: left;
+      display: flex; flex-wrap: wrap; gap: var(--sp-3);
+      line-height: 1.4;
+    }
+    /* two-up thumbnail grid on phones instead of the desktop 200px minmax
+       (which collapses to a single column at phone widths). */
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    /* tile prompt is hover-only on desktop; phones tap to open lightbox
+       instead, so leave the prompt overlay hidden. */
+    .gal-bar { gap: var(--sp-3); }
+    .spacer { display: none; }
+    .surprise { margin-left: auto; }
+    .lb-head { padding: var(--sp-3) var(--sp-4); }
+    .lb-head .kbd { display: none; }
+    .lb-body { padding: var(--sp-3); }
+    .lb-caption { padding: var(--sp-3) var(--sp-4); max-height: 30vh; }
+    .lb-nav.prev { left: var(--sp-2); }
+    .lb-nav.next { right: var(--sp-2); }
+  }
 `;

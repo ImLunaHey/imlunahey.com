@@ -212,4 +212,20 @@ const CSS = `
     border-top: 1px solid var(--color-border);
     font-size: var(--fs-xs); color: var(--color-fg-faint); font-family: var(--font-mono);
   }
+
+  @media (max-width: 560px) {
+    .shell-games { padding: 0 var(--sp-4); }
+    .page-hd {
+      grid-template-columns: 1fr;
+      padding-top: 48px;
+      gap: var(--sp-4);
+    }
+    .page-hd .counts {
+      text-align: left;
+      display: flex; flex-wrap: wrap; gap: var(--sp-3);
+      line-height: 1.4;
+    }
+    .review-grid { grid-template-columns: 1fr; gap: var(--sp-3); }
+    .review-card { grid-template-columns: 80px 1fr; gap: var(--sp-3); padding: var(--sp-2); }
+  }
 `;

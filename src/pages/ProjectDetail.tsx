@@ -362,6 +362,10 @@ const CSS = `
     display: grid; grid-template-columns: 1fr 280px; gap: var(--sp-8);
     padding: var(--sp-8) 0;
   }
+  /* grid children default to min-width: auto (content-sized). if the readme
+     contains a long url or a wide code block, that default lets the item
+     push the whole grid wider than the viewport. min-width:0 contains it. */
+  .readme { min-width: 0; }
   .readme h2 {
     font-family: var(--font-display); font-size: 28px;
     font-weight: 500; letter-spacing: -0.02em;
@@ -373,6 +377,7 @@ const CSS = `
   .readme p {
     color: var(--color-fg); line-height: 1.7; font-size: 15px;
     margin-bottom: var(--sp-3); text-wrap: pretty;
+    overflow-wrap: break-word;
   }
   .readme code.inline { background: var(--color-bg-raised); border: 1px solid var(--color-border); padding: 1px 6px; font-size: 12px; color: var(--color-accent); font-family: var(--font-mono); }
   .readme a { color: var(--color-accent); }
@@ -382,6 +387,8 @@ const CSS = `
     margin: var(--sp-4) 0;
     border: 1px solid var(--color-border);
     background: var(--color-bg-panel);
+    min-width: 0;
+    max-width: 100%;
   }
   .code-wrap .code-top {
     display: flex; justify-content: space-between; align-items: center;
@@ -404,11 +411,12 @@ const CSS = `
     line-height: 1.6; color: var(--color-fg);
   }
 
-  .side { display: flex; flex-direction: column; gap: var(--sp-5); }
+  .side { display: flex; flex-direction: column; gap: var(--sp-5); min-width: 0; }
   .side-box {
     border: 1px solid var(--color-border);
     background: var(--color-bg-panel);
     padding: var(--sp-4);
+    min-width: 0;
   }
   .side-box h3 {
     font-size: 10px; color: var(--color-fg-faint);
@@ -417,7 +425,12 @@ const CSS = `
   }
   .side-box dl { display: grid; grid-template-columns: auto 1fr; gap: 6px var(--sp-3); font-family: var(--font-mono); font-size: var(--fs-xs); }
   .side-box dt { color: var(--color-fg-faint); }
-  .side-box dd { color: var(--color-fg); text-align: right; }
+  .side-box dd {
+    color: var(--color-fg);
+    text-align: right;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
   .side-box dd .dim { color: var(--color-fg-faint); }
   .side-box dd .acc { color: var(--color-accent); }
 
@@ -473,5 +486,18 @@ const CSS = `
     .body { grid-template-columns: 1fr; }
     .ctas { grid-template-columns: 1fr; }
     .related-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .shell-project { padding: 0 var(--sp-4); }
+    .proj-hd { padding-top: var(--sp-6); }
+    .proj-hd .desc { font-size: 16px; }
+    .proj-hd .meta { gap: var(--sp-3); }
+    /* writeup callout stacks on narrow screens */
+    .writeup-callout { flex-direction: column; align-items: flex-start; gap: var(--sp-2); padding: var(--sp-4); }
+    .writeup-callout .icon { font-size: 36px; }
+    .writeup-callout .wc-title { font-size: 18px; }
+    .readme h2 { font-size: 24px; }
+    .readme p { font-size: 14px; }
+    .code-wrap pre { font-size: 12px; padding: 10px 12px; }
   }
 `;

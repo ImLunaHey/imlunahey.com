@@ -215,4 +215,41 @@ const BLOG_CSS = `
     color: var(--color-fg-faint);
     font-family: var(--font-mono);
   }
+
+  @media (max-width: 560px) {
+    .shell-writing { padding: 0 var(--sp-4); }
+    /* stack header, wrap counts into a single row of inline stats */
+    .page-hd {
+      grid-template-columns: 1fr;
+      padding-top: 48px;
+      gap: var(--sp-4);
+    }
+    .page-hd .counts {
+      text-align: left;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-3);
+      line-height: 1.4;
+    }
+    /* post row: date on its own line, title + "Xm" on the next, excerpt
+       always visible (no hover on touch). */
+    .post {
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        "date date"
+        "title meta"
+        "excerpt excerpt";
+      gap: 2px var(--sp-3);
+    }
+    .post .date { grid-area: date; }
+    .post .title { grid-area: title; font-size: var(--fs-md); }
+    .post .meta { grid-area: meta; }
+    .post .excerpt {
+      grid-area: excerpt;
+      max-height: none;
+      opacity: 1;
+      margin-top: var(--sp-1);
+    }
+    .post:hover { background: transparent; }
+  }
 `;

@@ -239,6 +239,7 @@ function RepoTable({
   }, [repos, filter, search, sortKey, sortDir]);
 
   return (
+    <div className="repo-table-wrap">
     <table className="repo-table">
       <thead>
         <tr>
@@ -297,11 +298,13 @@ function RepoTable({
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 
 function TableSkel() {
   return (
+    <div className="repo-table-wrap">
     <table className="repo-table">
       <tbody>
         {Array.from({ length: 8 }).map((_, i) => (
@@ -321,6 +324,7 @@ function TableSkel() {
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 
@@ -537,5 +541,28 @@ const PROJECTS_CSS = `
 
   @media (max-width: 860px) {
     .pinned { grid-template-columns: 1fr; }
+  }
+
+  /* mobile: table wraps in a horizontal scroller rather than breaking
+     the whole page, filters search goes full-width, page counts wrap
+     into two rows of smaller numbers. */
+  .repo-table-wrap { width: 100%; }
+  @media (max-width: 760px) {
+    .repo-table-wrap {
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      margin: 0 calc(-1 * var(--sp-4));
+      padding: 0 var(--sp-4);
+    }
+    .repo-table-wrap::-webkit-scrollbar { display: none; }
+    .repo-table { min-width: 720px; }
+    .f-search { margin-left: 0; max-width: none; flex: 1 1 100%; }
+  }
+  @media (max-width: 560px) {
+    .shell-projects { padding: 0 var(--sp-4); }
+    .page-hd { padding-top: 48px; }
+    .page-hd .counts { gap: var(--sp-5); flex-wrap: wrap; margin-top: var(--sp-4); }
+    .page-hd .counts b { font-size: 22px; }
   }
 `;

@@ -282,4 +282,29 @@ const CSS = `
     border-top: 1px solid var(--color-border);
     font-size: var(--fs-xs); color: var(--color-fg-faint); font-family: var(--font-mono);
   }
+
+  @media (max-width: 560px) {
+    .shell-watching { padding: 0 var(--sp-4); }
+    .page-hd {
+      grid-template-columns: 1fr;
+      padding-top: 48px;
+      gap: var(--sp-4);
+    }
+    .page-hd .counts {
+      text-align: left;
+      display: flex; flex-wrap: wrap; gap: var(--sp-3);
+      line-height: 1.4;
+    }
+    /* tabs were already overflow-x:auto — hide the scrollbar + fade edges
+       to match the nav/cmdbar pattern the rest of the site uses. */
+    .tabs {
+      scrollbar-width: none;
+      mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    /* shrink poster column so body has room for title/text */
+    .review-card { grid-template-columns: 80px 1fr; gap: var(--sp-3); padding: var(--sp-2); }
+    .review-grid { grid-template-columns: 1fr; gap: var(--sp-3); }
+  }
 `;

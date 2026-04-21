@@ -241,4 +241,10 @@ const CSS = `
     .review { grid-template-columns: 1fr; }
     .review .poster { width: 160px; }
   }
+  @media (max-width: 560px) {
+    .shell-review { padding: var(--sp-4); }
+    .review { padding: var(--sp-4) 0; gap: var(--sp-4); }
+    .body { padding: var(--sp-4) 0; }
+    .body-text { font-size: 14px; line-height: 1.65; }
+  }
 `;
