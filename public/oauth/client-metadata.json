@@ -9,7 +9,7 @@
   "redirect_uris": ["https://imlunahey.com/oauth/callback"],
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],
-  "scope": "atproto repo:com.imlunahey.guestbook.entry?action=create",
+  "scope": "atproto repo:com.imlunahey.guestbook.entry?action=create repo:com.imlunahey.leaderboard.score?action=create",
   "token_endpoint_auth_method": "none",
   "dpop_bound_access_tokens": true
 }

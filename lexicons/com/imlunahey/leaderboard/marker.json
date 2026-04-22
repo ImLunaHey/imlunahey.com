@@ -1,0 +1,21 @@
+{
+  "lexicon": 1,
+  "id": "com.imlunahey.leaderboard.marker",
+  "description": "Identifies a leaderboard surface. Score records reference this by AT-URI via their `subject` field; constellation indexes those references so the site can list scores without running a firehose subscriber.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["title", "url", "createdAt"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "url": { "type": "string", "format": "uri" },
+          "description": { "type": "string", "maxLength": 500 },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}

@@ -13,7 +13,8 @@
     "start": "node .output/server/index.mjs",
     "test": "vitest",
     "test:browser": "vitest --workspace=vitest.workspace.ts",
-    "guestbook:marker": "tsx --env-file=.env.local scripts/guestbook-marker.ts"
+    "guestbook:marker": "tsx --env-file=.env.local scripts/guestbook-marker.ts",
+    "leaderboard:marker": "tsx --env-file=.env.local scripts/leaderboard-marker.ts"
   },
   "dependencies": {
     "@ariakit/react": "^0.4.17",

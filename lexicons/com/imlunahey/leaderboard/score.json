@@ -1,0 +1,53 @@
+{
+  "lexicon": 1,
+  "id": "com.imlunahey.leaderboard.score",
+  "description": "A signed leaderboard score. Users play locally, call /api/sign-score on the site which validates the run and returns a server HMAC, then createRecord on their own PDS. Records without a valid server signature are ignored when rendering the leaderboard.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["game", "score", "subject", "did", "achievedAt", "sig"],
+        "properties": {
+          "game": {
+            "type": "string",
+            "description": "The game identifier. Includes the variant for games with multiple boards (e.g. typing-30).",
+            "knownValues": ["snake", "wordle", "typing-15", "typing-30", "typing-60"],
+            "maxLength": 64
+          },
+          "score": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The numeric score. Meaning depends on the game — for snake, food eaten; for typing, wpm; for wordle, guesses used (lower is better)."
+          },
+          "subject": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "AT-URI of the leaderboard marker record this score is claiming against."
+          },
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "The author's DID, copied into the record so the server HMAC binds the score to the player. Must match the record repo's DID when displayed."
+          },
+          "achievedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp assigned by the signing server, part of the HMAC payload."
+          },
+          "sig": {
+            "type": "string",
+            "description": "Base64url-encoded HMAC-SHA256 of the canonical {game, score, did, achievedAt} payload, signed with a server secret. The leaderboard renderer verifies this and drops records that don't match.",
+            "maxLength": 128
+          },
+          "replay": {
+            "type": "string",
+            "description": "Optional compact replay data (input log, guess sequence, typed text hash). Not required; when present, the signing server may use it for additional validation before signing.",
+            "maxLength": 4000
+          }
+        }
+      }
+    }
+  }
+}

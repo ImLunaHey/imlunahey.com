@@ -148,6 +148,38 @@ const LABS: Lab[] = [
     year: '2026',
     ready: true,
   },
+  {
+    slug: 'snake',
+    title: 'snake',
+    desc: 'arrow keys (or wasd), a green dot on a 24×16 grid, one life. paused by default.',
+    tags: ['game'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'life',
+    title: 'life',
+    desc: "conway's game of life on a 60×40 torus. click to paint, space to play, pre-seeded with glider/pulsar/gosper.",
+    tags: ['game', 'sim'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'wordle',
+    title: 'wordle',
+    desc: 'five-letter word, six guesses, one puzzle a day — seeded from the date so everyone gets the same word.',
+    tags: ['game'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'typing',
+    title: 'typing',
+    desc: 'short timed run — 15 / 30 / 60 second. wpm + live accuracy, best scores kept locally.',
+    tags: ['game', 'tool'],
+    year: '2026',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {

@@ -45,7 +45,11 @@ export type OgSlug =
   | 'lab/palette'
   | 'lab/jwt'
   | 'lab/cron'
-  | 'lab/og-preview';
+  | 'lab/og-preview'
+  | 'lab/snake'
+  | 'lab/life'
+  | 'lab/wordle'
+  | 'lab/typing';
 
 type OgEntry = {
   title: string;
@@ -87,6 +91,10 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/jwt': { title: 'jwt.', subtitle: 'decode json web tokens', glyph: '⎔', slug: '/labs/jwt' },
   'lab/cron': { title: 'cron.', subtitle: 'expression to english + fires', glyph: '◴', slug: '/labs/cron' },
   'lab/og-preview': { title: 'og preview.', subtitle: 'how your card looks in every feed', glyph: '▤', slug: '/labs/og-preview' },
+  'lab/snake': { title: 'snake.', subtitle: 'arrow keys, a dot, one life', glyph: '∿', slug: '/labs/snake' },
+  'lab/life': { title: 'life.', subtitle: "conway's automaton on a torus", glyph: '◫', slug: '/labs/life' },
+  'lab/wordle': { title: 'wordle.', subtitle: 'one word a day, six guesses', glyph: '▦', slug: '/labs/wordle' },
+  'lab/typing': { title: 'typing.', subtitle: 'wpm + accuracy, bring-your-own-keyboard', glyph: '⎇', slug: '/labs/typing' },
 };
 
 const W = 1200;

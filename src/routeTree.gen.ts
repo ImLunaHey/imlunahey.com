@@ -28,13 +28,17 @@ import { Route as MainGamesIndexRouteImport } from './routes/_main/games/index'
 import { Route as MainBlogIndexRouteImport } from './routes/_main/blog/index'
 import { Route as MainWatchingRkeyRouteImport } from './routes/_main/watching/$rkey'
 import { Route as MainProjectsNameRouteImport } from './routes/_main/projects/$name'
+import { Route as MainLabsWordleRouteImport } from './routes/_main/labs/wordle'
 import { Route as MainLabsVerseRevealRouteImport } from './routes/_main/labs/verse-reveal'
+import { Route as MainLabsTypingRouteImport } from './routes/_main/labs/typing'
 import { Route as MainLabsTidRouteImport } from './routes/_main/labs/tid'
+import { Route as MainLabsSnakeRouteImport } from './routes/_main/labs/snake'
 import { Route as MainLabsScreenshotMakerRouteImport } from './routes/_main/labs/screenshot-maker'
 import { Route as MainLabsPdfUploaderRouteImport } from './routes/_main/labs/pdf-uploader'
 import { Route as MainLabsPaletteRouteImport } from './routes/_main/labs/palette'
 import { Route as MainLabsOgPreviewRouteImport } from './routes/_main/labs/og-preview'
 import { Route as MainLabsListCleanerRouteImport } from './routes/_main/labs/list-cleaner'
+import { Route as MainLabsLifeRouteImport } from './routes/_main/labs/life'
 import { Route as MainLabsJwtRouteImport } from './routes/_main/labs/jwt'
 import { Route as MainLabsJetstreamRouteImport } from './routes/_main/labs/jetstream'
 import { Route as MainLabsInfiniteCanvasRouteImport } from './routes/_main/labs/infinite-canvas'
@@ -148,14 +152,29 @@ const MainProjectsNameRoute = MainProjectsNameRouteImport.update({
   path: '/projects/$name',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsWordleRoute = MainLabsWordleRouteImport.update({
+  id: '/labs/wordle',
+  path: '/labs/wordle',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsVerseRevealRoute = MainLabsVerseRevealRouteImport.update({
   id: '/labs/verse-reveal',
   path: '/labs/verse-reveal',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsTypingRoute = MainLabsTypingRouteImport.update({
+  id: '/labs/typing',
+  path: '/labs/typing',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsTidRoute = MainLabsTidRouteImport.update({
   id: '/labs/tid',
   path: '/labs/tid',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsSnakeRoute = MainLabsSnakeRouteImport.update({
+  id: '/labs/snake',
+  path: '/labs/snake',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsScreenshotMakerRoute = MainLabsScreenshotMakerRouteImport.update({
@@ -181,6 +200,11 @@ const MainLabsOgPreviewRoute = MainLabsOgPreviewRouteImport.update({
 const MainLabsListCleanerRoute = MainLabsListCleanerRouteImport.update({
   id: '/labs/list-cleaner',
   path: '/labs/list-cleaner',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsLifeRoute = MainLabsLifeRouteImport.update({
+  id: '/labs/life',
+  path: '/labs/life',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsJwtRoute = MainLabsJwtRouteImport.update({
@@ -294,13 +318,17 @@ export interface FileRoutesByFullPath {
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/labs/jetstream': typeof MainLabsJetstreamRoute
   '/labs/jwt': typeof MainLabsJwtRoute
+  '/labs/life': typeof MainLabsLifeRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/labs/og-preview': typeof MainLabsOgPreviewRoute
   '/labs/palette': typeof MainLabsPaletteRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
+  '/labs/snake': typeof MainLabsSnakeRoute
   '/labs/tid': typeof MainLabsTidRoute
+  '/labs/typing': typeof MainLabsTypingRoute
   '/labs/verse-reveal': typeof MainLabsVerseRevealRoute
+  '/labs/wordle': typeof MainLabsWordleRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
   '/blog/': typeof MainBlogIndexRoute
@@ -339,13 +367,17 @@ export interface FileRoutesByTo {
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/labs/jetstream': typeof MainLabsJetstreamRoute
   '/labs/jwt': typeof MainLabsJwtRoute
+  '/labs/life': typeof MainLabsLifeRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/labs/og-preview': typeof MainLabsOgPreviewRoute
   '/labs/palette': typeof MainLabsPaletteRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
+  '/labs/snake': typeof MainLabsSnakeRoute
   '/labs/tid': typeof MainLabsTidRoute
+  '/labs/typing': typeof MainLabsTypingRoute
   '/labs/verse-reveal': typeof MainLabsVerseRevealRoute
+  '/labs/wordle': typeof MainLabsWordleRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
   '/blog': typeof MainBlogIndexRoute
@@ -386,13 +418,17 @@ export interface FileRoutesById {
   '/_main/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/_main/labs/jetstream': typeof MainLabsJetstreamRoute
   '/_main/labs/jwt': typeof MainLabsJwtRoute
+  '/_main/labs/life': typeof MainLabsLifeRoute
   '/_main/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/_main/labs/og-preview': typeof MainLabsOgPreviewRoute
   '/_main/labs/palette': typeof MainLabsPaletteRoute
   '/_main/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/_main/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
+  '/_main/labs/snake': typeof MainLabsSnakeRoute
   '/_main/labs/tid': typeof MainLabsTidRoute
+  '/_main/labs/typing': typeof MainLabsTypingRoute
   '/_main/labs/verse-reveal': typeof MainLabsVerseRevealRoute
+  '/_main/labs/wordle': typeof MainLabsWordleRoute
   '/_main/projects/$name': typeof MainProjectsNameRoute
   '/_main/watching/$rkey': typeof MainWatchingRkeyRoute
   '/_main/blog/': typeof MainBlogIndexRoute
@@ -433,13 +469,17 @@ export interface FileRouteTypes {
     | '/labs/infinite-canvas'
     | '/labs/jetstream'
     | '/labs/jwt'
+    | '/labs/life'
     | '/labs/list-cleaner'
     | '/labs/og-preview'
     | '/labs/palette'
     | '/labs/pdf-uploader'
     | '/labs/screenshot-maker'
+    | '/labs/snake'
     | '/labs/tid'
+    | '/labs/typing'
     | '/labs/verse-reveal'
+    | '/labs/wordle'
     | '/projects/$name'
     | '/watching/$rkey'
     | '/blog/'
@@ -478,13 +518,17 @@ export interface FileRouteTypes {
     | '/labs/infinite-canvas'
     | '/labs/jetstream'
     | '/labs/jwt'
+    | '/labs/life'
     | '/labs/list-cleaner'
     | '/labs/og-preview'
     | '/labs/palette'
     | '/labs/pdf-uploader'
     | '/labs/screenshot-maker'
+    | '/labs/snake'
     | '/labs/tid'
+    | '/labs/typing'
     | '/labs/verse-reveal'
+    | '/labs/wordle'
     | '/projects/$name'
     | '/watching/$rkey'
     | '/blog'
@@ -524,13 +568,17 @@ export interface FileRouteTypes {
     | '/_main/labs/infinite-canvas'
     | '/_main/labs/jetstream'
     | '/_main/labs/jwt'
+    | '/_main/labs/life'
     | '/_main/labs/list-cleaner'
     | '/_main/labs/og-preview'
     | '/_main/labs/palette'
     | '/_main/labs/pdf-uploader'
     | '/_main/labs/screenshot-maker'
+    | '/_main/labs/snake'
     | '/_main/labs/tid'
+    | '/_main/labs/typing'
     | '/_main/labs/verse-reveal'
+    | '/_main/labs/wordle'
     | '/_main/projects/$name'
     | '/_main/watching/$rkey'
     | '/_main/blog/'
@@ -693,6 +741,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainProjectsNameRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/wordle': {
+      id: '/_main/labs/wordle'
+      path: '/labs/wordle'
+      fullPath: '/labs/wordle'
+      preLoaderRoute: typeof MainLabsWordleRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/verse-reveal': {
       id: '/_main/labs/verse-reveal'
       path: '/labs/verse-reveal'
@@ -700,11 +755,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsVerseRevealRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/typing': {
+      id: '/_main/labs/typing'
+      path: '/labs/typing'
+      fullPath: '/labs/typing'
+      preLoaderRoute: typeof MainLabsTypingRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/tid': {
       id: '/_main/labs/tid'
       path: '/labs/tid'
       fullPath: '/labs/tid'
       preLoaderRoute: typeof MainLabsTidRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/snake': {
+      id: '/_main/labs/snake'
+      path: '/labs/snake'
+      fullPath: '/labs/snake'
+      preLoaderRoute: typeof MainLabsSnakeRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/screenshot-maker': {
@@ -740,6 +809,13 @@ declare module '@tanstack/react-router' {
       path: '/labs/list-cleaner'
       fullPath: '/labs/list-cleaner'
       preLoaderRoute: typeof MainLabsListCleanerRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/life': {
+      id: '/_main/labs/life'
+      path: '/labs/life'
+      fullPath: '/labs/life'
+      preLoaderRoute: typeof MainLabsLifeRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/jwt': {
@@ -887,13 +963,17 @@ interface MainRouteChildren {
   MainLabsInfiniteCanvasRoute: typeof MainLabsInfiniteCanvasRoute
   MainLabsJetstreamRoute: typeof MainLabsJetstreamRoute
   MainLabsJwtRoute: typeof MainLabsJwtRoute
+  MainLabsLifeRoute: typeof MainLabsLifeRoute
   MainLabsListCleanerRoute: typeof MainLabsListCleanerRoute
   MainLabsOgPreviewRoute: typeof MainLabsOgPreviewRoute
   MainLabsPaletteRoute: typeof MainLabsPaletteRoute
   MainLabsPdfUploaderRoute: typeof MainLabsPdfUploaderRoute
   MainLabsScreenshotMakerRoute: typeof MainLabsScreenshotMakerRoute
+  MainLabsSnakeRoute: typeof MainLabsSnakeRoute
   MainLabsTidRoute: typeof MainLabsTidRoute
+  MainLabsTypingRoute: typeof MainLabsTypingRoute
   MainLabsVerseRevealRoute: typeof MainLabsVerseRevealRoute
+  MainLabsWordleRoute: typeof MainLabsWordleRoute
   MainProjectsNameRoute: typeof MainProjectsNameRoute
   MainWatchingRkeyRoute: typeof MainWatchingRkeyRoute
   MainBlogIndexRoute: typeof MainBlogIndexRoute
@@ -931,13 +1011,17 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsInfiniteCanvasRoute: MainLabsInfiniteCanvasRoute,
   MainLabsJetstreamRoute: MainLabsJetstreamRoute,
   MainLabsJwtRoute: MainLabsJwtRoute,
+  MainLabsLifeRoute: MainLabsLifeRoute,
   MainLabsListCleanerRoute: MainLabsListCleanerRoute,
   MainLabsOgPreviewRoute: MainLabsOgPreviewRoute,
   MainLabsPaletteRoute: MainLabsPaletteRoute,
   MainLabsPdfUploaderRoute: MainLabsPdfUploaderRoute,
   MainLabsScreenshotMakerRoute: MainLabsScreenshotMakerRoute,
+  MainLabsSnakeRoute: MainLabsSnakeRoute,
   MainLabsTidRoute: MainLabsTidRoute,
+  MainLabsTypingRoute: MainLabsTypingRoute,
   MainLabsVerseRevealRoute: MainLabsVerseRevealRoute,
+  MainLabsWordleRoute: MainLabsWordleRoute,
   MainProjectsNameRoute: MainProjectsNameRoute,
   MainWatchingRkeyRoute: MainWatchingRkeyRoute,
   MainBlogIndexRoute: MainBlogIndexRoute,

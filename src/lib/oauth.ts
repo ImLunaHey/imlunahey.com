@@ -11,13 +11,17 @@ import {
 import type { Session } from '@atcute/oauth-browser-client';
 
 /**
- * OAuth scope for the guestbook.
- *   atproto — base scope, required for any identity-bound access
- *   repo:<nsid>?action=create — write access scoped to exactly one
- *     collection and one action (createRecord), nothing else in the
- *     repo is touchable with this token.
+ * Per-feature scopes. The client_metadata.json declares every scope this
+ * client may ever request; each feature asks only for what it needs at
+ * createAuthorizationUrl time — so signing into the guestbook doesn't
+ * grant leaderboard access and vice versa.
+ *
+ * If a session authorised under one scope later hits a page needing the
+ * other, createRecord will fail with `ScopeMissingError` and we prompt
+ * the user to sign in again.
  */
-export const OAUTH_SCOPE = 'atproto repo:com.imlunahey.guestbook.entry?action=create';
+export const GUESTBOOK_SCOPE = 'atproto repo:com.imlunahey.guestbook.entry?action=create';
+export const LEADERBOARD_SCOPE = 'atproto repo:com.imlunahey.leaderboard.score?action=create';
 
 /**
  * In prod the client_id is the URL of our hosted metadata JSON.

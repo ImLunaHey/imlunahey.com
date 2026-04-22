@@ -7,7 +7,7 @@ import type { ActorIdentifier } from '@atcute/lexicons';
 import { SITE } from '../data';
 import { useAtprotoSession } from '../hooks/use-atproto-session';
 import { useProfile } from '../hooks/use-profile';
-import { ensureOAuthConfigured, OAUTH_SCOPE } from '../lib/oauth';
+import { ensureOAuthConfigured, GUESTBOOK_SCOPE } from '../lib/oauth';
 import { getGuestbookEntries, GUESTBOOK_ENTRY_COLLECTION, GUESTBOOK_MARKER_URI, type GuestbookEntry } from '../server/guestbook';
 
 // Each entry is a record on the visitor's own pds with
@@ -64,7 +64,7 @@ export default function GuestbookPage() {
       ensureOAuthConfigured();
       const url = await createAuthorizationUrl({
         target: { type: 'account', identifier: handle.trim() as ActorIdentifier },
-        scope: OAUTH_SCOPE,
+        scope: GUESTBOOK_SCOPE,
       });
       window.location.assign(url.toString());
     } catch (err) {
