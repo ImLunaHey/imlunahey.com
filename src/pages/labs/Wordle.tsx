@@ -6,7 +6,7 @@ import { OAuthUserAgent, createAuthorizationUrl } from '@atcute/oauth-browser-cl
 import type { ActorIdentifier } from '@atcute/lexicons';
 import { useAtprotoSession } from '../../hooks/use-atproto-session';
 import { useProfile } from '../../hooks/use-profile';
-import { ensureOAuthConfigured, LEADERBOARD_SCOPE } from '../../lib/oauth';
+import { ensureOAuthConfigured, LEADERBOARD_SCOPE, LEADERBOARD_WRITE_SCOPE, sessionHasScope } from '../../lib/oauth';
 import { dailyWordleAnswer } from '../../lib/wordle-answers';
 import { isWordleWord } from '../../lib/wordle-dictionary';
 import {
@@ -66,24 +66,42 @@ export default function WordlePage() {
   const [handleInput, setHandleInput] = useState('');
   const [publishState, setPublishState] = useState<'idle' | 'signing' | 'publishing' | 'published' | 'error'>('idle');
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [signingIn, setSigningIn] = useState(false);
+  // start locked until the player picks guest vs signed-in. if they're
+  // already signed in OR already mid-puzzle (from an earlier session in
+  // the same tab), skip straight to playing.
+  const [mode, setMode] = useState<'locked' | 'guest' | 'signed'>('locked');
 
   // restore from localStorage so a tab refresh doesn't wipe progress
   useEffect(() => {
-    const key = `lab:wordle:${today.toISOString().slice(0, 10)}`;
+    const key = `lab:wordle:${todayIso}`;
     const raw = localStorage.getItem(key);
     if (raw) {
       try {
-        const saved = JSON.parse(raw) as { guesses: string[] };
+        const saved = JSON.parse(raw) as { guesses: string[]; mode?: 'guest' | 'signed' };
         setGuesses(saved.guesses ?? []);
+        if ((saved.guesses ?? []).length > 0 && saved.mode) {
+          // already committed to a mode this run — skip the lock.
+          setMode(saved.mode);
+        }
       } catch {
         /* ignore */
       }
     }
-  }, [today]);
+  }, [todayIso]);
+
+  // auto-unlock once we see a signed-in session WITH the leaderboard
+  // scope — a guestbook-only token can't publish scores, so we keep the
+  // gate up to prompt for a sign-in that grants the right permission.
+  const canPublishScore = sessionHasScope(session, LEADERBOARD_WRITE_SCOPE);
   useEffect(() => {
-    const key = `lab:wordle:${today.toISOString().slice(0, 10)}`;
-    localStorage.setItem(key, JSON.stringify({ guesses }));
-  }, [guesses, today]);
+    if (session && canPublishScore && mode === 'locked') setMode('signed');
+  }, [session, canPublishScore, mode]);
+  useEffect(() => {
+    const key = `lab:wordle:${todayIso}`;
+    const persistMode: 'guest' | 'signed' | undefined = mode === 'locked' ? undefined : mode;
+    localStorage.setItem(key, JSON.stringify({ guesses, mode: persistMode }));
+  }, [guesses, todayIso, mode]);
 
   const solved = guesses.length > 0 && guesses[guesses.length - 1] === answer;
   const finished = solved || guesses.length >= 6;
@@ -106,15 +124,18 @@ export default function WordlePage() {
 
   async function startSignIn(handle: string) {
     setPublishError(null);
+    setSigningIn(true);
     try {
       ensureOAuthConfigured();
       const url = await createAuthorizationUrl({
         target: { type: 'account', identifier: handle.trim() as ActorIdentifier },
         scope: LEADERBOARD_SCOPE,
+        state: { returnTo: window.location.pathname },
       });
       window.location.assign(url.toString());
     } catch (err) {
       setPublishError(err instanceof Error ? err.message : String(err));
+      setSigningIn(false);
     }
   }
 
@@ -156,7 +177,9 @@ export default function WordlePage() {
   // keyboard input
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (finished) return;
+      // don't capture input while the sign-in gate is up — otherwise the
+      // user's handle gets typed into the puzzle in the background.
+      if (finished || mode === 'locked') return;
       const k = e.key;
       if (k === 'Enter') {
         submit();
@@ -195,7 +218,7 @@ export default function WordlePage() {
   }
 
   function tap(k: string) {
-    if (finished) return;
+    if (finished || mode === 'locked') return;
     if (k === 'enter') submit();
     else if (k === 'back') setCurrent((c) => c.slice(0, -1));
     else if (current.length < 5) setCurrent((c) => c + k);
@@ -241,38 +264,83 @@ export default function WordlePage() {
           </div>
         </header>
 
-        <section className="board">
-          {rows.map((row, i) => {
-            const isActive = !finished && i === guesses.length;
-            return (
-              <div key={i} className={`row${isActive && shake ? ' shake' : ''}`}>
-                {row.letters.map((l, j) => (
-                  <div key={j} className={`tile ${row.states[j]}`}>{l}</div>
-                ))}
-              </div>
-            );
-          })}
-          {invalidMsg ? <div className="invalid-msg">{invalidMsg}</div> : null}
-        </section>
-
-        <section className="keyboard">
-          {KEYBOARD_ROWS.map((r, i) => (
-            <div key={i} className="kbrow">
-              {i === 2 ? <button className="key wide" onClick={() => tap('enter')} type="button">enter</button> : null}
-              {r.split('').map((k) => (
-                <button
-                  key={k}
-                  className={`key ${keyState[k] ?? ''}`}
-                  onClick={() => tap(k)}
-                  type="button"
-                >
-                  {k}
-                </button>
-              ))}
-              {i === 2 ? <button className="key wide" onClick={() => tap('back')} type="button">⌫</button> : null}
+        {mode === 'locked' ? (
+          <section className="gate">
+            <div className="gate-title">today&apos;s puzzle.</div>
+            <div className="gate-sub">
+              scores post to an atproto leaderboard — sign in to claim yours, or play as guest
+              and your result stays on this device.
             </div>
-          ))}
-        </section>
+            <form
+              className="gate-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (handleInput.trim()) void startSignIn(handleInput);
+              }}
+            >
+              <input
+                className="gate-input"
+                placeholder="your.handle.bsky.social"
+                value={handleInput}
+                onChange={(e) => setHandleInput(e.target.value)}
+                autoComplete="username"
+                spellCheck={false}
+                disabled={signingIn}
+              />
+              <button
+                className="gate-btn primary"
+                type="submit"
+                disabled={!handleInput.trim() || signingIn}
+              >
+                {signingIn ? 'redirecting…' : 'sign in'}
+              </button>
+            </form>
+            <button
+              className="gate-btn"
+              type="button"
+              onClick={() => setMode('guest')}
+              disabled={signingIn}
+            >
+              play as guest
+            </button>
+            {publishError ? <div className="publish-err">{publishError}</div> : null}
+          </section>
+        ) : (
+          <section className="board">
+            {rows.map((row, i) => {
+              const isActive = !finished && i === guesses.length;
+              return (
+                <div key={i} className={`row${isActive && shake ? ' shake' : ''}`}>
+                  {row.letters.map((l, j) => (
+                    <div key={j} className={`tile ${row.states[j]}`}>{l}</div>
+                  ))}
+                </div>
+              );
+            })}
+            {invalidMsg ? <div className="invalid-msg">{invalidMsg}</div> : null}
+          </section>
+        )}
+
+        {mode !== 'locked' ? (
+          <section className="keyboard">
+            {KEYBOARD_ROWS.map((r, i) => (
+              <div key={i} className="kbrow">
+                {i === 2 ? <button className="key wide" onClick={() => tap('enter')} type="button">enter</button> : null}
+                {r.split('').map((k) => (
+                  <button
+                    key={k}
+                    className={`key ${keyState[k] ?? ''}`}
+                    onClick={() => tap(k)}
+                    type="button"
+                  >
+                    {k}
+                  </button>
+                ))}
+                {i === 2 ? <button className="key wide" onClick={() => tap('back')} type="button">⌫</button> : null}
+              </div>
+            ))}
+          </section>
+        ) : null}
 
         {finished ? (
           <section className="result">
@@ -284,7 +352,7 @@ export default function WordlePage() {
               <button className="copy" onClick={() => void copyResult()} type="button">
                 copy result
               </button>
-              {solved && session ? (
+              {solved && session && canPublishScore ? (
                 publishState === 'published' ? (
                   <span className="r-published">
                     ✓ published as <b className="t-accent">@{profile?.handle ?? session.info.sub}</b>
@@ -304,25 +372,9 @@ export default function WordlePage() {
                   </button>
                 )
               ) : solved ? (
-                <form
-                  className="inline-signin"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (handleInput.trim()) void startSignIn(handleInput);
-                  }}
-                >
-                  <input
-                    className="handle-in"
-                    placeholder="handle to claim this score"
-                    value={handleInput}
-                    onChange={(e) => setHandleInput(e.target.value)}
-                    autoComplete="username"
-                    spellCheck={false}
-                  />
-                  <button className="copy primary" type="submit" disabled={!handleInput.trim()}>
-                    sign in
-                  </button>
-                </form>
+                <span className="r-published t-faint">
+                  playing as guest — score not on leaderboard. sign in next time.
+                </span>
               ) : null}
             </div>
             {publishError ? <div className="publish-err">{publishError}</div> : null}
@@ -438,6 +490,58 @@ const CSS = `
     text-transform: lowercase;
   }
 
+  .gate {
+    margin: var(--sp-6) auto 0;
+    max-width: 400px;
+    display: flex; flex-direction: column; align-items: stretch;
+    gap: var(--sp-3);
+    padding: var(--sp-5);
+    border: 1px solid var(--color-accent-dim);
+    background: color-mix(in oklch, var(--color-accent) 5%, var(--color-bg-panel));
+    text-align: center;
+  }
+  .gate-title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    color: var(--color-accent);
+    letter-spacing: -0.01em;
+    text-shadow: 0 0 12px var(--accent-glow);
+  }
+  .gate-sub {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--color-fg-dim);
+    line-height: 1.55;
+  }
+  .gate-form { display: flex; gap: 6px; }
+  .gate-input {
+    flex: 1; min-width: 0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border-bright);
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    padding: 8px 10px;
+  }
+  .gate-input:focus { outline: none; border-color: var(--color-accent); }
+  .gate-btn {
+    font-family: var(--font-mono); font-size: var(--fs-xs);
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid var(--color-border-bright);
+    color: var(--color-fg-dim);
+    cursor: pointer;
+    text-transform: lowercase;
+    letter-spacing: 0.06em;
+  }
+  .gate-btn:hover { color: var(--color-fg); border-color: var(--color-accent-dim); }
+  .gate-btn.primary {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-bg);
+  }
+  .gate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
   .row.shake { animation: wordle-shake 0.3s ease-in-out; }
   @keyframes wordle-shake {
     0%, 100% { transform: translateX(0); }
@@ -505,16 +609,23 @@ const CSS = `
   .wl-empty { padding: var(--sp-5) var(--sp-4); color: var(--color-fg-faint); font-family: var(--font-mono); font-size: var(--fs-xs); text-align: center; }
   .wl-row {
     display: grid;
-    grid-template-columns: 28px 24px 1fr auto auto;
+    grid-template-columns: 28px 1fr auto;
     gap: var(--sp-2);
     padding: 6px var(--sp-4);
     border-bottom: 1px dashed var(--color-border);
     align-items: center;
     font-family: var(--font-mono); font-size: var(--fs-xs);
-    color: inherit; text-decoration: none;
   }
   .wl-row:last-child { border-bottom: 0; }
   .wl-row.me { background: color-mix(in oklch, var(--color-accent) 8%, transparent); }
+  .wl-who-link, .wl-record-link {
+    display: flex; align-items: center; gap: 6px;
+    color: inherit; text-decoration: none;
+    min-width: 0;
+  }
+  .wl-who-link:hover .wl-name { color: var(--color-accent); }
+  .wl-record-link:hover .wl-score { color: color-mix(in oklch, var(--color-accent) 85%, white); text-shadow: 0 0 8px var(--accent-glow); }
+  .wl-record-link:hover .wl-when { color: var(--color-fg-dim); }
   .wl-rank { color: var(--color-fg-faint); }
   .wl-rank.top1 { color: var(--color-accent); }
   .wl-avatar { width: 20px; height: 20px; border-radius: 50%; background: var(--color-bg-raised); border: 1px solid var(--color-border); object-fit: cover; }
@@ -544,19 +655,25 @@ function WordleBoard({ rows, myDid }: { rows: LeaderboardRow[] | null; myDid: st
         <div className="wl-empty">no one&apos;s solved today yet.</div>
       ) : (
         rows.map((r, i) => (
-          <a
-            key={r.uri}
-            className={`wl-row${r.did === myDid ? ' me' : ''}`}
-            href={`https://bsky.app/profile/${r.handle}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <div key={r.uri} className={`wl-row${r.did === myDid ? ' me' : ''}`}>
             <span className={`wl-rank ${i === 0 ? 'top1' : ''}`}>#{i + 1}</span>
-            {r.avatar ? <img src={r.avatar} alt="" className="wl-avatar" loading="lazy" /> : <span className="wl-avatar" />}
-            <span className="wl-name">@{r.handle}</span>
-            <span className="wl-score">{r.score}/6</span>
-            <span className="wl-when">{relative(r.achievedAt)}</span>
-          </a>
+            <a
+              className="wl-who-link"
+              href={`https://bsky.app/profile/${r.handle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {r.avatar ? <img src={r.avatar} alt="" className="wl-avatar" loading="lazy" /> : <span className="wl-avatar" />}
+              <span className="wl-name">@{r.handle}</span>
+            </a>
+            <Link
+              className="wl-record-link"
+              to={`/labs/at-uri/${r.uri.replace('at://', '')}` as never}
+            >
+              <span className="wl-score">{r.score}/6</span>
+              <span className="wl-when">{relative(r.achievedAt)}</span>
+            </Link>
+          </div>
         ))
       )}
     </div>

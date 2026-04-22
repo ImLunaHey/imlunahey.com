@@ -7,7 +7,7 @@ import type { ActorIdentifier } from '@atcute/lexicons';
 import { SITE } from '../data';
 import { useAtprotoSession } from '../hooks/use-atproto-session';
 import { useProfile } from '../hooks/use-profile';
-import { ensureOAuthConfigured, GUESTBOOK_SCOPE } from '../lib/oauth';
+import { ensureOAuthConfigured, GUESTBOOK_SCOPE, GUESTBOOK_WRITE_SCOPE, sessionHasScope } from '../lib/oauth';
 import { getGuestbookEntries, GUESTBOOK_ENTRY_COLLECTION, GUESTBOOK_MARKER_URI, type GuestbookEntry } from '../server/guestbook';
 
 // Each entry is a record on the visitor's own pds with
@@ -43,9 +43,15 @@ export default function GuestbookPage() {
   const [draft, setDraft] = useState('');
   const [handleInput, setHandleInput] = useState('');
   const [signInError, setSignInError] = useState<string | null>(null);
+  const [signingIn, setSigningIn] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const { session, loading: sessionLoading, refresh: refreshSession } = useAtprotoSession();
-  const signedIn = session !== null;
+  // a session is only useful here if it actually carries the guestbook
+  // write scope. a leaderboard-only session (e.g. signed in via /labs/snake
+  // first) can't createRecord on guestbook entries, so we treat it as
+  // signed-out and prompt for a fresh sign-in.
+  const canPublishEntry = sessionHasScope(session, GUESTBOOK_WRITE_SCOPE);
+  const signedIn = session !== null && canPublishEntry;
   const queryClient = useQueryClient();
 
   // Resolve the signed-in DID to a handle / display name / avatar so the
@@ -60,16 +66,22 @@ export default function GuestbookPage() {
 
   async function startSignIn(handle: string) {
     setSignInError(null);
+    setSigningIn(true);
     try {
       ensureOAuthConfigured();
       const url = await createAuthorizationUrl({
         target: { type: 'account', identifier: handle.trim() as ActorIdentifier },
         scope: GUESTBOOK_SCOPE,
+        state: { returnTo: window.location.pathname },
       });
+      // leave signingIn=true; navigation replaces the page anyway. if it
+      // somehow fails silently, the stuck button is a feature — the user
+      // knows something's hung instead of thinking nothing happened.
       window.location.assign(url.toString());
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setSignInError(msg);
+      setSigningIn(false);
     }
   }
 
@@ -186,9 +198,14 @@ export default function GuestbookPage() {
                   onChange={(e) => setHandleInput(e.target.value)}
                   autoComplete="username"
                   spellCheck={false}
+                  disabled={signingIn}
                 />
-                <button className="btn-primary" type="submit" disabled={!handleInput.trim()}>
-                  sign in
+                <button
+                  className="btn-primary"
+                  type="submit"
+                  disabled={!handleInput.trim() || signingIn}
+                >
+                  {signingIn ? 'redirecting…' : 'sign in'}
                 </button>
                 {signInError ? <span className="signin-err">{signInError}</span> : null}
               </div>

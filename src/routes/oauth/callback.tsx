@@ -33,8 +33,13 @@ function OauthCallback() {
     const params = new URLSearchParams(hash || window.location.search);
 
     finalizeAuthorization(params)
-      .then(() => {
-        navigate({ to: '/guestbook' as never, replace: true });
+      .then((result) => {
+        // atcute round-trips any state we supplied at createAuthorizationUrl
+        // time. we stash the originating pathname there so each page bounces
+        // the user back to wherever they started sign-in from.
+        const state = result.state as { returnTo?: string } | null;
+        const to = state?.returnTo && state.returnTo.startsWith('/') ? state.returnTo : '/guestbook';
+        navigate({ to: to as never, replace: true });
       })
       .catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err);

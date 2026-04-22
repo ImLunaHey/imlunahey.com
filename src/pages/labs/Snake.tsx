@@ -6,7 +6,7 @@ import { OAuthUserAgent, createAuthorizationUrl } from '@atcute/oauth-browser-cl
 import type { ActorIdentifier } from '@atcute/lexicons';
 import { useAtprotoSession } from '../../hooks/use-atproto-session';
 import { useProfile } from '../../hooks/use-profile';
-import { ensureOAuthConfigured, LEADERBOARD_SCOPE } from '../../lib/oauth';
+import { ensureOAuthConfigured, LEADERBOARD_SCOPE, LEADERBOARD_WRITE_SCOPE, sessionHasScope } from '../../lib/oauth';
 import {
   getLeaderboard,
   LEADERBOARD_MARKER_URI,
@@ -82,13 +82,16 @@ export default function SnakePage() {
 
   // if the user is already signed in when they land here, skip the
   // guest/sign-in gate and go straight to the normal "paused, press space"
-  // state. we won't auto-flip an already-chosen guest back to signed.
+  // state. only auto-unlock if the session actually has the leaderboard
+  // scope — a guestbook-only session can't publish scores, so we leave
+  // the gate up to prompt for a sign-in that grants the right permission.
+  const canPublishScore = sessionHasScope(session, LEADERBOARD_WRITE_SCOPE);
   useEffect(() => {
-    if (session && status === 'locked') {
+    if (session && canPublishScore && status === 'locked') {
       setMode('signed');
       setStatus('paused');
     }
-  }, [session, status]);
+  }, [session, canPublishScore, status]);
 
   const reset = useCallback(() => {
     const s = initialSnake();
@@ -108,6 +111,7 @@ export default function SnakePage() {
       const url = await createAuthorizationUrl({
         target: { type: 'account', identifier: handle.trim() as ActorIdentifier },
         scope: LEADERBOARD_SCOPE,
+        state: { returnTo: window.location.pathname },
       });
       window.location.assign(url.toString());
     } catch (err) {
@@ -305,7 +309,7 @@ export default function SnakePage() {
                 <span className="ov-score-val">{score}</span>
                 <span className="ov-score-lbl">food</span>
               </div>
-              {mode === 'signed' && session ? (
+              {mode === 'signed' && session && canPublishScore ? (
                 publishState === 'published' ? (
                   <div className="ov-sub">
                     ✓ published as <b className="t-accent">@{profile?.handle ?? session.info.sub}</b>
@@ -513,18 +517,24 @@ const CSS = `
   .lb-empty { padding: var(--sp-5) var(--sp-4); color: var(--color-fg-faint); font-family: var(--font-mono); font-size: var(--fs-xs); text-align: center; }
   .lb-row {
     display: grid;
-    grid-template-columns: 32px 28px 1fr auto auto;
+    grid-template-columns: 32px 1fr auto;
     gap: var(--sp-3);
     padding: 8px var(--sp-4);
     border-bottom: 1px dashed var(--color-border);
     align-items: center;
     font-family: var(--font-mono); font-size: var(--fs-sm);
-    color: inherit;
-    text-decoration: none;
   }
   .lb-row:last-child { border-bottom: 0; }
-  .lb-row:hover { background: var(--color-bg-raised); }
   .lb-row.me { background: color-mix(in oklch, var(--color-accent) 8%, transparent); }
+  .lb-who-link, .lb-record-link {
+    display: flex; align-items: center; gap: var(--sp-2);
+    color: inherit; text-decoration: none;
+    min-width: 0;
+  }
+  .lb-who-link:hover .lb-name { color: var(--color-accent); }
+  .lb-record-link { gap: var(--sp-3); }
+  .lb-record-link:hover .lb-score { color: color-mix(in oklch, var(--color-accent) 85%, white); text-shadow: 0 0 8px var(--accent-glow); }
+  .lb-record-link:hover .lb-when { color: var(--color-fg-dim); }
   .lb-rank { color: var(--color-fg-faint); font-size: var(--fs-xs); }
   .lb-rank.top1 { color: var(--color-accent); }
   .lb-avatar {
@@ -567,26 +577,34 @@ function Leaderboard({ rows, myDid }: { rows: LeaderboardRow[] | null; myDid: st
         <div className="lb-empty">no scores yet. be the first.</div>
       ) : (
         rows.map((r, i) => (
-          <a
-            key={r.uri}
-            className={`lb-row${r.did === myDid ? ' me' : ''}`}
-            href={`https://bsky.app/profile/${r.handle}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <div key={r.uri} className={`lb-row${r.did === myDid ? ' me' : ''}`}>
             <span className={`lb-rank ${i === 0 ? 'top1' : ''}`}>#{i + 1}</span>
-            {r.avatar ? (
-              <img src={r.avatar} alt="" className="lb-avatar" loading="lazy" />
-            ) : (
-              <span className="lb-avatar" />
-            )}
-            <span className="lb-who">
-              <span className="lb-name">{r.displayName}</span>
-              <span className="lb-handle">@{r.handle}</span>
-            </span>
-            <span className="lb-score">{r.score}</span>
-            <span className="lb-when">{relative(r.achievedAt)}</span>
-          </a>
+            {/* profile half — avatar + name link to bsky */}
+            <a
+              className="lb-who-link"
+              href={`https://bsky.app/profile/${r.handle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {r.avatar ? (
+                <img src={r.avatar} alt="" className="lb-avatar" loading="lazy" />
+              ) : (
+                <span className="lb-avatar" />
+              )}
+              <span className="lb-who">
+                <span className="lb-name">{r.displayName}</span>
+                <span className="lb-handle">@{r.handle}</span>
+              </span>
+            </a>
+            {/* record half — score + when open the at-uri resolver lab */}
+            <Link
+              className="lb-record-link"
+              to={`/labs/at-uri/${r.uri.replace('at://', '')}` as never}
+            >
+              <span className="lb-score">{r.score}</span>
+              <span className="lb-when">{relative(r.achievedAt)}</span>
+            </Link>
+          </div>
         ))
       )}
     </div>

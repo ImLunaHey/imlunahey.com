@@ -24,6 +24,30 @@ export const GUESTBOOK_SCOPE = 'atproto repo:com.imlunahey.guestbook.entry?actio
 export const LEADERBOARD_SCOPE = 'atproto repo:com.imlunahey.leaderboard.score?action=create';
 
 /**
+ * The specific repo scope strings that a token MUST carry to write the
+ * relevant collection. Used to check a session before showing "publish"
+ * actions — a session authorised under GUESTBOOK_SCOPE has `atproto` and
+ * the guestbook scope but NOT the leaderboard one, so attempting to post
+ * a score would fail with ScopeMissingError.
+ */
+export const GUESTBOOK_WRITE_SCOPE = 'repo:com.imlunahey.guestbook.entry?action=create';
+export const LEADERBOARD_WRITE_SCOPE = 'repo:com.imlunahey.leaderboard.score?action=create';
+
+export function sessionHasScope(session: Session | null, scope: string): boolean {
+  if (!session) return false;
+  const granted = (session.token?.scope ?? '').split(/\s+/);
+  return granted.includes(scope);
+}
+
+/**
+ * Union of all scopes this client may ever request — advertised on the
+ * loopback client_id and in the hosted client-metadata.json. Individual
+ * features still narrow the scope they actually request at auth time.
+ */
+const ALL_SCOPES =
+  'atproto repo:com.imlunahey.guestbook.entry?action=create repo:com.imlunahey.leaderboard.score?action=create';
+
+/**
  * In prod the client_id is the URL of our hosted metadata JSON.
  * In dev we use atproto's loopback-client pattern: client_id is a URL on
  * `http://127.0.0.1` with the metadata encoded as query params, which
@@ -43,7 +67,7 @@ function oauthEndpoints(): { clientId: string; redirectUri: string } {
     // origin than the sign-in page, and the state/dpop-key in storage
     // is unreachable (browsers partition storage per origin).
     const redirectUri = `${origin}/oauth/callback`;
-    const params = new URLSearchParams({ redirect_uri: redirectUri, scope: OAUTH_SCOPE });
+    const params = new URLSearchParams({ redirect_uri: redirectUri, scope: ALL_SCOPES });
     return { clientId: `http://localhost?${params.toString()}`, redirectUri };
   }
   return {
