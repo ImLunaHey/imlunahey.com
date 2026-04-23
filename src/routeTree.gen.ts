@@ -42,6 +42,12 @@ import { Route as MainLabsTypingRouteImport } from './routes/_main/labs/typing'
 import { Route as MainLabsTimestampRouteImport } from './routes/_main/labs/timestamp'
 import { Route as MainLabsTidRouteImport } from './routes/_main/labs/tid'
 import { Route as MainLabsThreadTreeRouteImport } from './routes/_main/labs/thread-tree'
+import { Route as MainLabsTflTubeMapRouteImport } from './routes/_main/labs/tfl-tube-map'
+import { Route as MainLabsTflStatusRouteImport } from './routes/_main/labs/tfl-status'
+import { Route as MainLabsTflRoadsRouteImport } from './routes/_main/labs/tfl-roads'
+import { Route as MainLabsTflCyclesRouteImport } from './routes/_main/labs/tfl-cycles'
+import { Route as MainLabsTflArrivalsRouteImport } from './routes/_main/labs/tfl-arrivals'
+import { Route as MainLabsTflAirRouteImport } from './routes/_main/labs/tfl-air'
 import { Route as MainLabsTerminalRouteImport } from './routes/_main/labs/terminal'
 import { Route as MainLabsSubnetRouteImport } from './routes/_main/labs/subnet'
 import { Route as MainLabsSpectrogramRouteImport } from './routes/_main/labs/spectrogram'
@@ -269,6 +275,36 @@ const MainLabsTidRoute = MainLabsTidRouteImport.update({
 const MainLabsThreadTreeRoute = MainLabsThreadTreeRouteImport.update({
   id: '/labs/thread-tree',
   path: '/labs/thread-tree',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsTflTubeMapRoute = MainLabsTflTubeMapRouteImport.update({
+  id: '/labs/tfl-tube-map',
+  path: '/labs/tfl-tube-map',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsTflStatusRoute = MainLabsTflStatusRouteImport.update({
+  id: '/labs/tfl-status',
+  path: '/labs/tfl-status',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsTflRoadsRoute = MainLabsTflRoadsRouteImport.update({
+  id: '/labs/tfl-roads',
+  path: '/labs/tfl-roads',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsTflCyclesRoute = MainLabsTflCyclesRouteImport.update({
+  id: '/labs/tfl-cycles',
+  path: '/labs/tfl-cycles',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsTflArrivalsRoute = MainLabsTflArrivalsRouteImport.update({
+  id: '/labs/tfl-arrivals',
+  path: '/labs/tfl-arrivals',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsTflAirRoute = MainLabsTflAirRouteImport.update({
+  id: '/labs/tfl-air',
+  path: '/labs/tfl-air',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsTerminalRoute = MainLabsTerminalRouteImport.update({
@@ -662,6 +698,12 @@ export interface FileRoutesByFullPath {
   '/labs/spectrogram': typeof MainLabsSpectrogramRoute
   '/labs/subnet': typeof MainLabsSubnetRoute
   '/labs/terminal': typeof MainLabsTerminalRoute
+  '/labs/tfl-air': typeof MainLabsTflAirRoute
+  '/labs/tfl-arrivals': typeof MainLabsTflArrivalsRoute
+  '/labs/tfl-cycles': typeof MainLabsTflCyclesRoute
+  '/labs/tfl-roads': typeof MainLabsTflRoadsRoute
+  '/labs/tfl-status': typeof MainLabsTflStatusRoute
+  '/labs/tfl-tube-map': typeof MainLabsTflTubeMapRoute
   '/labs/thread-tree': typeof MainLabsThreadTreeRoute
   '/labs/tid': typeof MainLabsTidRoute
   '/labs/timestamp': typeof MainLabsTimestampRoute
@@ -760,6 +802,12 @@ export interface FileRoutesByTo {
   '/labs/spectrogram': typeof MainLabsSpectrogramRoute
   '/labs/subnet': typeof MainLabsSubnetRoute
   '/labs/terminal': typeof MainLabsTerminalRoute
+  '/labs/tfl-air': typeof MainLabsTflAirRoute
+  '/labs/tfl-arrivals': typeof MainLabsTflArrivalsRoute
+  '/labs/tfl-cycles': typeof MainLabsTflCyclesRoute
+  '/labs/tfl-roads': typeof MainLabsTflRoadsRoute
+  '/labs/tfl-status': typeof MainLabsTflStatusRoute
+  '/labs/tfl-tube-map': typeof MainLabsTflTubeMapRoute
   '/labs/thread-tree': typeof MainLabsThreadTreeRoute
   '/labs/tid': typeof MainLabsTidRoute
   '/labs/timestamp': typeof MainLabsTimestampRoute
@@ -860,6 +908,12 @@ export interface FileRoutesById {
   '/_main/labs/spectrogram': typeof MainLabsSpectrogramRoute
   '/_main/labs/subnet': typeof MainLabsSubnetRoute
   '/_main/labs/terminal': typeof MainLabsTerminalRoute
+  '/_main/labs/tfl-air': typeof MainLabsTflAirRoute
+  '/_main/labs/tfl-arrivals': typeof MainLabsTflArrivalsRoute
+  '/_main/labs/tfl-cycles': typeof MainLabsTflCyclesRoute
+  '/_main/labs/tfl-roads': typeof MainLabsTflRoadsRoute
+  '/_main/labs/tfl-status': typeof MainLabsTflStatusRoute
+  '/_main/labs/tfl-tube-map': typeof MainLabsTflTubeMapRoute
   '/_main/labs/thread-tree': typeof MainLabsThreadTreeRoute
   '/_main/labs/tid': typeof MainLabsTidRoute
   '/_main/labs/timestamp': typeof MainLabsTimestampRoute
@@ -960,6 +1014,12 @@ export interface FileRouteTypes {
     | '/labs/spectrogram'
     | '/labs/subnet'
     | '/labs/terminal'
+    | '/labs/tfl-air'
+    | '/labs/tfl-arrivals'
+    | '/labs/tfl-cycles'
+    | '/labs/tfl-roads'
+    | '/labs/tfl-status'
+    | '/labs/tfl-tube-map'
     | '/labs/thread-tree'
     | '/labs/tid'
     | '/labs/timestamp'
@@ -1058,6 +1118,12 @@ export interface FileRouteTypes {
     | '/labs/spectrogram'
     | '/labs/subnet'
     | '/labs/terminal'
+    | '/labs/tfl-air'
+    | '/labs/tfl-arrivals'
+    | '/labs/tfl-cycles'
+    | '/labs/tfl-roads'
+    | '/labs/tfl-status'
+    | '/labs/tfl-tube-map'
     | '/labs/thread-tree'
     | '/labs/tid'
     | '/labs/timestamp'
@@ -1157,6 +1223,12 @@ export interface FileRouteTypes {
     | '/_main/labs/spectrogram'
     | '/_main/labs/subnet'
     | '/_main/labs/terminal'
+    | '/_main/labs/tfl-air'
+    | '/_main/labs/tfl-arrivals'
+    | '/_main/labs/tfl-cycles'
+    | '/_main/labs/tfl-roads'
+    | '/_main/labs/tfl-status'
+    | '/_main/labs/tfl-tube-map'
     | '/_main/labs/thread-tree'
     | '/_main/labs/tid'
     | '/_main/labs/timestamp'
@@ -1429,6 +1501,48 @@ declare module '@tanstack/react-router' {
       path: '/labs/thread-tree'
       fullPath: '/labs/thread-tree'
       preLoaderRoute: typeof MainLabsThreadTreeRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/tfl-tube-map': {
+      id: '/_main/labs/tfl-tube-map'
+      path: '/labs/tfl-tube-map'
+      fullPath: '/labs/tfl-tube-map'
+      preLoaderRoute: typeof MainLabsTflTubeMapRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/tfl-status': {
+      id: '/_main/labs/tfl-status'
+      path: '/labs/tfl-status'
+      fullPath: '/labs/tfl-status'
+      preLoaderRoute: typeof MainLabsTflStatusRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/tfl-roads': {
+      id: '/_main/labs/tfl-roads'
+      path: '/labs/tfl-roads'
+      fullPath: '/labs/tfl-roads'
+      preLoaderRoute: typeof MainLabsTflRoadsRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/tfl-cycles': {
+      id: '/_main/labs/tfl-cycles'
+      path: '/labs/tfl-cycles'
+      fullPath: '/labs/tfl-cycles'
+      preLoaderRoute: typeof MainLabsTflCyclesRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/tfl-arrivals': {
+      id: '/_main/labs/tfl-arrivals'
+      path: '/labs/tfl-arrivals'
+      fullPath: '/labs/tfl-arrivals'
+      preLoaderRoute: typeof MainLabsTflArrivalsRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/tfl-air': {
+      id: '/_main/labs/tfl-air'
+      path: '/labs/tfl-air'
+      fullPath: '/labs/tfl-air'
+      preLoaderRoute: typeof MainLabsTflAirRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/terminal': {
@@ -1944,6 +2058,12 @@ interface MainRouteChildren {
   MainLabsSpectrogramRoute: typeof MainLabsSpectrogramRoute
   MainLabsSubnetRoute: typeof MainLabsSubnetRoute
   MainLabsTerminalRoute: typeof MainLabsTerminalRoute
+  MainLabsTflAirRoute: typeof MainLabsTflAirRoute
+  MainLabsTflArrivalsRoute: typeof MainLabsTflArrivalsRoute
+  MainLabsTflCyclesRoute: typeof MainLabsTflCyclesRoute
+  MainLabsTflRoadsRoute: typeof MainLabsTflRoadsRoute
+  MainLabsTflStatusRoute: typeof MainLabsTflStatusRoute
+  MainLabsTflTubeMapRoute: typeof MainLabsTflTubeMapRoute
   MainLabsThreadTreeRoute: typeof MainLabsThreadTreeRoute
   MainLabsTidRoute: typeof MainLabsTidRoute
   MainLabsTimestampRoute: typeof MainLabsTimestampRoute
@@ -2040,6 +2160,12 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsSpectrogramRoute: MainLabsSpectrogramRoute,
   MainLabsSubnetRoute: MainLabsSubnetRoute,
   MainLabsTerminalRoute: MainLabsTerminalRoute,
+  MainLabsTflAirRoute: MainLabsTflAirRoute,
+  MainLabsTflArrivalsRoute: MainLabsTflArrivalsRoute,
+  MainLabsTflCyclesRoute: MainLabsTflCyclesRoute,
+  MainLabsTflRoadsRoute: MainLabsTflRoadsRoute,
+  MainLabsTflStatusRoute: MainLabsTflStatusRoute,
+  MainLabsTflTubeMapRoute: MainLabsTflTubeMapRoute,
   MainLabsThreadTreeRoute: MainLabsThreadTreeRoute,
   MainLabsTidRoute: MainLabsTidRoute,
   MainLabsTimestampRoute: MainLabsTimestampRoute,

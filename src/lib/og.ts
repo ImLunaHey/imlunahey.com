@@ -96,6 +96,12 @@ export type OgSlug =
   | 'lab/iss'
   | 'lab/lightning'
   | 'lab/periodic'
+  | 'lab/tfl-status'
+  | 'lab/tfl-cycles'
+  | 'lab/tfl-arrivals'
+  | 'lab/tfl-air'
+  | 'lab/tfl-roads'
+  | 'lab/tfl-tube-map'
   | 'lab/year-in-review';
 
 type OgEntry = {
@@ -187,6 +193,12 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/iss': { title: 'iss.', subtitle: 'international space station · live position, 5s refresh', glyph: '✦', slug: '/labs/iss' },
   'lab/lightning': { title: 'lightning.', subtitle: 'global storm-risk map · cape + lpi from open-meteo', glyph: '⚡', slug: '/labs/lightning' },
   'lab/periodic': { title: 'periodic.', subtitle: '118 elements · category, mass, config, discovery year', glyph: '⚛', slug: '/labs/periodic' },
+  'lab/tfl-status': { title: 'tfl status.', subtitle: 'live tube / dlr / overground / elizabeth line service', glyph: '◉', slug: '/labs/tfl-status' },
+  'lab/tfl-cycles': { title: 'cycles.', subtitle: 'every santander cycles dock on a live london map', glyph: '⚙', slug: '/labs/tfl-cycles' },
+  'lab/tfl-arrivals': { title: 'arrivals.', subtitle: 'live next-train board for any london station', glyph: '→', slug: '/labs/tfl-arrivals' },
+  'lab/tfl-air': { title: 'air.', subtitle: 'london air quality · now + 24h forecast', glyph: '☁', slug: '/labs/tfl-air' },
+  'lab/tfl-roads': { title: 'roads.', subtitle: 'every active tfl road disruption, severity-mapped', glyph: '◊', slug: '/labs/tfl-roads' },
+  'lab/tfl-tube-map': { title: 'tube map.', subtitle: 'every station on every line, live-disruption overlay', glyph: '⎯', slug: '/labs/tfl-tube-map' },
   'lab/year-in-review': { title: 'year in review.', subtitle: 'bluesky wrapped from any account\'s car file', glyph: '★', slug: '/labs/year-in-review' },
 };
 
