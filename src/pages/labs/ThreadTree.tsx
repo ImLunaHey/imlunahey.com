@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, useSearch } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
 
 type AtActor = { did: string; handle: string; displayName?: string; avatar?: string };
@@ -119,16 +119,19 @@ function countTree(node: ThreadNode): { posts: number; authors: Set<string>; lik
 export default function ThreadTreePage() {
   const search = useSearch({ strict: false }) as { uri?: string };
   const initial = search.uri ?? 'https://bsky.app/profile/imlunahey.com/post/3mjzwsly52c2c';
+  const navigate = useNavigate();
   const [input, setInput] = useState(initial);
-  const [submitted, setSubmitted] = useState<string | null>(initial);
+  const submitted = search.uri ?? null;
 
   useEffect(() => {
-    if (search.uri && search.uri !== submitted) {
-      setInput(search.uri);
-      setSubmitted(search.uri);
-    }
+    if (search.uri) setInput(search.uri);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.uri]);
+
+  const submit = (v: string) => {
+    const t = v.trim();
+    if (t) navigate({ to: '/labs/thread-tree', search: { uri: t } });
+  };
 
   const { data: atUri, error: normErr } = useQuery({
     queryKey: ['thread-norm', submitted],
@@ -153,7 +156,7 @@ export default function ThreadTreePage() {
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (input.trim()) setSubmitted(input.trim());
+    submit(input);
   };
 
   return (

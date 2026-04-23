@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
+import { useEffect, useMemo, useState } from 'react';
 import { listCerts, type Cert } from '../../server/certs';
 
 function relative(iso: string): string {
@@ -17,8 +17,21 @@ function relative(iso: string): string {
 }
 
 export default function CertsPage() {
-  const [input, setInput] = useState('imlunahey.com');
-  const [submitted, setSubmitted] = useState<string | null>('imlunahey.com');
+  const search = useSearch({ strict: false }) as { domain?: string };
+  const navigate = useNavigate();
+  const initial = search.domain ?? 'imlunahey.com';
+  const [input, setInput] = useState(initial);
+  const submitted = search.domain ?? 'imlunahey.com';
+
+  useEffect(() => {
+    if (search.domain) setInput(search.domain);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.domain]);
+
+  const submit = (v: string) => {
+    const t = v.trim();
+    if (t) navigate({ to: '/labs/certs', search: { domain: t } });
+  };
 
   const { data, isFetching, error } = useQuery({
     queryKey: ['crt-sh', submitted],
@@ -49,8 +62,7 @@ export default function CertsPage() {
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const v = input.trim();
-    if (v) setSubmitted(v);
+    submit(input);
   };
 
   return (

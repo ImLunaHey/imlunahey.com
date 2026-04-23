@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
+import { useEffect, useMemo, useState } from 'react';
 
 const RECORD_TYPES = [
   { id: 'A', code: 1 },
@@ -72,14 +72,27 @@ function humanTtl(s: number): string {
 }
 
 export default function DnsPage() {
-  const [name, setName] = useState('imlunahey.com');
-  const [type, setType] = useState('A');
-  const [submitted, setSubmitted] = useState<{ name: string; type: string } | null>({ name: 'imlunahey.com', type: 'A' });
+  const search = useSearch({ strict: false }) as { name?: string; type?: string };
+  const navigate = useNavigate();
+  const [name, setName] = useState(search.name ?? 'imlunahey.com');
+  const [type, setType] = useState(search.type ?? 'A');
+  const submitted = { name: search.name ?? 'imlunahey.com', type: search.type ?? 'A' };
+
+  useEffect(() => {
+    if (search.name) setName(search.name);
+    if (search.type) setType(search.type);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.name, search.type]);
+
+  const submit = (n: string, t: string) => {
+    const trimmed = n.trim();
+    if (trimmed) navigate({ to: '/labs/dns', search: { name: trimmed, type: t } });
+  };
 
   const { data, isFetching, error } = useQuery({
-    queryKey: ['dns', submitted?.name, submitted?.type],
-    queryFn: () => lookup(submitted!.name, submitted!.type),
-    enabled: !!submitted?.name,
+    queryKey: ['dns', submitted.name, submitted.type],
+    queryFn: () => lookup(submitted.name, submitted.type),
+    enabled: !!submitted.name,
     staleTime: 1000 * 60 * 2,
     retry: false,
   });
@@ -88,8 +101,7 @@ export default function DnsPage() {
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const n = name.trim();
-    if (n) setSubmitted({ name: n, type });
+    submit(name, type);
   };
 
   const answers = data?.Answer ?? [];
@@ -145,7 +157,7 @@ export default function DnsPage() {
             <button
               key={`${s.name}-${s.type}`}
               className="dns-chip"
-              onClick={() => { setName(s.name); setType(s.type); setSubmitted({ name: s.name, type: s.type }); }}
+              onClick={() => submit(s.name, s.type)}
             >{s.label}</button>
           ))}
         </div>

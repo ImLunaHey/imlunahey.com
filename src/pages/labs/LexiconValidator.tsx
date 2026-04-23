@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
+import { useEffect, useMemo, useState } from 'react';
 import { fetchLexicon } from '../../lib/fetch-lexicon';
 
 type Def = {
@@ -215,9 +215,16 @@ const SAMPLE_RECORD = `{
 }`;
 
 export default function LexiconValidatorPage() {
-  const [nsidInput, setNsidInput] = useState('app.bsky.feed.post');
+  const search = useSearch({ strict: false }) as { nsid?: string };
+  const navigate = useNavigate();
+  const [nsidInput, setNsidInput] = useState(search.nsid ?? 'app.bsky.feed.post');
   const [jsonInput, setJsonInput] = useState(SAMPLE_RECORD);
-  const [nsidSubmitted, setNsidSubmitted] = useState<string | null>('app.bsky.feed.post');
+  const nsidSubmitted = search.nsid ?? 'app.bsky.feed.post';
+
+  useEffect(() => {
+    if (search.nsid) setNsidInput(search.nsid);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.nsid]);
 
   const { data: lexicon, isPending: loadingLex, error: lexErr } = useQuery({
     queryKey: ['lex-validator', nsidSubmitted],
@@ -242,7 +249,7 @@ export default function LexiconValidatorPage() {
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const v = nsidInput.trim();
-    if (v) setNsidSubmitted(v);
+    if (v) navigate({ to: '/labs/lexicon-validator', search: { nsid: v } });
   };
 
   const lexErrMsg = lexErr instanceof Error ? lexErr.message : null;

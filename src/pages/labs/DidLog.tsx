@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, useSearch } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
 
 type PlcOp = {
@@ -127,16 +127,19 @@ function relative(iso: string): string {
 export default function DidLogPage() {
   const search = useSearch({ strict: false }) as { actor?: string };
   const initial = search.actor?.trim() || 'imlunahey.com';
+  const navigate = useNavigate();
   const [input, setInput] = useState(initial);
-  const [submitted, setSubmitted] = useState<string | null>(initial);
+  const submitted = search.actor?.trim() || null;
 
   useEffect(() => {
-    if (search.actor && search.actor !== submitted) {
-      setInput(search.actor);
-      setSubmitted(search.actor);
-    }
+    if (search.actor) setInput(search.actor);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.actor]);
+
+  const submit = (v: string) => {
+    const t = v.trim();
+    if (t) navigate({ to: '/labs/did-log', search: { actor: t } });
+  };
 
   const { data: did, isPending: resolving, error: resolveErr } = useQuery({
     queryKey: ['did-log-resolve', submitted],
@@ -168,8 +171,7 @@ export default function DidLogPage() {
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const v = input.trim();
-    if (v) setSubmitted(v);
+    submit(input);
   };
 
   const err = resolveErr instanceof Error ? resolveErr.message : logErr instanceof Error ? logErr.message : null;

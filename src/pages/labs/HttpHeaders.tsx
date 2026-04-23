@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
-import { useState } from 'react';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
 import { inspectUrl, type InspectResult } from '../../server/http-inspect';
 
 const SECURITY_HEADERS = new Set([
@@ -33,14 +33,30 @@ function groupOf(key: string): Group {
 }
 
 export default function HttpHeadersPage() {
-  const [input, setInput] = useState('https://imlunahey.com');
-  const [method, setMethod] = useState<'GET' | 'HEAD'>('HEAD');
-  const [submitted, setSubmitted] = useState<{ url: string; method: 'GET' | 'HEAD' } | null>({ url: 'https://imlunahey.com', method: 'HEAD' });
+  const search = useSearch({ strict: false }) as { url?: string; method?: 'GET' | 'HEAD' };
+  const navigate = useNavigate();
+  const [input, setInput] = useState(search.url ?? 'https://imlunahey.com');
+  const [method, setMethod] = useState<'GET' | 'HEAD'>(search.method ?? 'HEAD');
+  const submitted = {
+    url: search.url ?? 'https://imlunahey.com',
+    method: search.method ?? ('HEAD' as const),
+  };
+
+  useEffect(() => {
+    if (search.url) setInput(search.url);
+    if (search.method) setMethod(search.method);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.url, search.method]);
+
+  const submit = (u: string, m: 'GET' | 'HEAD') => {
+    const t = u.trim();
+    if (t) navigate({ to: '/labs/http-headers', search: { url: t, method: m } });
+  };
 
   const { data, isFetching, error } = useQuery({
-    queryKey: ['http-inspect', submitted?.url, submitted?.method],
-    queryFn: () => inspectUrl({ data: { url: submitted!.url, method: submitted!.method } }),
-    enabled: !!submitted,
+    queryKey: ['http-inspect', submitted.url, submitted.method],
+    queryFn: () => inspectUrl({ data: { url: submitted.url, method: submitted.method } }),
+    enabled: !!submitted.url,
     retry: false,
     staleTime: 1000 * 60,
   });
@@ -49,8 +65,7 @@ export default function HttpHeadersPage() {
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const v = input.trim();
-    if (v) setSubmitted({ url: v, method });
+    submit(input, method);
   };
 
   return (

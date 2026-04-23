@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
+import { useEffect, useMemo, useState } from 'react';
 import { whoisLookup, type WhoisResult } from '../../server/whois';
 
 const SUGGESTIONS = ['imlunahey.com', 'bsky.social', 'github.com', 'cloudflare.com', 'wikipedia.org'];
@@ -27,8 +27,21 @@ function ageFrom(iso: string | null): string | null {
 }
 
 export default function WhoisPage() {
-  const [input, setInput] = useState('imlunahey.com');
-  const [submitted, setSubmitted] = useState<string | null>('imlunahey.com');
+  const search = useSearch({ strict: false }) as { domain?: string };
+  const navigate = useNavigate();
+  const initial = search.domain ?? 'imlunahey.com';
+  const [input, setInput] = useState(initial);
+  const submitted = search.domain ?? 'imlunahey.com';
+
+  useEffect(() => {
+    if (search.domain) setInput(search.domain);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.domain]);
+
+  const submit = (v: string) => {
+    const t = v.trim();
+    if (t) navigate({ to: '/labs/whois', search: { domain: t } });
+  };
 
   const { data, isFetching, error } = useQuery({
     queryKey: ['whois', submitted],
@@ -42,9 +55,7 @@ export default function WhoisPage() {
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const v = input.trim();
-    if (!v) return;
-    setSubmitted(v);
+    submit(input);
   };
 
   return (
@@ -90,7 +101,7 @@ export default function WhoisPage() {
             <button
               key={s}
               className="wh-suggest-chip"
-              onClick={() => { setInput(s); setSubmitted(s); }}
+              onClick={() => submit(s)}
             >{s}</button>
           ))}
         </div>

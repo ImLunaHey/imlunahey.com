@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, useSearch } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
 
 type ProbeResult = {
@@ -73,20 +73,20 @@ const SUGGESTIONS = [
 
 export default function PdsHealthPage() {
   const search = useSearch({ strict: false }) as { url?: string };
+  const navigate = useNavigate();
   const initial = search.url ? normalizePds(search.url) : 'https://bsky.social';
   const [input, setInput] = useState(initial);
-  const [submitted, setSubmitted] = useState<string | null>(initial);
+  const submitted = search.url ? normalizePds(search.url) : null;
 
   useEffect(() => {
-    if (search.url) {
-      const n = normalizePds(search.url);
-      if (n !== submitted) {
-        setInput(n);
-        setSubmitted(n);
-      }
-    }
+    if (search.url) setInput(normalizePds(search.url));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.url]);
+
+  const submit = (v: string) => {
+    const n = normalizePds(v);
+    if (n) navigate({ to: '/labs/pds-health', search: { url: n } });
+  };
 
   const { data, isFetching, refetch } = useQuery({
     queryKey: ['pds-health', submitted],
@@ -102,8 +102,7 @@ export default function PdsHealthPage() {
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const v = normalizePds(input);
-    if (v) setSubmitted(v);
+    submit(input);
   };
 
   return (
@@ -141,7 +140,7 @@ export default function PdsHealthPage() {
         <div className="ph-suggest">
           <span className="ph-suggest-lbl">try</span>
           {SUGGESTIONS.map((s) => (
-            <button key={s} className="ph-chip" onClick={() => { setInput(s); setSubmitted(s); }}>
+            <button key={s} className="ph-chip" onClick={() => submit(s)}>
               {s.replace(/^https?:\/\//, '')}
             </button>
           ))}

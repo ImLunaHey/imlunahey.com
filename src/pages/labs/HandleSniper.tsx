@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
+import { useEffect, useMemo, useState } from 'react';
 
 type ResolveResult = { did: string } | { error: string; notFound?: boolean };
 
@@ -72,23 +72,31 @@ function suggestions(base: string): string[] {
 }
 
 export default function HandleSniperPage() {
-  const [input, setInput] = useState('imlunahey.com');
-  const [checked, setChecked] = useState<string[]>(['imlunahey.com']);
+  const search = useSearch({ strict: false }) as { q?: string };
+  const navigate = useNavigate();
+  const urlQ = search.q?.trim().toLowerCase() || null;
+  const [input, setInput] = useState(urlQ ?? 'imlunahey.com');
+
+  useEffect(() => {
+    if (urlQ) setInput(urlQ);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlQ]);
 
   const normalized = input.replace(/^@/, '').trim().toLowerCase();
-  const sugg = useMemo(() => (normalized ? suggestions(normalized) : []), [normalized]);
 
-  const check = () => {
-    if (!normalized) return;
-    setChecked((c) => {
-      const all = [normalized, ...sugg, ...c];
-      return Array.from(new Set(all)).slice(0, 40);
-    });
-  };
+  // The list of handles being checked is derived from the current URL query
+  // (plus its suggested variants). Submitting the form navigates to ?q=...
+  // so the URL stays shareable.
+  const checked = useMemo(() => {
+    const base = urlQ || 'imlunahey.com';
+    const variants = suggestions(base);
+    return Array.from(new Set([base, ...variants])).slice(0, 40);
+  }, [urlQ]);
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    check();
+    if (!normalized) return;
+    navigate({ to: '/labs/handle-sniper', search: { q: normalized } });
   };
 
   return (
