@@ -840,24 +840,47 @@ function PostBlock({ title, post, did, engagement }: { title: string; post: Post
   );
 }
 
+function lexiconAuthorityDomain(nsid: string): string | null {
+  const parts = nsid.split('.');
+  if (parts.length < 2) return null;
+  return `${parts[1]}.${parts[0]}`;
+}
+
 function LexiconBreakdown({ items, muted }: { items: Array<[string, number]>; muted?: boolean }) {
   const max = items[0]?.[1] ?? 1;
   return (
     <ul className={`yr-coll-list ${muted ? 'muted' : ''}`}>
-      {items.map(([nsid, count]) => (
-        <li key={nsid} className="yr-coll">
-          <Link
-            to={`/labs/lexicon/$nsid` as never}
-            params={{ nsid } as never}
-            className="yr-coll-name"
-            title={`open ${nsid} in the lexicon browser`}
-          >{nsid}</Link>
-          <span className="yr-coll-bar">
-            <span className="yr-coll-fill" style={{ width: `${(count / max) * 100}%` }} />
-          </span>
-          <span className="yr-coll-v">{count.toLocaleString()}</span>
-        </li>
-      ))}
+      {items.map(([nsid, count]) => {
+        const domain = lexiconAuthorityDomain(nsid);
+        return (
+          <li key={nsid} className="yr-coll">
+            <span className="yr-coll-icon">
+              {domain ? (
+                <img
+                  src={`https://www.google.com/s2/favicons?sz=32&domain=${encodeURIComponent(domain)}`}
+                  alt=""
+                  width={16}
+                  height={16}
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.visibility = 'hidden';
+                  }}
+                />
+              ) : null}
+            </span>
+            <Link
+              to={`/labs/lexicon/$nsid` as never}
+              params={{ nsid } as never}
+              className="yr-coll-name"
+              title={`open ${nsid} in the lexicon browser`}
+            >{nsid}</Link>
+            <span className="yr-coll-bar">
+              <span className="yr-coll-fill" style={{ width: `${(count / max) * 100}%` }} />
+            </span>
+            <span className="yr-coll-v">{count.toLocaleString()}</span>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -1345,7 +1368,7 @@ const CSS = `
   .yr-coll-list.muted { opacity: 0.75; }
   .yr-coll {
     display: grid;
-    grid-template-columns: minmax(220px, 1fr) minmax(120px, 2fr) 70px;
+    grid-template-columns: 16px minmax(220px, 1fr) minmax(120px, 2fr) 70px;
     gap: var(--sp-3);
     align-items: center;
     padding: 4px var(--sp-2);
@@ -1353,6 +1376,12 @@ const CSS = `
     font-size: var(--fs-xs);
   }
   .yr-coll:hover { background: var(--color-bg-raised); }
+  .yr-coll-icon {
+    width: 16px; height: 16px;
+    display: inline-flex; align-items: center; justify-content: center;
+    opacity: 0.85;
+  }
+  .yr-coll-icon img { display: block; width: 16px; height: 16px; image-rendering: -webkit-optimize-contrast; }
   .yr-coll-name {
     color: var(--color-fg);
     text-decoration: none;
