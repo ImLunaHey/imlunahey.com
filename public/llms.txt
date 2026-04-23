@@ -1,0 +1,116 @@
+# luna · imlunahey.com
+
+> Personal site of luna — software engineer in London, UK. Open-source
+> contributor, builds web tools for Bluesky / atproto, writes a blog,
+> and keeps a large collection of interactive labs. The site uses a
+> phosphor-green terminal aesthetic and is hand-authored (TypeScript +
+> React + TanStack + Tailwind, deployed on Cloudflare Workers).
+
+This file exists to give language models a concise, machine-friendly
+map of the site. Every linked page is hand-authored markup or a small
+React component; most tool pages run entirely in the user's browser
+with no tracking.
+
+## Main sections
+
+- [Home](https://imlunahey.com/): intro, now-playing, weather, activity
+- [Writing](https://imlunahey.com/blog): essays, devlogs, half-sentences
+- [Projects](https://imlunahey.com/projects): open source + experiments
+- [Gallery](https://imlunahey.com/gallery): photos + midjourney sessions
+- [Watching](https://imlunahey.com/watching): film and TV reviews, 1-10, via popfeed
+- [Games](https://imlunahey.com/games): game reviews via popfeed, with Pokédex panels on Pokémon titles
+- [Library](https://imlunahey.com/library): physical media shelf (Criterion, 4K, Blu-ray, Arrow, DVD, VHS)
+- [Music](https://imlunahey.com/music): last.fm scrobbles
+- [Bookmarks](https://imlunahey.com/bookmarks): articles, talks, papers
+- [Homelab](https://imlunahey.com/homelab): rack, services, uptime
+- [Globe](https://imlunahey.com/globe): places lived, visited, passed through
+- [Guestbook](https://imlunahey.com/guestbook): signed entries stored in each visitor's own atproto repo
+- [AI usage](https://imlunahey.com/ai): every token, every client, every dollar
+- [Uses](https://imlunahey.com/uses): the full rig
+- [Labs](https://imlunahey.com/labs): experiments, demos, tools (50+)
+- [Design system](https://imlunahey.com/design-system): tokens, elements, patterns
+
+## Atproto / Bluesky tools
+
+Tools that read or write atproto / Bluesky data. All are client-side
+unless otherwise noted.
+
+- [bsky composer](https://imlunahey.com/labs/bsky-composer): draft a post with live OG link-card preview; optional sign-in to publish
+- [handle sniper](https://imlunahey.com/labs/handle-sniper): check availability across community PDSes (bsky.social, blacksky.app, deer.social, gndr.social, …)
+- [DID log](https://imlunahey.com/labs/did-log): timeline of an identity — handle changes, PDS migrations, key rotations, all from plc.directory
+- [thread tree](https://imlunahey.com/labs/thread-tree): paste any bsky post URL, render the full conversation as an indented tree
+- [PDS health](https://imlunahey.com/labs/pds-health): probe describe/health/listRepos on any PDS; ok / degraded / down verdict
+- [lexicon validator](https://imlunahey.com/labs/lexicon-validator): validate any record JSON against its schema, resolved live via DNS-over-HTTPS + PLC
+- [firehose stats](https://imlunahey.com/labs/firehose-stats): live aggregate of the Bluesky Jetstream — events/sec, top collections, tallies
+- [year in review](https://imlunahey.com/labs/year-in-review): "Bluesky Wrapped" from any account's CAR file — posts, likes, follows, lexicons used, cross-app references
+- [jetstream](https://imlunahey.com/labs/jetstream): live atproto firehose viewer with filters
+- [PLC log](https://imlunahey.com/labs/plc-log): did:plc operation history by DID
+- [lexicon](https://imlunahey.com/labs/lexicon): render any atproto schema by NSID
+- [feed](https://imlunahey.com/labs/feed): any Bluesky actor's feed, read-only
+- [car explorer](https://imlunahey.com/labs/car-explorer): browse any atproto repo's records
+- [at-uri](https://imlunahey.com/labs/at-uri): resolve any at:// URI
+- [TID](https://imlunahey.com/labs/tid): timestamp-ID gen + decode
+- [PDF uploader](https://imlunahey.com/labs/pdf-uploader): post a PDF to your Bluesky PDS
+- [list cleaner](https://imlunahey.com/labs/list-cleaner): prune dead Bluesky list subscriptions
+
+## Developer tools
+
+- [regex](https://imlunahey.com/labs/regex): live regex tester with capture groups + presets
+- [encode](https://imlunahey.com/labs/encode): base64 / base64url / URL / HTML / hex / binary / rot13 / JSON-escape, bidirectional
+- [diff](https://imlunahey.com/labs/diff): LCS-based line diff, split + unified views, ignore whitespace
+- [hash](https://imlunahey.com/labs/hash): MD5 + SHA-1/256/384/512 of any text, client-side
+- [JSON](https://imlunahey.com/labs/json): collapsible tree viewer with search + JSONPath copier
+- [schema](https://imlunahey.com/labs/schema): infer a JSON Schema from sample data
+- [IDs](https://imlunahey.com/labs/ids): UUID v4/v7, ULID, nanoid, TID, snowflake, CUID2 — generate + inspect
+- [hex dump](https://imlunahey.com/labs/hex-dump): xxd-style view of any bytes (text / hex / base64 input)
+- [unicode](https://imlunahey.com/labs/unicode): grapheme segmentation + per-codepoint breakdown + NFC/NFD/NFKC/NFKD
+- [case](https://imlunahey.com/labs/case): every case style at once (camel, pascal, snake, kebab, sponge, …)
+- [password](https://imlunahey.com/labs/password): generator with live entropy meter
+- [timestamp](https://imlunahey.com/labs/timestamp): unix s/ms / ISO / RFC / relative / 8 timezones
+- [colour](https://imlunahey.com/labs/colour): hex / rgb / hsl / hsv / oklch / cmyk with WCAG contrast grades
+- [JWT](https://imlunahey.com/labs/jwt): decode JSON Web Tokens
+- [cron](https://imlunahey.com/labs/cron): cron expression → English + next 10 fire times
+- [OG preview](https://imlunahey.com/labs/og-preview): how any URL's og:* / twitter:* meta renders in Bluesky / Discord / Slack / X
+- [curl → fetch](https://imlunahey.com/labs/curl): paste a curl command, get fetch() + axios
+- [CSV](https://imlunahey.com/labs/csv): CSV ↔ JSON with quoted fields, alt delimiters, preview
+- [user-agent parser](https://imlunahey.com/labs/ua): browser / engine / OS / device extraction
+- [screenshot maker](https://imlunahey.com/labs/screenshot-maker): wrap an image in browser chrome
+
+## Network + privacy tools
+
+- [fingerprint](https://imlunahey.com/labs/fingerprint): everything the browser silently discloses — UA, canvas + WebGL + audio hashes, fonts, media devices, more
+- [whois](https://imlunahey.com/labs/whois): RDAP-based domain lookup with rdap.org fallback for ccTLDs
+- [DNS](https://imlunahey.com/labs/dns): DoH lookup for A / AAAA / TXT / MX / CNAME / NS / SOA / SRV / CAA
+- [HTTP headers](https://imlunahey.com/labs/http-headers): fetch any URL, see redirect chain + headers grouped by security / CORS / cache
+- [HTTP status](https://imlunahey.com/labs/http-status): every status code with plain-English descriptions + common causes
+- [certs](https://imlunahey.com/labs/certs): TLS cert history from crt.sh Certificate Transparency logs
+- [subnet](https://imlunahey.com/labs/subnet): CIDR calculator with bitwise breakdown
+
+## Interactive + creative
+
+- [matrix](https://imlunahey.com/labs/matrix): falling-kana canvas screensaver
+- [terminal](https://imlunahey.com/labs/terminal): fake shell for navigating the site (cd, ls, cat, open, tree, neofetch)
+- [palette](https://imlunahey.com/labs/palette): image → dominant colours
+- [infinite canvas](https://imlunahey.com/labs/infinite-canvas): canvas2D pan + zoom
+- [verse reveal](https://imlunahey.com/labs/verse-reveal): staggered ASCII text effect
+- [CSS battles](https://imlunahey.com/labs/css-battles): daily solutions to cssbattle.dev prompts
+
+## Games (in labs)
+
+- [snake](https://imlunahey.com/labs/snake): classic arcade
+- [wordle](https://imlunahey.com/labs/wordle): one word a day, six guesses
+- [life](https://imlunahey.com/labs/life): Conway's Game of Life on a torus
+- [typing](https://imlunahey.com/labs/typing): WPM + accuracy test
+
+## About the site itself
+
+- Stack: TypeScript, React, TanStack Start (router + start), Tailwind,
+  Cloudflare Workers (+ one Durable Object for the visitor-count pulse)
+- Source: [github.com/imlunahey/imlunahey.com](https://github.com/imlunahey/imlunahey.com)
+- Deploy: Cloudflare Workers + R2 + pages-style static assets
+
+## Contact
+
+- Bluesky: [@imlunahey.com](https://bsky.app/profile/imlunahey.com)
+- GitHub: [@imlunahey](https://github.com/imlunahey)
+- Email: xo@wvvw.me
