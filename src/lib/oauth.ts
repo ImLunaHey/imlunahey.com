@@ -22,6 +22,7 @@ import type { Session } from '@atcute/oauth-browser-client';
  */
 export const GUESTBOOK_SCOPE = 'atproto repo:com.imlunahey.guestbook.entry?action=create';
 export const LEADERBOARD_SCOPE = 'atproto repo:com.imlunahey.leaderboard.score?action=create';
+export const BSKY_POST_SCOPE = 'atproto repo:app.bsky.feed.post?action=create';
 
 /**
  * The specific repo scope strings that a token MUST carry to write the
@@ -32,6 +33,7 @@ export const LEADERBOARD_SCOPE = 'atproto repo:com.imlunahey.leaderboard.score?a
  */
 export const GUESTBOOK_WRITE_SCOPE = 'repo:com.imlunahey.guestbook.entry?action=create';
 export const LEADERBOARD_WRITE_SCOPE = 'repo:com.imlunahey.leaderboard.score?action=create';
+export const BSKY_POST_WRITE_SCOPE = 'repo:app.bsky.feed.post?action=create';
 
 export function sessionHasScope(session: Session | null, scope: string): boolean {
   if (!session) return false;
@@ -44,8 +46,7 @@ export function sessionHasScope(session: Session | null, scope: string): boolean
  * loopback client_id and in the hosted client-metadata.json. Individual
  * features still narrow the scope they actually request at auth time.
  */
-const ALL_SCOPES =
-  'atproto repo:com.imlunahey.guestbook.entry?action=create repo:com.imlunahey.leaderboard.score?action=create';
+const ALL_SCOPES = ['atproto', GUESTBOOK_WRITE_SCOPE, LEADERBOARD_WRITE_SCOPE, BSKY_POST_WRITE_SCOPE].join(' ');
 
 /**
  * In prod the client_id is the URL of our hosted metadata JSON.
