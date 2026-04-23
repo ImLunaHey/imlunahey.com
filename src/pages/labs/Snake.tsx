@@ -155,6 +155,15 @@ export default function SnakePage() {
   // keyboard: arrows / wasd to turn; space to pause; enter to restart on death.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      // Don't hijack keys while the user is typing in a form field — otherwise
+      // typing "wasd" in the alias input steered the snake + swallowed the chars.
+      const t = e.target as HTMLElement | null;
+      const inField =
+        t?.tagName === 'INPUT' ||
+        t?.tagName === 'TEXTAREA' ||
+        t?.isContentEditable === true;
+      if (inField) return;
+
       const k = e.key.toLowerCase();
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(e.key.toLowerCase()) || ['w', 'a', 's', 'd'].includes(k)) {
         e.preventDefault();

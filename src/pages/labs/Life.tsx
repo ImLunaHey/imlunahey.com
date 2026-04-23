@@ -101,6 +101,8 @@ export default function LifePage() {
   // keyboard shortcuts
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      const t = e.target as HTMLElement | null;
+      if (t?.tagName === 'INPUT' || t?.tagName === 'TEXTAREA' || t?.isContentEditable) return;
       const k = e.key.toLowerCase();
       if (k === ' ') {
         e.preventDefault();

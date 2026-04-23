@@ -177,6 +177,8 @@ export default function WordlePage() {
   // keyboard input
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      const t = e.target as HTMLElement | null;
+      if (t?.tagName === 'INPUT' || t?.tagName === 'TEXTAREA' || t?.isContentEditable) return;
       // don't capture input while the sign-in gate is up — otherwise the
       // user's handle gets typed into the puzzle in the background.
       if (finished || mode === 'locked') return;
