@@ -15,11 +15,14 @@ import { Route as OgSplatRouteImport } from './routes/og/$'
 import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
 import { Route as MainUsesRouteImport } from './routes/_main/uses'
 import { Route as MainMusicRouteImport } from './routes/_main/music'
+import { Route as MainLibraryRouteImport } from './routes/_main/library'
+import { Route as MainHomelabRouteImport } from './routes/_main/homelab'
 import { Route as MainHealthRouteImport } from './routes/_main/health'
 import { Route as MainGuestbookRouteImport } from './routes/_main/guestbook'
 import { Route as MainGlobeRouteImport } from './routes/_main/globe'
 import { Route as MainGalleryRouteImport } from './routes/_main/gallery'
 import { Route as MainDesignSystemRouteImport } from './routes/_main/design-system'
+import { Route as MainBookmarksRouteImport } from './routes/_main/bookmarks'
 import { Route as MainAiRouteImport } from './routes/_main/ai'
 import { Route as MainWatchingIndexRouteImport } from './routes/_main/watching/index'
 import { Route as MainProjectsIndexRouteImport } from './routes/_main/projects/index'
@@ -87,6 +90,16 @@ const MainMusicRoute = MainMusicRouteImport.update({
   path: '/music',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLibraryRoute = MainLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainHomelabRoute = MainHomelabRouteImport.update({
+  id: '/homelab',
+  path: '/homelab',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainHealthRoute = MainHealthRouteImport.update({
   id: '/health',
   path: '/health',
@@ -110,6 +123,11 @@ const MainGalleryRoute = MainGalleryRouteImport.update({
 const MainDesignSystemRoute = MainDesignSystemRouteImport.update({
   id: '/design-system',
   path: '/design-system',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainBookmarksRoute = MainBookmarksRouteImport.update({
+  id: '/bookmarks',
+  path: '/bookmarks',
   getParentRoute: () => MainRoute,
 } as any)
 const MainAiRoute = MainAiRouteImport.update({
@@ -303,11 +321,14 @@ const MainLabsAtUriSplatRoute = MainLabsAtUriSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
   '/ai': typeof MainAiRoute
+  '/bookmarks': typeof MainBookmarksRoute
   '/design-system': typeof MainDesignSystemRoute
   '/gallery': typeof MainGalleryRoute
   '/globe': typeof MainGlobeRoute
   '/guestbook': typeof MainGuestbookRoute
   '/health': typeof MainHealthRoute
+  '/homelab': typeof MainHomelabRoute
+  '/library': typeof MainLibraryRoute
   '/music': typeof MainMusicRoute
   '/uses': typeof MainUsesRoute
   '/oauth/callback': typeof OauthCallbackRoute
@@ -351,11 +372,14 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/ai': typeof MainAiRoute
+  '/bookmarks': typeof MainBookmarksRoute
   '/design-system': typeof MainDesignSystemRoute
   '/gallery': typeof MainGalleryRoute
   '/globe': typeof MainGlobeRoute
   '/guestbook': typeof MainGuestbookRoute
   '/health': typeof MainHealthRoute
+  '/homelab': typeof MainHomelabRoute
+  '/library': typeof MainLibraryRoute
   '/music': typeof MainMusicRoute
   '/uses': typeof MainUsesRoute
   '/oauth/callback': typeof OauthCallbackRoute
@@ -402,11 +426,14 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_main': typeof MainRouteWithChildren
   '/_main/ai': typeof MainAiRoute
+  '/_main/bookmarks': typeof MainBookmarksRoute
   '/_main/design-system': typeof MainDesignSystemRoute
   '/_main/gallery': typeof MainGalleryRoute
   '/_main/globe': typeof MainGlobeRoute
   '/_main/guestbook': typeof MainGuestbookRoute
   '/_main/health': typeof MainHealthRoute
+  '/_main/homelab': typeof MainHomelabRoute
+  '/_main/library': typeof MainLibraryRoute
   '/_main/music': typeof MainMusicRoute
   '/_main/uses': typeof MainUsesRoute
   '/oauth/callback': typeof OauthCallbackRoute
@@ -454,11 +481,14 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/ai'
+    | '/bookmarks'
     | '/design-system'
     | '/gallery'
     | '/globe'
     | '/guestbook'
     | '/health'
+    | '/homelab'
+    | '/library'
     | '/music'
     | '/uses'
     | '/oauth/callback'
@@ -502,11 +532,14 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/ai'
+    | '/bookmarks'
     | '/design-system'
     | '/gallery'
     | '/globe'
     | '/guestbook'
     | '/health'
+    | '/homelab'
+    | '/library'
     | '/music'
     | '/uses'
     | '/oauth/callback'
@@ -552,11 +585,14 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_main'
     | '/_main/ai'
+    | '/_main/bookmarks'
     | '/_main/design-system'
     | '/_main/gallery'
     | '/_main/globe'
     | '/_main/guestbook'
     | '/_main/health'
+    | '/_main/homelab'
+    | '/_main/library'
     | '/_main/music'
     | '/_main/uses'
     | '/oauth/callback'
@@ -650,6 +686,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainMusicRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/library': {
+      id: '/_main/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof MainLibraryRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/homelab': {
+      id: '/_main/homelab'
+      path: '/homelab'
+      fullPath: '/homelab'
+      preLoaderRoute: typeof MainHomelabRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/health': {
       id: '/_main/health'
       path: '/health'
@@ -683,6 +733,13 @@ declare module '@tanstack/react-router' {
       path: '/design-system'
       fullPath: '/design-system'
       preLoaderRoute: typeof MainDesignSystemRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/bookmarks': {
+      id: '/_main/bookmarks'
+      path: '/bookmarks'
+      fullPath: '/bookmarks'
+      preLoaderRoute: typeof MainBookmarksRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/ai': {
@@ -949,11 +1006,14 @@ declare module '@tanstack/react-router' {
 
 interface MainRouteChildren {
   MainAiRoute: typeof MainAiRoute
+  MainBookmarksRoute: typeof MainBookmarksRoute
   MainDesignSystemRoute: typeof MainDesignSystemRoute
   MainGalleryRoute: typeof MainGalleryRoute
   MainGlobeRoute: typeof MainGlobeRoute
   MainGuestbookRoute: typeof MainGuestbookRoute
   MainHealthRoute: typeof MainHealthRoute
+  MainHomelabRoute: typeof MainHomelabRoute
+  MainLibraryRoute: typeof MainLibraryRoute
   MainMusicRoute: typeof MainMusicRoute
   MainUsesRoute: typeof MainUsesRoute
   MainIndexRoute: typeof MainIndexRoute
@@ -997,11 +1057,14 @@ interface MainRouteChildren {
 
 const MainRouteChildren: MainRouteChildren = {
   MainAiRoute: MainAiRoute,
+  MainBookmarksRoute: MainBookmarksRoute,
   MainDesignSystemRoute: MainDesignSystemRoute,
   MainGalleryRoute: MainGalleryRoute,
   MainGlobeRoute: MainGlobeRoute,
   MainGuestbookRoute: MainGuestbookRoute,
   MainHealthRoute: MainHealthRoute,
+  MainHomelabRoute: MainHomelabRoute,
+  MainLibraryRoute: MainLibraryRoute,
   MainMusicRoute: MainMusicRoute,
   MainUsesRoute: MainUsesRoute,
   MainIndexRoute: MainIndexRoute,

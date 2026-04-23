@@ -25,6 +25,9 @@ export type OgSlug =
   | 'labs'
   | 'uses'
   | 'design-system'
+  | 'bookmarks'
+  | 'library'
+  | 'homelab'
   | 'globe'
   | 'guestbook'
   | 'ai'
@@ -71,6 +74,9 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   labs: { title: 'labs.', subtitle: 'experiments, demos, tools', glyph: '⚗', slug: '/labs' },
   uses: { title: 'uses.', subtitle: 'the full rig', glyph: '◈', slug: '/uses' },
   'design-system': { title: 'design.sys.', subtitle: 'tokens, elements, patterns', glyph: '◰', slug: '/design-system' },
+  bookmarks: { title: 'bookmarks.', subtitle: 'articles, talks, papers worth keeping', glyph: '❖', slug: '/bookmarks' },
+  library: { title: 'library.', subtitle: 'physical media shelf', glyph: '▥', slug: '/library' },
+  homelab: { title: 'homelab.', subtitle: 'rack, services, uptime', glyph: '⌸', slug: '/homelab' },
   globe: { title: 'globe.', subtitle: 'places lived, visited, passed through', glyph: '◯', slug: '/globe' },
   guestbook: { title: 'guestbook.', subtitle: 'signed entries via atproto', glyph: '✒', slug: '/guestbook' },
   ai: { title: 'ai.usage.', subtitle: 'every token, every client, every dollar', glyph: '⌬', slug: '/ai' },
