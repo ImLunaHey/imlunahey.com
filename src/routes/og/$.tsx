@@ -42,8 +42,23 @@ export const Route = createFileRoute('/og/$')({
         const raw = (params as { _splat?: string })._splat ?? 'home';
         // strip either .svg (legacy) or .png from the slug so old links still
         // resolve to the new format.
-        const slug = raw.replace(/\.(svg|png)$/, '') as OgSlug;
-        const svg = buildOgSvg(slug);
+        const cleaned = raw.replace(/\.(svg|png)$/, '');
+
+        // Dynamic cards: /og/year-in-review/{handle}/{year}
+        // These can't be pre-registered as OgSlug entries, so build the OG
+        // entry on the fly from the splat parts.
+        const yrMatch = /^year-in-review\/([^/]+)\/([^/]+)$/.exec(cleaned);
+        const entry = yrMatch
+          ? {
+              title: decodeURIComponent(yrMatch[1]),
+              subtitle: yrMatch[2] === 'all'
+                ? 'lifetime · atproto year in review'
+                : `${yrMatch[2]} · atproto year in review`,
+              glyph: '★',
+              slug: `/labs/year-in-review/${decodeURIComponent(yrMatch[1])}/${yrMatch[2]}`,
+            }
+          : (cleaned as OgSlug);
+        const svg = buildOgSvg(entry);
 
         await ensureInit();
 
