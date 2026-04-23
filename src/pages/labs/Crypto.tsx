@@ -1,6 +1,6 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 // CoinGecko free tier. No auth, ~30 req/min — fine for a visitor-triggered
 // lab at a 60s refresh cadence. We pull everything we need in one markets
@@ -11,18 +11,11 @@ type Coin = {
   symbol: string;
   name: string;
   image: string;
-  current_price: number;
-  market_cap: number;
-  market_cap_rank: number;
-  total_volume: number;
-  high_24h: number;
-  low_24h: number;
-  ath: number;
-  ath_change_percentage: number;
-  circulating_supply: number;
-  total_supply: number | null;
-  max_supply: number | null;
-  sparkline_in_7d: { price: number[] };
+  current_price: number | null;
+  market_cap: number | null;
+  market_cap_rank: number | null;
+  total_volume: number | null;
+  sparkline_in_7d?: { price?: number[] } | null;
   price_change_percentage_1h_in_currency: number | null;
   price_change_percentage_24h_in_currency: number | null;
   price_change_percentage_7d_in_currency: number | null;
@@ -30,6 +23,9 @@ type Coin = {
 
 type Currency = 'usd' | 'eur' | 'gbp' | 'jpy';
 type Period = '1h' | '24h' | '7d';
+
+const CURRENCIES: Currency[] = ['usd', 'gbp', 'eur', 'jpy'];
+const PERIODS: Period[] = ['1h', '24h', '7d'];
 
 const CURRENCY_SYMBOL: Record<Currency, string> = { usd: '$', eur: '€', gbp: '£', jpy: '¥' };
 
@@ -46,32 +42,33 @@ async function fetchMarkets(cur: Currency): Promise<Coin[]> {
   return r.json();
 }
 
-function fmtMoney(n: number, cur: Currency): string {
+function fmtMoney(n: number | null | undefined, cur: Currency): string {
+  if (n == null || !isFinite(n)) return '—';
   const sym = CURRENCY_SYMBOL[cur];
-  if (!isFinite(n)) return '—';
   const abs = Math.abs(n);
-  if (abs >= 1_000_000_000) return `${sym}${(n / 1e9).toFixed(2)}B`;
-  if (abs >= 1_000_000) return `${sym}${(n / 1e6).toFixed(2)}M`;
+  if (abs >= 1e12) return `${sym}${(n / 1e12).toFixed(2)}T`;
+  if (abs >= 1e9) return `${sym}${(n / 1e9).toFixed(2)}B`;
+  if (abs >= 1e6) return `${sym}${(n / 1e6).toFixed(2)}M`;
   if (abs >= 1) return `${sym}${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
   if (abs >= 0.01) return `${sym}${n.toLocaleString(undefined, { maximumFractionDigits: 4 })}`;
   return `${sym}${n.toLocaleString(undefined, { maximumFractionDigits: 8 })}`;
 }
 
-function fmtPct(n: number | null): string {
+function fmtPct(n: number | null | undefined): string {
   if (n == null || !isFinite(n)) return '—';
   const rounded = Math.abs(n) >= 100 ? n.toFixed(0) : n.toFixed(2);
   return `${n >= 0 ? '+' : ''}${rounded}%`;
 }
 
-function toneFor(n: number | null): 'up' | 'down' | 'flat' {
+function toneFor(n: number | null | undefined): 'up' | 'down' | 'flat' {
   if (n == null || !isFinite(n)) return 'flat';
   if (n > 0.05) return 'up';
   if (n < -0.05) return 'down';
   return 'flat';
 }
 
-function Sparkline({ prices, tone }: { prices: number[]; tone: 'up' | 'down' | 'flat' }) {
-  if (prices.length < 2) return null;
+function Sparkline({ prices, tone }: { prices: number[] | undefined; tone: 'up' | 'down' | 'flat' }) {
+  if (!prices || prices.length < 2) return null;
   const W = 100, H = 28;
   let min = Infinity, max = -Infinity;
   for (const p of prices) { if (p < min) min = p; if (p > max) max = p; }
@@ -94,24 +91,46 @@ function Sparkline({ prices, tone }: { prices: number[]; tone: 'up' | 'down' | '
   );
 }
 
-export default function CryptoPage() {
-  const [cur, setCur] = useState<Currency>('usd');
-  const [period, setPeriod] = useState<Period>('24h');
-  const [query, setQuery] = useState('');
+type SearchShape = { cur?: Currency; period?: Period; q?: string };
 
-  const q = useQuery({
+export default function CryptoPage() {
+  const navigate = useNavigate();
+  const search = useSearch({ strict: false }) as SearchShape;
+  const cur: Currency = CURRENCIES.includes(search.cur as Currency) ? (search.cur as Currency) : 'usd';
+  const period: Period = PERIODS.includes(search.period as Period) ? (search.period as Period) : '24h';
+  const q = search.q ?? '';
+
+  // local input mirrors the URL q, debounced to avoid routing on every keystroke
+  const [input, setInput] = useState(q);
+  useEffect(() => { setInput(q); }, [q]);
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      if (input.trim() !== q) {
+        navigate({ to: '/labs/crypto' as never, search: { cur, period, q: input.trim() || undefined } as never, replace: true });
+      }
+    }, 300);
+    return () => window.clearTimeout(t);
+  }, [input, q, cur, period, navigate]);
+
+  const setCur = (c: Currency) => navigate({ to: '/labs/crypto' as never, search: { cur: c, period, q: q || undefined } as never, replace: true });
+  const setPeriod = (p: Period) => navigate({ to: '/labs/crypto' as never, search: { cur, period: p, q: q || undefined } as never, replace: true });
+
+  const query = useQuery({
     queryKey: ['coingecko-markets', cur],
     queryFn: () => fetchMarkets(cur),
     refetchInterval: 60_000,
     staleTime: 60_000,
+    // keep old data visible while a new currency fetch is in-flight — avoids
+    // a blank-table flash on segmented-button clicks
+    placeholderData: (prev) => prev,
   });
 
-  const coins = q.data ?? [];
+  const coins = query.data ?? [];
   const filtered = useMemo(() => {
-    const f = query.trim().toLowerCase();
+    const f = q.trim().toLowerCase();
     if (!f) return coins;
     return coins.filter((c) => c.name.toLowerCase().includes(f) || c.symbol.toLowerCase().includes(f));
-  }, [coins, query]);
+  }, [coins, q]);
 
   const pctFor = (c: Coin): number | null =>
     period === '1h' ? c.price_change_percentage_1h_in_currency
@@ -127,40 +146,37 @@ export default function CryptoPage() {
           <h1>crypto<span className="dot">.</span></h1>
           <p className="sub">
             top 50 cryptocurrencies by market cap, live from coingecko. 7-day sparkline per coin,
-            1h / 24h / 7d change toggle, usd / gbp / eur / jpy. refreshes every minute.
+            1h / 24h / 7d change toggle, usd / gbp / eur / jpy. refreshes every minute. click a
+            row for full market data.
           </p>
         </header>
 
         <section className="ctrl">
           <div className="seg">
-            {(['usd', 'gbp', 'eur', 'jpy'] as Currency[]).map((c) => (
-              <button key={c} className={`seg-btn ${cur === c ? 'on' : ''}`} onClick={() => setCur(c)}>
-                {c}
-              </button>
+            {CURRENCIES.map((c) => (
+              <button key={c} className={`seg-btn ${cur === c ? 'on' : ''}`} onClick={() => setCur(c)}>{c}</button>
             ))}
           </div>
           <div className="seg">
-            {(['1h', '24h', '7d'] as Period[]).map((p) => (
-              <button key={p} className={`seg-btn ${period === p ? 'on' : ''}`} onClick={() => setPeriod(p)}>
-                {p}
-              </button>
+            {PERIODS.map((p) => (
+              <button key={p} className={`seg-btn ${period === p ? 'on' : ''}`} onClick={() => setPeriod(p)}>{p}</button>
             ))}
           </div>
           <input
             className="srch"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="filter by name or ticker…"
             spellCheck={false}
             autoComplete="off"
           />
-          {q.dataUpdatedAt ? (
-            <span className="t-faint upd">updated {Math.round((Date.now() - q.dataUpdatedAt) / 1000)}s ago</span>
+          {query.dataUpdatedAt ? (
+            <span className="t-faint upd">updated {Math.round((Date.now() - query.dataUpdatedAt) / 1000)}s ago</span>
           ) : null}
         </section>
 
-        {q.isError ? <div className="err">coingecko returned an error — rate-limited or offline.</div> : null}
-        {q.isLoading ? <div className="loading">loading…</div> : null}
+        {query.isError ? <div className="err">coingecko returned an error — rate-limited or offline.</div> : null}
+        {query.isLoading && coins.length === 0 ? <div className="loading">loading…</div> : null}
 
         <section className="table">
           <div className="th">
@@ -176,7 +192,12 @@ export default function CryptoPage() {
             const pct = pctFor(c);
             const tone = toneFor(pct);
             return (
-              <div key={c.id} className="tr">
+              <Link
+                key={c.id}
+                to={'/labs/crypto/$id' as never}
+                params={{ id: c.id } as never}
+                className="tr"
+              >
                 <span className="rnk">{c.market_cap_rank ?? '—'}</span>
                 <span className="coin">
                   <img src={c.image} alt="" width={20} height={20} loading="lazy" />
@@ -190,9 +211,9 @@ export default function CryptoPage() {
                 <span className="r hide-sm">{fmtMoney(c.market_cap, cur)}</span>
                 <span className="r hide-sm">{fmtMoney(c.total_volume, cur)}</span>
                 <span className="hide-sm spark-cell">
-                  <Sparkline prices={c.sparkline_in_7d.price} tone={toneFor(c.price_change_percentage_7d_in_currency)} />
+                  <Sparkline prices={c.sparkline_in_7d?.price} tone={toneFor(c.price_change_percentage_7d_in_currency)} />
                 </span>
-              </div>
+              </Link>
             );
           })}
         </section>
@@ -237,15 +258,16 @@ const CSS = `
     font-size: var(--fs-xs);
   }
   .th { border-bottom: 1px solid var(--color-border); color: var(--color-fg-faint); text-transform: uppercase; letter-spacing: 0.08em; }
-  .tr { border-bottom: 1px dashed var(--color-border); }
+  .tr { border-bottom: 1px dashed var(--color-border); color: inherit; text-decoration: none; }
   .tr:last-child { border-bottom: 0; }
-  .tr:hover { background: var(--color-bg-raised); }
+  .tr:hover { background: var(--color-bg-raised); text-decoration: none; }
+  .tr:hover .coin b { color: var(--color-accent); }
   .r { text-align: right; font-variant-numeric: tabular-nums; }
   .rnk { color: var(--color-fg-faint); }
 
   .coin { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
   .coin img { width: 20px; height: 20px; flex: 0 0 20px; image-rendering: -webkit-optimize-contrast; }
-  .coin b { color: var(--color-fg); font-weight: 400; font-size: var(--fs-sm); }
+  .coin b { color: var(--color-fg); font-weight: 400; font-size: var(--fs-sm); transition: color .12s; }
   .coin .sym { color: var(--color-fg-faint); margin-left: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
   .price { color: var(--color-fg); }
 

@@ -90,7 +90,6 @@ import { Route as MainLabsDiffRouteImport } from './routes/_main/labs/diff'
 import { Route as MainLabsDidLogRouteImport } from './routes/_main/labs/did-log'
 import { Route as MainLabsCurlRouteImport } from './routes/_main/labs/curl'
 import { Route as MainLabsCsvRouteImport } from './routes/_main/labs/csv'
-import { Route as MainLabsCryptoRouteImport } from './routes/_main/labs/crypto'
 import { Route as MainLabsCronRouteImport } from './routes/_main/labs/cron'
 import { Route as MainLabsCrimeRouteImport } from './routes/_main/labs/crime'
 import { Route as MainLabsColourRouteImport } from './routes/_main/labs/colour'
@@ -106,6 +105,7 @@ import { Route as MainLabsPlcLogIndexRouteImport } from './routes/_main/labs/plc
 import { Route as MainLabsLexiconIndexRouteImport } from './routes/_main/labs/lexicon/index'
 import { Route as MainLabsFeedIndexRouteImport } from './routes/_main/labs/feed/index'
 import { Route as MainLabsCssBattlesIndexRouteImport } from './routes/_main/labs/css-battles/index'
+import { Route as MainLabsCryptoIndexRouteImport } from './routes/_main/labs/crypto/index'
 import { Route as MainLabsCarExplorerIndexRouteImport } from './routes/_main/labs/car-explorer/index'
 import { Route as MainLabsAtUriIndexRouteImport } from './routes/_main/labs/at-uri/index'
 import { Route as MainPokedexRkeyPokeIdRouteImport } from './routes/_main/pokedex/$rkey/$pokeId'
@@ -113,6 +113,7 @@ import { Route as MainLabsPlcLogSplatRouteImport } from './routes/_main/labs/plc
 import { Route as MainLabsLexiconNsidRouteImport } from './routes/_main/labs/lexicon/$nsid'
 import { Route as MainLabsFeedSplatRouteImport } from './routes/_main/labs/feed/$'
 import { Route as MainLabsCssBattlesDateRouteImport } from './routes/_main/labs/css-battles/$date'
+import { Route as MainLabsCryptoIdRouteImport } from './routes/_main/labs/crypto/$id'
 import { Route as MainLabsCarExplorerSplatRouteImport } from './routes/_main/labs/car-explorer/$'
 import { Route as MainLabsAtUriSplatRouteImport } from './routes/_main/labs/at-uri/$'
 import { Route as MainLabsYearInReviewHandleYearRouteImport } from './routes/_main/labs/year-in-review/$handle/$year'
@@ -522,11 +523,6 @@ const MainLabsCsvRoute = MainLabsCsvRouteImport.update({
   path: '/labs/csv',
   getParentRoute: () => MainRoute,
 } as any)
-const MainLabsCryptoRoute = MainLabsCryptoRouteImport.update({
-  id: '/labs/crypto',
-  path: '/labs/crypto',
-  getParentRoute: () => MainRoute,
-} as any)
 const MainLabsCronRoute = MainLabsCronRouteImport.update({
   id: '/labs/cron',
   path: '/labs/cron',
@@ -603,6 +599,11 @@ const MainLabsCssBattlesIndexRoute = MainLabsCssBattlesIndexRouteImport.update({
   path: '/labs/css-battles/',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsCryptoIndexRoute = MainLabsCryptoIndexRouteImport.update({
+  id: '/labs/crypto/',
+  path: '/labs/crypto/',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsCarExplorerIndexRoute =
   MainLabsCarExplorerIndexRouteImport.update({
     id: '/labs/car-explorer/',
@@ -637,6 +638,11 @@ const MainLabsFeedSplatRoute = MainLabsFeedSplatRouteImport.update({
 const MainLabsCssBattlesDateRoute = MainLabsCssBattlesDateRouteImport.update({
   id: '/labs/css-battles/$date',
   path: '/labs/css-battles/$date',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsCryptoIdRoute = MainLabsCryptoIdRouteImport.update({
+  id: '/labs/crypto/$id',
+  path: '/labs/crypto/$id',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsCarExplorerSplatRoute =
@@ -683,7 +689,6 @@ export interface FileRoutesByFullPath {
   '/labs/colour': typeof MainLabsColourRoute
   '/labs/crime': typeof MainLabsCrimeRoute
   '/labs/cron': typeof MainLabsCronRoute
-  '/labs/crypto': typeof MainLabsCryptoRoute
   '/labs/csv': typeof MainLabsCsvRoute
   '/labs/curl': typeof MainLabsCurlRoute
   '/labs/did-log': typeof MainLabsDidLogRoute
@@ -751,6 +756,7 @@ export interface FileRoutesByFullPath {
   '/watching/': typeof MainWatchingIndexRoute
   '/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
   '/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
+  '/labs/crypto/$id': typeof MainLabsCryptoIdRoute
   '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
   '/labs/feed/$': typeof MainLabsFeedSplatRoute
   '/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
@@ -758,6 +764,7 @@ export interface FileRoutesByFullPath {
   '/pokedex/$rkey/$pokeId': typeof MainPokedexRkeyPokeIdRoute
   '/labs/at-uri/': typeof MainLabsAtUriIndexRoute
   '/labs/car-explorer/': typeof MainLabsCarExplorerIndexRoute
+  '/labs/crypto/': typeof MainLabsCryptoIndexRoute
   '/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
   '/labs/feed/': typeof MainLabsFeedIndexRoute
   '/labs/lexicon/': typeof MainLabsLexiconIndexRoute
@@ -791,7 +798,6 @@ export interface FileRoutesByTo {
   '/labs/colour': typeof MainLabsColourRoute
   '/labs/crime': typeof MainLabsCrimeRoute
   '/labs/cron': typeof MainLabsCronRoute
-  '/labs/crypto': typeof MainLabsCryptoRoute
   '/labs/csv': typeof MainLabsCsvRoute
   '/labs/curl': typeof MainLabsCurlRoute
   '/labs/did-log': typeof MainLabsDidLogRoute
@@ -859,6 +865,7 @@ export interface FileRoutesByTo {
   '/watching': typeof MainWatchingIndexRoute
   '/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
   '/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
+  '/labs/crypto/$id': typeof MainLabsCryptoIdRoute
   '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
   '/labs/feed/$': typeof MainLabsFeedSplatRoute
   '/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
@@ -866,6 +873,7 @@ export interface FileRoutesByTo {
   '/pokedex/$rkey/$pokeId': typeof MainPokedexRkeyPokeIdRoute
   '/labs/at-uri': typeof MainLabsAtUriIndexRoute
   '/labs/car-explorer': typeof MainLabsCarExplorerIndexRoute
+  '/labs/crypto': typeof MainLabsCryptoIndexRoute
   '/labs/css-battles': typeof MainLabsCssBattlesIndexRoute
   '/labs/feed': typeof MainLabsFeedIndexRoute
   '/labs/lexicon': typeof MainLabsLexiconIndexRoute
@@ -901,7 +909,6 @@ export interface FileRoutesById {
   '/_main/labs/colour': typeof MainLabsColourRoute
   '/_main/labs/crime': typeof MainLabsCrimeRoute
   '/_main/labs/cron': typeof MainLabsCronRoute
-  '/_main/labs/crypto': typeof MainLabsCryptoRoute
   '/_main/labs/csv': typeof MainLabsCsvRoute
   '/_main/labs/curl': typeof MainLabsCurlRoute
   '/_main/labs/did-log': typeof MainLabsDidLogRoute
@@ -969,6 +976,7 @@ export interface FileRoutesById {
   '/_main/watching/': typeof MainWatchingIndexRoute
   '/_main/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
   '/_main/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
+  '/_main/labs/crypto/$id': typeof MainLabsCryptoIdRoute
   '/_main/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
   '/_main/labs/feed/$': typeof MainLabsFeedSplatRoute
   '/_main/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
@@ -976,6 +984,7 @@ export interface FileRoutesById {
   '/_main/pokedex/$rkey/$pokeId': typeof MainPokedexRkeyPokeIdRoute
   '/_main/labs/at-uri/': typeof MainLabsAtUriIndexRoute
   '/_main/labs/car-explorer/': typeof MainLabsCarExplorerIndexRoute
+  '/_main/labs/crypto/': typeof MainLabsCryptoIndexRoute
   '/_main/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
   '/_main/labs/feed/': typeof MainLabsFeedIndexRoute
   '/_main/labs/lexicon/': typeof MainLabsLexiconIndexRoute
@@ -1011,7 +1020,6 @@ export interface FileRouteTypes {
     | '/labs/colour'
     | '/labs/crime'
     | '/labs/cron'
-    | '/labs/crypto'
     | '/labs/csv'
     | '/labs/curl'
     | '/labs/did-log'
@@ -1079,6 +1087,7 @@ export interface FileRouteTypes {
     | '/watching/'
     | '/labs/at-uri/$'
     | '/labs/car-explorer/$'
+    | '/labs/crypto/$id'
     | '/labs/css-battles/$date'
     | '/labs/feed/$'
     | '/labs/lexicon/$nsid'
@@ -1086,6 +1095,7 @@ export interface FileRouteTypes {
     | '/pokedex/$rkey/$pokeId'
     | '/labs/at-uri/'
     | '/labs/car-explorer/'
+    | '/labs/crypto/'
     | '/labs/css-battles/'
     | '/labs/feed/'
     | '/labs/lexicon/'
@@ -1119,7 +1129,6 @@ export interface FileRouteTypes {
     | '/labs/colour'
     | '/labs/crime'
     | '/labs/cron'
-    | '/labs/crypto'
     | '/labs/csv'
     | '/labs/curl'
     | '/labs/did-log'
@@ -1187,6 +1196,7 @@ export interface FileRouteTypes {
     | '/watching'
     | '/labs/at-uri/$'
     | '/labs/car-explorer/$'
+    | '/labs/crypto/$id'
     | '/labs/css-battles/$date'
     | '/labs/feed/$'
     | '/labs/lexicon/$nsid'
@@ -1194,6 +1204,7 @@ export interface FileRouteTypes {
     | '/pokedex/$rkey/$pokeId'
     | '/labs/at-uri'
     | '/labs/car-explorer'
+    | '/labs/crypto'
     | '/labs/css-battles'
     | '/labs/feed'
     | '/labs/lexicon'
@@ -1228,7 +1239,6 @@ export interface FileRouteTypes {
     | '/_main/labs/colour'
     | '/_main/labs/crime'
     | '/_main/labs/cron'
-    | '/_main/labs/crypto'
     | '/_main/labs/csv'
     | '/_main/labs/curl'
     | '/_main/labs/did-log'
@@ -1296,6 +1306,7 @@ export interface FileRouteTypes {
     | '/_main/watching/'
     | '/_main/labs/at-uri/$'
     | '/_main/labs/car-explorer/$'
+    | '/_main/labs/crypto/$id'
     | '/_main/labs/css-battles/$date'
     | '/_main/labs/feed/$'
     | '/_main/labs/lexicon/$nsid'
@@ -1303,6 +1314,7 @@ export interface FileRouteTypes {
     | '/_main/pokedex/$rkey/$pokeId'
     | '/_main/labs/at-uri/'
     | '/_main/labs/car-explorer/'
+    | '/_main/labs/crypto/'
     | '/_main/labs/css-battles/'
     | '/_main/labs/feed/'
     | '/_main/labs/lexicon/'
@@ -1887,13 +1899,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsCsvRouteImport
       parentRoute: typeof MainRoute
     }
-    '/_main/labs/crypto': {
-      id: '/_main/labs/crypto'
-      path: '/labs/crypto'
-      fullPath: '/labs/crypto'
-      preLoaderRoute: typeof MainLabsCryptoRouteImport
-      parentRoute: typeof MainRoute
-    }
     '/_main/labs/cron': {
       id: '/_main/labs/cron'
       path: '/labs/cron'
@@ -1999,6 +2004,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsCssBattlesIndexRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/crypto/': {
+      id: '/_main/labs/crypto/'
+      path: '/labs/crypto'
+      fullPath: '/labs/crypto/'
+      preLoaderRoute: typeof MainLabsCryptoIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/car-explorer/': {
       id: '/_main/labs/car-explorer/'
       path: '/labs/car-explorer'
@@ -2048,6 +2060,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsCssBattlesDateRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/crypto/$id': {
+      id: '/_main/labs/crypto/$id'
+      path: '/labs/crypto/$id'
+      fullPath: '/labs/crypto/$id'
+      preLoaderRoute: typeof MainLabsCryptoIdRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/car-explorer/$': {
       id: '/_main/labs/car-explorer/$'
       path: '/labs/car-explorer/$'
@@ -2095,7 +2114,6 @@ interface MainRouteChildren {
   MainLabsColourRoute: typeof MainLabsColourRoute
   MainLabsCrimeRoute: typeof MainLabsCrimeRoute
   MainLabsCronRoute: typeof MainLabsCronRoute
-  MainLabsCryptoRoute: typeof MainLabsCryptoRoute
   MainLabsCsvRoute: typeof MainLabsCsvRoute
   MainLabsCurlRoute: typeof MainLabsCurlRoute
   MainLabsDidLogRoute: typeof MainLabsDidLogRoute
@@ -2163,6 +2181,7 @@ interface MainRouteChildren {
   MainWatchingIndexRoute: typeof MainWatchingIndexRoute
   MainLabsAtUriSplatRoute: typeof MainLabsAtUriSplatRoute
   MainLabsCarExplorerSplatRoute: typeof MainLabsCarExplorerSplatRoute
+  MainLabsCryptoIdRoute: typeof MainLabsCryptoIdRoute
   MainLabsCssBattlesDateRoute: typeof MainLabsCssBattlesDateRoute
   MainLabsFeedSplatRoute: typeof MainLabsFeedSplatRoute
   MainLabsLexiconNsidRoute: typeof MainLabsLexiconNsidRoute
@@ -2170,6 +2189,7 @@ interface MainRouteChildren {
   MainPokedexRkeyPokeIdRoute: typeof MainPokedexRkeyPokeIdRoute
   MainLabsAtUriIndexRoute: typeof MainLabsAtUriIndexRoute
   MainLabsCarExplorerIndexRoute: typeof MainLabsCarExplorerIndexRoute
+  MainLabsCryptoIndexRoute: typeof MainLabsCryptoIndexRoute
   MainLabsCssBattlesIndexRoute: typeof MainLabsCssBattlesIndexRoute
   MainLabsFeedIndexRoute: typeof MainLabsFeedIndexRoute
   MainLabsLexiconIndexRoute: typeof MainLabsLexiconIndexRoute
@@ -2201,7 +2221,6 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsColourRoute: MainLabsColourRoute,
   MainLabsCrimeRoute: MainLabsCrimeRoute,
   MainLabsCronRoute: MainLabsCronRoute,
-  MainLabsCryptoRoute: MainLabsCryptoRoute,
   MainLabsCsvRoute: MainLabsCsvRoute,
   MainLabsCurlRoute: MainLabsCurlRoute,
   MainLabsDidLogRoute: MainLabsDidLogRoute,
@@ -2269,6 +2288,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainWatchingIndexRoute: MainWatchingIndexRoute,
   MainLabsAtUriSplatRoute: MainLabsAtUriSplatRoute,
   MainLabsCarExplorerSplatRoute: MainLabsCarExplorerSplatRoute,
+  MainLabsCryptoIdRoute: MainLabsCryptoIdRoute,
   MainLabsCssBattlesDateRoute: MainLabsCssBattlesDateRoute,
   MainLabsFeedSplatRoute: MainLabsFeedSplatRoute,
   MainLabsLexiconNsidRoute: MainLabsLexiconNsidRoute,
@@ -2276,6 +2296,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainPokedexRkeyPokeIdRoute: MainPokedexRkeyPokeIdRoute,
   MainLabsAtUriIndexRoute: MainLabsAtUriIndexRoute,
   MainLabsCarExplorerIndexRoute: MainLabsCarExplorerIndexRoute,
+  MainLabsCryptoIndexRoute: MainLabsCryptoIndexRoute,
   MainLabsCssBattlesIndexRoute: MainLabsCssBattlesIndexRoute,
   MainLabsFeedIndexRoute: MainLabsFeedIndexRoute,
   MainLabsLexiconIndexRoute: MainLabsLexiconIndexRoute,
