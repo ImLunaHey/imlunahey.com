@@ -171,6 +171,7 @@ const LABS: Array<{ to: string; label: string; subtitle?: string }> = [
   { to: '/labs/crime', label: 'crime', subtitle: 'police.uk data for any postcode' },
   { to: '/labs/mp', label: 'mp', subtitle: 'your mp + recent commons votes' },
   { to: '/labs/hygiene', label: 'hygiene', subtitle: 'fsa food-safety ratings' },
+  { to: '/labs/crypto', label: 'crypto', subtitle: 'live top-50 crypto prices + sparklines' },
   { to: '/labs/year-in-review', label: 'year in review', subtitle: 'bluesky wrapped — from any handle\'s car file' },
   { to: '/labs/jwt', label: 'jwt', subtitle: 'decode & inspect' },
   { to: '/labs/cron', label: 'cron', subtitle: 'cron expression helper' },

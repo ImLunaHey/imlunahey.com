@@ -90,6 +90,7 @@ import { Route as MainLabsDiffRouteImport } from './routes/_main/labs/diff'
 import { Route as MainLabsDidLogRouteImport } from './routes/_main/labs/did-log'
 import { Route as MainLabsCurlRouteImport } from './routes/_main/labs/curl'
 import { Route as MainLabsCsvRouteImport } from './routes/_main/labs/csv'
+import { Route as MainLabsCryptoRouteImport } from './routes/_main/labs/crypto'
 import { Route as MainLabsCronRouteImport } from './routes/_main/labs/cron'
 import { Route as MainLabsCrimeRouteImport } from './routes/_main/labs/crime'
 import { Route as MainLabsColourRouteImport } from './routes/_main/labs/colour'
@@ -521,6 +522,11 @@ const MainLabsCsvRoute = MainLabsCsvRouteImport.update({
   path: '/labs/csv',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsCryptoRoute = MainLabsCryptoRouteImport.update({
+  id: '/labs/crypto',
+  path: '/labs/crypto',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsCronRoute = MainLabsCronRouteImport.update({
   id: '/labs/cron',
   path: '/labs/cron',
@@ -677,6 +683,7 @@ export interface FileRoutesByFullPath {
   '/labs/colour': typeof MainLabsColourRoute
   '/labs/crime': typeof MainLabsCrimeRoute
   '/labs/cron': typeof MainLabsCronRoute
+  '/labs/crypto': typeof MainLabsCryptoRoute
   '/labs/csv': typeof MainLabsCsvRoute
   '/labs/curl': typeof MainLabsCurlRoute
   '/labs/did-log': typeof MainLabsDidLogRoute
@@ -784,6 +791,7 @@ export interface FileRoutesByTo {
   '/labs/colour': typeof MainLabsColourRoute
   '/labs/crime': typeof MainLabsCrimeRoute
   '/labs/cron': typeof MainLabsCronRoute
+  '/labs/crypto': typeof MainLabsCryptoRoute
   '/labs/csv': typeof MainLabsCsvRoute
   '/labs/curl': typeof MainLabsCurlRoute
   '/labs/did-log': typeof MainLabsDidLogRoute
@@ -893,6 +901,7 @@ export interface FileRoutesById {
   '/_main/labs/colour': typeof MainLabsColourRoute
   '/_main/labs/crime': typeof MainLabsCrimeRoute
   '/_main/labs/cron': typeof MainLabsCronRoute
+  '/_main/labs/crypto': typeof MainLabsCryptoRoute
   '/_main/labs/csv': typeof MainLabsCsvRoute
   '/_main/labs/curl': typeof MainLabsCurlRoute
   '/_main/labs/did-log': typeof MainLabsDidLogRoute
@@ -1002,6 +1011,7 @@ export interface FileRouteTypes {
     | '/labs/colour'
     | '/labs/crime'
     | '/labs/cron'
+    | '/labs/crypto'
     | '/labs/csv'
     | '/labs/curl'
     | '/labs/did-log'
@@ -1109,6 +1119,7 @@ export interface FileRouteTypes {
     | '/labs/colour'
     | '/labs/crime'
     | '/labs/cron'
+    | '/labs/crypto'
     | '/labs/csv'
     | '/labs/curl'
     | '/labs/did-log'
@@ -1217,6 +1228,7 @@ export interface FileRouteTypes {
     | '/_main/labs/colour'
     | '/_main/labs/crime'
     | '/_main/labs/cron'
+    | '/_main/labs/crypto'
     | '/_main/labs/csv'
     | '/_main/labs/curl'
     | '/_main/labs/did-log'
@@ -1875,6 +1887,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsCsvRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/crypto': {
+      id: '/_main/labs/crypto'
+      path: '/labs/crypto'
+      fullPath: '/labs/crypto'
+      preLoaderRoute: typeof MainLabsCryptoRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/cron': {
       id: '/_main/labs/cron'
       path: '/labs/cron'
@@ -2076,6 +2095,7 @@ interface MainRouteChildren {
   MainLabsColourRoute: typeof MainLabsColourRoute
   MainLabsCrimeRoute: typeof MainLabsCrimeRoute
   MainLabsCronRoute: typeof MainLabsCronRoute
+  MainLabsCryptoRoute: typeof MainLabsCryptoRoute
   MainLabsCsvRoute: typeof MainLabsCsvRoute
   MainLabsCurlRoute: typeof MainLabsCurlRoute
   MainLabsDidLogRoute: typeof MainLabsDidLogRoute
@@ -2181,6 +2201,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsColourRoute: MainLabsColourRoute,
   MainLabsCrimeRoute: MainLabsCrimeRoute,
   MainLabsCronRoute: MainLabsCronRoute,
+  MainLabsCryptoRoute: MainLabsCryptoRoute,
   MainLabsCsvRoute: MainLabsCsvRoute,
   MainLabsCurlRoute: MainLabsCurlRoute,
   MainLabsDidLogRoute: MainLabsDidLogRoute,

@@ -1,10 +1,22 @@
 import { Outlet, useLocation } from '@tanstack/react-router';
+import { useEffect } from 'react';
 import CommandPalette from './CommandPalette';
 import { ErrorBoundary } from './ErrorBoundary';
 import { NavBar } from './NavBar';
+import { markSeen } from '../lib/lab-seen';
+
+// matches /labs/{slug} exactly or /labs/{slug}/... (the `year-in-review/:handle/:year`
+// style deep routes shouldn't mark the top-level slug — they're their own thing).
+const LAB_PATH = /^\/labs\/([a-z0-9-]+)(?:\/|$)/;
 
 export default function Layout() {
   const { pathname } = useLocation();
+
+  useEffect(() => {
+    const m = LAB_PATH.exec(pathname);
+    if (m) markSeen(m[1]);
+  }, [pathname]);
+
   return (
     <>
       <NavBar />

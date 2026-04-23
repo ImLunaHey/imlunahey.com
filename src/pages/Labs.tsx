@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { seedBaseline, useLabSeen } from '../lib/lab-seen';
 
 type Lab = {
   slug: string;
@@ -558,6 +559,14 @@ const LABS: Lab[] = [
     ready: true,
   },
   {
+    slug: 'crypto',
+    title: 'crypto',
+    desc: 'top 50 cryptocurrencies by market cap — live price, 1h/24h/7d change, 7-day sparkline. usd/gbp/eur/jpy toggle. 60s refresh from coingecko\'s free tier.',
+    tags: ['live', 'finance'],
+    year: '2026',
+    ready: true,
+  },
+  {
     slug: 'year-in-review',
     title: 'year in review',
     desc: 'spotify-wrapped for bluesky. enter a handle, pick a year — fetches the full atproto repo car, parses it, surfaces posts / likes / follows / top hashtags / longest post.',
@@ -603,6 +612,14 @@ export default function LabsPage() {
   const [query, setQuery] = useState('');
   const [activeTag, setActiveTag] = useState<string>('all');
   const [showUnready, setShowUnready] = useState(true);
+
+  const seen = useLabSeen();
+  useEffect(() => {
+    // First-ever visit: mark every currently-listed lab as already seen, so
+    // a brand-new visitor doesn't see "new" on every card. From then on,
+    // only labs that appear *after* baseline get the badge until visited.
+    seedBaseline(LABS.map((l) => l.slug));
+  }, []);
 
   const allTags = useMemo(() => {
     const counts = new Map<string, number>();
@@ -710,17 +727,20 @@ export default function LabsPage() {
           </div>
         ) : (
           <section className="lab-grid">
-            {filtered.map((l) =>
-              l.ready ? (
-                <Link key={l.slug} to={`/labs/${l.slug}` as never} className="lab-card">
-                  <LabCardContent lab={l} />
+            {filtered.map((l) => {
+              // seen is null until the client hook hydrates — treat that as
+              // "already seen" to avoid a flash of badges on page load.
+              const isNew = l.ready && seen != null && !seen.has(l.slug);
+              return l.ready ? (
+                <Link key={l.slug} to={`/labs/${l.slug}` as never} className={`lab-card ${isNew ? 'is-new' : ''}`}>
+                  <LabCardContent lab={l} isNew={isNew} />
                 </Link>
               ) : (
                 <div key={l.slug} className="lab-card soon">
-                  <LabCardContent lab={l} />
+                  <LabCardContent lab={l} isNew={false} />
                 </div>
-              ),
-            )}
+              );
+            })}
           </section>
         )}
 
@@ -740,11 +760,12 @@ export default function LabsPage() {
   );
 }
 
-function LabCardContent({ lab }: { lab: Lab }) {
+function LabCardContent({ lab, isNew }: { lab: Lab; isNew: boolean }) {
   return (
     <>
       <div className="lab-head">
         <span className="lab-tags">
+          {isNew ? <span className="lab-new">new</span> : null}
           {lab.tags.map((t) => (
             <span key={t} className="lab-tag">
               {t}
@@ -940,7 +961,7 @@ const CSS = `
     font-size: var(--fs-xs);
     color: var(--color-fg-faint);
   }
-  .lab-tags { display: flex; gap: 4px; }
+  .lab-tags { display: flex; gap: 4px; flex-wrap: wrap; }
   .lab-tag {
     padding: 1px 6px;
     border: 1px solid var(--color-accent-dim);
@@ -948,6 +969,17 @@ const CSS = `
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }
+  .lab-new {
+    padding: 1px 6px;
+    background: var(--color-accent);
+    color: var(--color-bg);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  .is-new { border-color: var(--color-accent-dim); }
+  .is-new .lab-name { color: var(--color-fg); }
   .lab-year { color: var(--color-fg-faint); }
 
   .lab-name {

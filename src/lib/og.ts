@@ -105,6 +105,7 @@ export type OgSlug =
   | 'lab/crime'
   | 'lab/mp'
   | 'lab/hygiene'
+  | 'lab/crypto'
   | 'lab/year-in-review';
 
 type OgEntry = {
@@ -205,6 +206,7 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/crime': { title: 'crime.', subtitle: 'every reported street crime within 1 mile of any uk postcode', glyph: '⌖', slug: '/labs/crime' },
   'lab/mp': { title: 'mp.', subtitle: 'postcode → your mp → their recent commons votes', glyph: '⚖', slug: '/labs/mp' },
   'lab/hygiene': { title: 'hygiene.', subtitle: 'food standards rating for any uk eatery', glyph: '✓', slug: '/labs/hygiene' },
+  'lab/crypto': { title: 'crypto.', subtitle: 'live top-50 crypto prices + 7-day sparklines from coingecko', glyph: '¤', slug: '/labs/crypto' },
   'lab/year-in-review': { title: 'year in review.', subtitle: 'bluesky wrapped from any account\'s car file', glyph: '★', slug: '/labs/year-in-review' },
 };
 
