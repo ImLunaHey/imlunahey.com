@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, Navigate, useParams } from '@tanstack/react-router';
 import { getPopfeedGames, getPopfeedWatches, type Watch } from '../server/popfeed';
+import PokedexPanel, { hasPokedex } from '../components/PokedexPanel';
 
 type Kind = 'watch' | 'game';
 
@@ -92,6 +93,10 @@ function ReviewContent({ item, backTo }: { item: Watch; backTo: string }) {
             <div className="body-label">── review</div>
             <p className="body-text">{item.text}</p>
           </section>
+        ) : null}
+
+        {kindLabel(item.kind) === 'game' && hasPokedex(item.title) ? (
+          <PokedexPanel title={item.title} rkey={item.rkey} />
         ) : null}
 
         <footer className="review-footer">
