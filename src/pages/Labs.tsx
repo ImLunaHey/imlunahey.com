@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router';
+import { useMemo, useState } from 'react';
 
 type Lab = {
   slug: string;
@@ -149,6 +150,270 @@ const LABS: Lab[] = [
     ready: true,
   },
   {
+    slug: 'bsky-composer',
+    title: 'bsky composer',
+    desc: 'draft a bluesky post with a live link-card preview. grapheme-accurate char count, facet highlights, previewable as any handle.',
+    tags: ['atproto', 'bluesky', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'fingerprint',
+    title: 'fingerprint',
+    desc: 'everything your browser silently tells every site. ua, canvas + webgl + audio hashes, fonts, ip/geo from cloudflare headers, entropy meter.',
+    tags: ['tool', 'privacy'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'whois',
+    title: 'whois',
+    desc: 'rdap-based domain lookup — registrar, registration & expiry dates, nameservers, status flags, dnssec. cached server-side.',
+    tags: ['tool', 'network'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'ids',
+    title: 'ids',
+    desc: 'generate uuid v4/v7, ulid, nanoid, tid, snowflake, cuid2. paste any id to decode its embedded timestamp and structure.',
+    tags: ['tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'unicode',
+    title: 'unicode',
+    desc: 'grapheme segmentation, per-codepoint labels, utf-8 byte counts, and every nfc/nfd/nfkc/nfkd normalization form side by side.',
+    tags: ['tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'handle-sniper',
+    title: 'handle sniper',
+    desc: 'check bluesky handle availability — checks your input plus common suffix variants. 404 from resolveHandle means nobody has it yet.',
+    tags: ['atproto', 'bluesky', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'did-log',
+    title: 'did log',
+    desc: 'full history of an atproto identity — handle changes, pds migrations, key rotations, all from plc.directory. rendered as a vertical timeline.',
+    tags: ['atproto', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'thread-tree',
+    title: 'thread tree',
+    desc: 'paste any bsky.app post url — renders the full conversation (ancestors + all replies, up to 10 levels) as an indented tree with likes, reposts, and reply counts.',
+    tags: ['atproto', 'bluesky', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'pds-health',
+    title: 'pds health',
+    desc: 'probe any atproto pds — describe/health/listrepos endpoints, response times, and operator metadata. ok/degraded/down verdict at a glance.',
+    tags: ['atproto', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'regex',
+    title: 'regex',
+    desc: 'live regex tester with highlight. presets for email/url/ipv4/uuid/date/hex color/at-uri. capture groups with ranges; all js regex flags.',
+    tags: ['tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'encode',
+    title: 'encode',
+    desc: 'base64 / base64url / url / html / hex / binary / rot13 / json-escape. bidirectional. utf-8 throughout. bottom panel compares every codec at once.',
+    tags: ['tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'diff',
+    title: 'diff',
+    desc: 'line-level diff between two blobs. lcs-based. split + unified views, whitespace toggle, +/− stats. colored exactly like github.',
+    tags: ['tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'lexicon-validator',
+    title: 'lexicon validator',
+    desc: 'paste any atproto record json, point at a lexicon nsid — get pass/fail with per-field violations. resolves schemas live via dns-over-https + plc.',
+    tags: ['atproto', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'firehose-stats',
+    title: 'firehose stats',
+    desc: 'live aggregate of the bluesky jetstream. events/sec, top collections, create/update/delete tallies — the whole network\'s writes summarized.',
+    tags: ['atproto', 'bluesky', 'live'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'dns',
+    title: 'dns',
+    desc: 'live dns lookup via mozilla dns-over-https. a, aaaa, txt, mx, cname, ns, soa, caa. includes the _atproto.handle.domain pattern bluesky uses.',
+    tags: ['network', 'atproto', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'json',
+    title: 'json',
+    desc: 'paste any json blob — collapsible tree with search, jsonpath copier, compact preview of closed branches. eats deeply nested records for breakfast.',
+    tags: ['tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'colour',
+    title: 'colour',
+    desc: 'type a colour in any format — hex, rgb, hsl, oklch, or a css name. see every other format, accessibility contrast, and live rgb/hsl sliders.',
+    tags: ['tool', 'css'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'timestamp',
+    title: 'timestamp',
+    desc: 'paste any date — unix s/ms, iso 8601, rfc 2822, whatever. get every format, day of week, iso week, relative time, and 8 timezones at once.',
+    tags: ['tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'matrix',
+    title: 'matrix',
+    desc: 'the canonical terminal effect. falling kana in phosphor green, amber, cyan, or magenta. choose charset: matrix, binary, hex, pokemon, atproto.',
+    tags: ['canvas', 'animation'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'terminal',
+    title: 'terminal',
+    desc: 'a fake shell for the site. cd /labs, ls, cat readme.txt, open /games. arrow-key history, neofetch, the whole thing.',
+    tags: ['tool', 'terminal'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'hash',
+    title: 'hash',
+    desc: 'md5, sha-1, sha-256, sha-384, sha-512 of any input, all at once. sha via subtlecrypto, md5 via js (subtlecrypto refuses). all client-side.',
+    tags: ['tool', 'crypto'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'case',
+    title: 'case',
+    desc: 'every case style at once — camel, pascal, snake, screaming, kebab, train, dot, path, sentence, title (with stopwords), spongecase, swap, inverse.',
+    tags: ['tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'password',
+    title: 'password',
+    desc: 'generate strong passwords in-browser via crypto.getRandomValues. length + charset toggles, live entropy meter with weak / ok / strong / insane grades.',
+    tags: ['tool', 'crypto'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'hex-dump',
+    title: 'hex dump',
+    desc: 'xxd-style hex + ascii dump of any bytes. input as plain text (utf-8), hex, or base64. choose 8/16/24/32 columns, control chars highlighted.',
+    tags: ['tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'ua',
+    title: 'ua',
+    desc: 'parse any user-agent string — browser, engine, os, device. pre-filled with your own ua. bot detection, presets for mainstream browsers.',
+    tags: ['tool', 'network'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'http-status',
+    title: 'http status',
+    desc: 'every http status code with a plain-english description and common causes. search + filter by category. tooltip link to http.cat.',
+    tags: ['tool', 'network'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'curl',
+    title: 'curl → fetch',
+    desc: 'paste a curl command, get fetch() + axios code. parses -X, -H, -d, -u, -L, --json, --form and more.',
+    tags: ['tool', 'network'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'csv',
+    title: 'csv',
+    desc: 'csv ↔ json. quoted fields, escaped quotes, alternate delimiters (, \\t ; |), type coercion, live table preview.',
+    tags: ['tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'subnet',
+    title: 'subnet',
+    desc: 'cidr → network, broadcast, first/last host, netmask, wildcard, class. bitwise breakdown showing network vs host portions.',
+    tags: ['tool', 'network'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'http-headers',
+    title: 'http headers',
+    desc: 'fetch any url server-side — see the redirect chain, every response header grouped by security / cors / cache / server, and a body preview.',
+    tags: ['tool', 'network'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'certs',
+    title: 'certs',
+    desc: 'every tls certificate ever issued for a domain, pulled from crt.sh ct logs. issuer, subject names, wildcard detection, expiry.',
+    tags: ['tool', 'network', 'crypto'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'schema',
+    title: 'schema',
+    desc: 'paste json — infer a json schema. detects date-time / email / uuid / uri / ipv4. merges heterogeneous arrays, marks required vs optional.',
+    tags: ['tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'year-in-review',
+    title: 'year in review',
+    desc: 'spotify-wrapped for bluesky. enter a handle, pick a year — fetches the full atproto repo car, parses it, surfaces posts / likes / follows / top hashtags / longest post.',
+    tags: ['atproto', 'bluesky', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
     slug: 'snake',
     title: 'snake',
     desc: 'arrow keys (or wasd), a green dot on a 24×16 grid, one life. paused by default.',
@@ -183,6 +448,34 @@ const LABS: Lab[] = [
 ];
 
 export default function LabsPage() {
+  const [query, setQuery] = useState('');
+  const [activeTag, setActiveTag] = useState<string>('all');
+  const [showUnready, setShowUnready] = useState(true);
+
+  const allTags = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const l of LABS) {
+      for (const t of l.tags) counts.set(t, (counts.get(t) ?? 0) + 1);
+    }
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return LABS.filter((l) => {
+      if (!showUnready && !l.ready) return false;
+      if (activeTag !== 'all' && !l.tags.includes(activeTag)) return false;
+      if (q) {
+        const hay = `${l.title} ${l.desc} ${l.tags.join(' ')}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [query, activeTag, showUnready]);
+
+  const clear = () => { setQuery(''); setActiveTag('all'); setShowUnready(true); };
+  const filtering = query !== '' || activeTag !== 'all' || !showUnready;
+
   return (
     <>
       <style>{CSS}</style>
@@ -205,22 +498,79 @@ export default function LabsPage() {
             <span>
               shipped <b>{LABS.filter((l) => l.ready).length}</b>
             </span>
+            <span>
+              tags <b>{allTags.length}</b>
+            </span>
           </div>
         </header>
 
-        <section className="lab-grid">
-          {LABS.map((l) =>
-            l.ready ? (
-              <Link key={l.slug} to={`/labs/${l.slug}` as never} className="lab-card">
-                <LabCardContent lab={l} />
-              </Link>
-            ) : (
-              <div key={l.slug} className="lab-card soon">
-                <LabCardContent lab={l} />
-              </div>
-            ),
-          )}
+        <section className="lab-filters">
+          <div className="lab-filter-row">
+            <div className="lab-search">
+              <span className="lab-search-icon">/</span>
+              <input
+                className="lab-search-input"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="filter by title, description, or tag…"
+                autoComplete="off"
+                spellCheck={false}
+              />
+              {query ? <button className="lab-search-clear" onClick={() => setQuery('')}>×</button> : null}
+            </div>
+            <label className="lab-check">
+              <input
+                type="checkbox"
+                checked={showUnready}
+                onChange={(e) => setShowUnready(e.target.checked)}
+              />
+              show unready
+            </label>
+          </div>
+          <div className="lab-tag-row">
+            <button
+              className={`lab-tag-chip ${activeTag === 'all' ? 'on' : ''}`}
+              onClick={() => setActiveTag('all')}
+            >
+              all <span className="ct">{LABS.length}</span>
+            </button>
+            {allTags.map(([tag, count]) => (
+              <button
+                key={tag}
+                className={`lab-tag-chip ${activeTag === tag ? 'on' : ''}`}
+                onClick={() => setActiveTag(tag)}
+              >
+                {tag} <span className="ct">{count}</span>
+              </button>
+            ))}
+          </div>
+          {filtering ? (
+            <div className="lab-filter-status">
+              showing <b>{filtered.length}</b> of {LABS.length}
+              <button className="lab-clear-btn" onClick={clear}>clear filters</button>
+            </div>
+          ) : null}
         </section>
+
+        {filtered.length === 0 ? (
+          <div className="lab-empty">
+            no labs match — try <button className="t-accent lab-clear-inline" onClick={clear}>clearing filters</button>.
+          </div>
+        ) : (
+          <section className="lab-grid">
+            {filtered.map((l) =>
+              l.ready ? (
+                <Link key={l.slug} to={`/labs/${l.slug}` as never} className="lab-card">
+                  <LabCardContent lab={l} />
+                </Link>
+              ) : (
+                <div key={l.slug} className="lab-card soon">
+                  <LabCardContent lab={l} />
+                </div>
+              ),
+            )}
+          </section>
+        )}
 
         <footer className="labs-footer">
           <span>
@@ -278,6 +628,131 @@ const CSS = `
   }
   .page-hd h1 .dot { color: var(--color-accent); text-shadow: 0 0 16px var(--accent-glow); }
   .page-hd .sub { color: var(--color-fg-dim); font-size: var(--fs-md); max-width: 58ch; margin-top: var(--sp-3); }
+
+  .lab-filters {
+    padding: var(--sp-4) 0 var(--sp-3);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+  }
+  .lab-filter-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    flex-wrap: wrap;
+  }
+  .lab-search {
+    flex: 1;
+    min-width: 220px;
+    display: inline-flex;
+    align-items: center;
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-border);
+  }
+  .lab-search-icon {
+    padding: 0 var(--sp-2) 0 var(--sp-3);
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-md);
+  }
+  .lab-search-input {
+    flex: 1;
+    background: transparent;
+    border: 0; outline: 0;
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    padding: 8px 0;
+  }
+  .lab-search-input::placeholder { color: var(--color-fg-faint); }
+  .lab-search-clear {
+    background: transparent;
+    border: 0;
+    color: var(--color-fg-faint);
+    cursor: pointer;
+    padding: 0 var(--sp-3);
+    font-size: var(--fs-md);
+    font-family: var(--font-mono);
+  }
+  .lab-search-clear:hover { color: var(--color-accent); }
+  .lab-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--color-fg-dim);
+    cursor: pointer;
+  }
+  .lab-check input { accent-color: var(--color-accent); }
+
+  .lab-tag-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .lab-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    color: var(--color-fg-dim);
+    border: 1px solid var(--color-border);
+    padding: 3px 9px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    text-transform: lowercase;
+  }
+  .lab-tag-chip:hover { color: var(--color-fg); border-color: var(--color-border-bright); }
+  .lab-tag-chip.on {
+    color: var(--color-accent);
+    border-color: var(--color-accent-dim);
+    background: color-mix(in oklch, var(--color-accent) 6%, transparent);
+  }
+  .lab-tag-chip .ct {
+    color: var(--color-fg-ghost);
+    font-size: 10px;
+  }
+  .lab-tag-chip.on .ct { color: var(--color-accent-dim); }
+
+  .lab-filter-status {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--color-fg-faint);
+  }
+  .lab-filter-status b { color: var(--color-accent); font-weight: 400; }
+  .lab-clear-btn, .lab-clear-inline {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-fg-dim);
+    padding: 2px 8px;
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+    text-transform: lowercase;
+  }
+  .lab-clear-inline {
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+  }
+  .lab-clear-btn:hover, .lab-clear-inline:hover { color: var(--color-accent); }
+
+  .lab-empty {
+    padding: var(--sp-10) var(--sp-4);
+    text-align: center;
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    border: 1px dashed var(--color-border);
+    margin-top: var(--sp-5);
+  }
   .page-hd .meta {
     display: flex; gap: var(--sp-6);
     margin-top: var(--sp-5);

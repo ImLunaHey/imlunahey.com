@@ -32,34 +32,69 @@ import { Route as MainBlogIndexRouteImport } from './routes/_main/blog/index'
 import { Route as MainWatchingRkeyRouteImport } from './routes/_main/watching/$rkey'
 import { Route as MainProjectsNameRouteImport } from './routes/_main/projects/$name'
 import { Route as MainLabsWordleRouteImport } from './routes/_main/labs/wordle'
+import { Route as MainLabsWhoisRouteImport } from './routes/_main/labs/whois'
 import { Route as MainLabsVerseRevealRouteImport } from './routes/_main/labs/verse-reveal'
+import { Route as MainLabsUnicodeRouteImport } from './routes/_main/labs/unicode'
+import { Route as MainLabsUaRouteImport } from './routes/_main/labs/ua'
 import { Route as MainLabsTypingRouteImport } from './routes/_main/labs/typing'
+import { Route as MainLabsTimestampRouteImport } from './routes/_main/labs/timestamp'
 import { Route as MainLabsTidRouteImport } from './routes/_main/labs/tid'
+import { Route as MainLabsThreadTreeRouteImport } from './routes/_main/labs/thread-tree'
+import { Route as MainLabsTerminalRouteImport } from './routes/_main/labs/terminal'
+import { Route as MainLabsSubnetRouteImport } from './routes/_main/labs/subnet'
 import { Route as MainLabsSnakeRouteImport } from './routes/_main/labs/snake'
 import { Route as MainLabsScreenshotMakerRouteImport } from './routes/_main/labs/screenshot-maker'
+import { Route as MainLabsSchemaRouteImport } from './routes/_main/labs/schema'
+import { Route as MainLabsRegexRouteImport } from './routes/_main/labs/regex'
+import { Route as MainLabsPdsHealthRouteImport } from './routes/_main/labs/pds-health'
 import { Route as MainLabsPdfUploaderRouteImport } from './routes/_main/labs/pdf-uploader'
+import { Route as MainLabsPasswordRouteImport } from './routes/_main/labs/password'
 import { Route as MainLabsPaletteRouteImport } from './routes/_main/labs/palette'
 import { Route as MainLabsOgPreviewRouteImport } from './routes/_main/labs/og-preview'
+import { Route as MainLabsMatrixRouteImport } from './routes/_main/labs/matrix'
 import { Route as MainLabsListCleanerRouteImport } from './routes/_main/labs/list-cleaner'
 import { Route as MainLabsLifeRouteImport } from './routes/_main/labs/life'
+import { Route as MainLabsLexiconValidatorRouteImport } from './routes/_main/labs/lexicon-validator'
 import { Route as MainLabsJwtRouteImport } from './routes/_main/labs/jwt'
+import { Route as MainLabsJsonRouteImport } from './routes/_main/labs/json'
 import { Route as MainLabsJetstreamRouteImport } from './routes/_main/labs/jetstream'
 import { Route as MainLabsInfiniteCanvasRouteImport } from './routes/_main/labs/infinite-canvas'
+import { Route as MainLabsIdsRouteImport } from './routes/_main/labs/ids'
+import { Route as MainLabsHttpStatusRouteImport } from './routes/_main/labs/http-status'
+import { Route as MainLabsHttpHeadersRouteImport } from './routes/_main/labs/http-headers'
+import { Route as MainLabsHexDumpRouteImport } from './routes/_main/labs/hex-dump'
+import { Route as MainLabsHashRouteImport } from './routes/_main/labs/hash'
+import { Route as MainLabsHandleSniperRouteImport } from './routes/_main/labs/handle-sniper'
+import { Route as MainLabsFirehoseStatsRouteImport } from './routes/_main/labs/firehose-stats'
+import { Route as MainLabsFingerprintRouteImport } from './routes/_main/labs/fingerprint'
+import { Route as MainLabsEncodeRouteImport } from './routes/_main/labs/encode'
+import { Route as MainLabsDnsRouteImport } from './routes/_main/labs/dns'
+import { Route as MainLabsDiffRouteImport } from './routes/_main/labs/diff'
+import { Route as MainLabsDidLogRouteImport } from './routes/_main/labs/did-log'
+import { Route as MainLabsCurlRouteImport } from './routes/_main/labs/curl'
+import { Route as MainLabsCsvRouteImport } from './routes/_main/labs/csv'
 import { Route as MainLabsCronRouteImport } from './routes/_main/labs/cron'
+import { Route as MainLabsColourRouteImport } from './routes/_main/labs/colour'
+import { Route as MainLabsCertsRouteImport } from './routes/_main/labs/certs'
+import { Route as MainLabsCaseRouteImport } from './routes/_main/labs/case'
+import { Route as MainLabsBskyComposerRouteImport } from './routes/_main/labs/bsky-composer'
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
+import { Route as MainLabsYearInReviewIndexRouteImport } from './routes/_main/labs/year-in-review/index'
 import { Route as MainLabsPlcLogIndexRouteImport } from './routes/_main/labs/plc-log/index'
 import { Route as MainLabsLexiconIndexRouteImport } from './routes/_main/labs/lexicon/index'
 import { Route as MainLabsFeedIndexRouteImport } from './routes/_main/labs/feed/index'
 import { Route as MainLabsCssBattlesIndexRouteImport } from './routes/_main/labs/css-battles/index'
 import { Route as MainLabsCarExplorerIndexRouteImport } from './routes/_main/labs/car-explorer/index'
 import { Route as MainLabsAtUriIndexRouteImport } from './routes/_main/labs/at-uri/index'
+import { Route as MainPokedexRkeyPokeIdRouteImport } from './routes/_main/pokedex/$rkey/$pokeId'
 import { Route as MainLabsPlcLogSplatRouteImport } from './routes/_main/labs/plc-log/$'
 import { Route as MainLabsLexiconNsidRouteImport } from './routes/_main/labs/lexicon/$nsid'
 import { Route as MainLabsFeedSplatRouteImport } from './routes/_main/labs/feed/$'
 import { Route as MainLabsCssBattlesDateRouteImport } from './routes/_main/labs/css-battles/$date'
 import { Route as MainLabsCarExplorerSplatRouteImport } from './routes/_main/labs/car-explorer/$'
 import { Route as MainLabsAtUriSplatRouteImport } from './routes/_main/labs/at-uri/$'
+import { Route as MainLabsYearInReviewHandleYearRouteImport } from './routes/_main/labs/year-in-review/$handle/$year'
 
 const MainRoute = MainRouteImport.update({
   id: '/_main',
@@ -175,9 +210,24 @@ const MainLabsWordleRoute = MainLabsWordleRouteImport.update({
   path: '/labs/wordle',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsWhoisRoute = MainLabsWhoisRouteImport.update({
+  id: '/labs/whois',
+  path: '/labs/whois',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsVerseRevealRoute = MainLabsVerseRevealRouteImport.update({
   id: '/labs/verse-reveal',
   path: '/labs/verse-reveal',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsUnicodeRoute = MainLabsUnicodeRouteImport.update({
+  id: '/labs/unicode',
+  path: '/labs/unicode',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsUaRoute = MainLabsUaRouteImport.update({
+  id: '/labs/ua',
+  path: '/labs/ua',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsTypingRoute = MainLabsTypingRouteImport.update({
@@ -185,9 +235,29 @@ const MainLabsTypingRoute = MainLabsTypingRouteImport.update({
   path: '/labs/typing',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsTimestampRoute = MainLabsTimestampRouteImport.update({
+  id: '/labs/timestamp',
+  path: '/labs/timestamp',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsTidRoute = MainLabsTidRouteImport.update({
   id: '/labs/tid',
   path: '/labs/tid',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsThreadTreeRoute = MainLabsThreadTreeRouteImport.update({
+  id: '/labs/thread-tree',
+  path: '/labs/thread-tree',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsTerminalRoute = MainLabsTerminalRouteImport.update({
+  id: '/labs/terminal',
+  path: '/labs/terminal',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsSubnetRoute = MainLabsSubnetRouteImport.update({
+  id: '/labs/subnet',
+  path: '/labs/subnet',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsSnakeRoute = MainLabsSnakeRouteImport.update({
@@ -200,9 +270,29 @@ const MainLabsScreenshotMakerRoute = MainLabsScreenshotMakerRouteImport.update({
   path: '/labs/screenshot-maker',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsSchemaRoute = MainLabsSchemaRouteImport.update({
+  id: '/labs/schema',
+  path: '/labs/schema',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsRegexRoute = MainLabsRegexRouteImport.update({
+  id: '/labs/regex',
+  path: '/labs/regex',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsPdsHealthRoute = MainLabsPdsHealthRouteImport.update({
+  id: '/labs/pds-health',
+  path: '/labs/pds-health',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsPdfUploaderRoute = MainLabsPdfUploaderRouteImport.update({
   id: '/labs/pdf-uploader',
   path: '/labs/pdf-uploader',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsPasswordRoute = MainLabsPasswordRouteImport.update({
+  id: '/labs/password',
+  path: '/labs/password',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsPaletteRoute = MainLabsPaletteRouteImport.update({
@@ -215,6 +305,11 @@ const MainLabsOgPreviewRoute = MainLabsOgPreviewRouteImport.update({
   path: '/labs/og-preview',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsMatrixRoute = MainLabsMatrixRouteImport.update({
+  id: '/labs/matrix',
+  path: '/labs/matrix',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsListCleanerRoute = MainLabsListCleanerRouteImport.update({
   id: '/labs/list-cleaner',
   path: '/labs/list-cleaner',
@@ -225,9 +320,20 @@ const MainLabsLifeRoute = MainLabsLifeRouteImport.update({
   path: '/labs/life',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsLexiconValidatorRoute =
+  MainLabsLexiconValidatorRouteImport.update({
+    id: '/labs/lexicon-validator',
+    path: '/labs/lexicon-validator',
+    getParentRoute: () => MainRoute,
+  } as any)
 const MainLabsJwtRoute = MainLabsJwtRouteImport.update({
   id: '/labs/jwt',
   path: '/labs/jwt',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsJsonRoute = MainLabsJsonRouteImport.update({
+  id: '/labs/json',
+  path: '/labs/json',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsJetstreamRoute = MainLabsJetstreamRouteImport.update({
@@ -240,9 +346,99 @@ const MainLabsInfiniteCanvasRoute = MainLabsInfiniteCanvasRouteImport.update({
   path: '/labs/infinite-canvas',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsIdsRoute = MainLabsIdsRouteImport.update({
+  id: '/labs/ids',
+  path: '/labs/ids',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsHttpStatusRoute = MainLabsHttpStatusRouteImport.update({
+  id: '/labs/http-status',
+  path: '/labs/http-status',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsHttpHeadersRoute = MainLabsHttpHeadersRouteImport.update({
+  id: '/labs/http-headers',
+  path: '/labs/http-headers',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsHexDumpRoute = MainLabsHexDumpRouteImport.update({
+  id: '/labs/hex-dump',
+  path: '/labs/hex-dump',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsHashRoute = MainLabsHashRouteImport.update({
+  id: '/labs/hash',
+  path: '/labs/hash',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsHandleSniperRoute = MainLabsHandleSniperRouteImport.update({
+  id: '/labs/handle-sniper',
+  path: '/labs/handle-sniper',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsFirehoseStatsRoute = MainLabsFirehoseStatsRouteImport.update({
+  id: '/labs/firehose-stats',
+  path: '/labs/firehose-stats',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsFingerprintRoute = MainLabsFingerprintRouteImport.update({
+  id: '/labs/fingerprint',
+  path: '/labs/fingerprint',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsEncodeRoute = MainLabsEncodeRouteImport.update({
+  id: '/labs/encode',
+  path: '/labs/encode',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsDnsRoute = MainLabsDnsRouteImport.update({
+  id: '/labs/dns',
+  path: '/labs/dns',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsDiffRoute = MainLabsDiffRouteImport.update({
+  id: '/labs/diff',
+  path: '/labs/diff',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsDidLogRoute = MainLabsDidLogRouteImport.update({
+  id: '/labs/did-log',
+  path: '/labs/did-log',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsCurlRoute = MainLabsCurlRouteImport.update({
+  id: '/labs/curl',
+  path: '/labs/curl',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsCsvRoute = MainLabsCsvRouteImport.update({
+  id: '/labs/csv',
+  path: '/labs/csv',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsCronRoute = MainLabsCronRouteImport.update({
   id: '/labs/cron',
   path: '/labs/cron',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsColourRoute = MainLabsColourRouteImport.update({
+  id: '/labs/colour',
+  path: '/labs/colour',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsCertsRoute = MainLabsCertsRouteImport.update({
+  id: '/labs/certs',
+  path: '/labs/certs',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsCaseRoute = MainLabsCaseRouteImport.update({
+  id: '/labs/case',
+  path: '/labs/case',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsBskyComposerRoute = MainLabsBskyComposerRouteImport.update({
+  id: '/labs/bsky-composer',
+  path: '/labs/bsky-composer',
   getParentRoute: () => MainRoute,
 } as any)
 const MainGamesRkeyRoute = MainGamesRkeyRouteImport.update({
@@ -255,6 +451,12 @@ const MainBlogRkeyRoute = MainBlogRkeyRouteImport.update({
   path: '/blog/$rkey',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsYearInReviewIndexRoute =
+  MainLabsYearInReviewIndexRouteImport.update({
+    id: '/labs/year-in-review/',
+    path: '/labs/year-in-review/',
+    getParentRoute: () => MainRoute,
+  } as any)
 const MainLabsPlcLogIndexRoute = MainLabsPlcLogIndexRouteImport.update({
   id: '/labs/plc-log/',
   path: '/labs/plc-log/',
@@ -284,6 +486,11 @@ const MainLabsCarExplorerIndexRoute =
 const MainLabsAtUriIndexRoute = MainLabsAtUriIndexRouteImport.update({
   id: '/labs/at-uri/',
   path: '/labs/at-uri/',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainPokedexRkeyPokeIdRoute = MainPokedexRkeyPokeIdRouteImport.update({
+  id: '/pokedex/$rkey/$pokeId',
+  path: '/pokedex/$rkey/$pokeId',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsPlcLogSplatRoute = MainLabsPlcLogSplatRouteImport.update({
@@ -317,6 +524,12 @@ const MainLabsAtUriSplatRoute = MainLabsAtUriSplatRouteImport.update({
   path: '/labs/at-uri/$',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsYearInReviewHandleYearRoute =
+  MainLabsYearInReviewHandleYearRouteImport.update({
+    id: '/labs/year-in-review/$handle/$year',
+    path: '/labs/year-in-review/$handle/$year',
+    getParentRoute: () => MainRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
@@ -335,20 +548,52 @@ export interface FileRoutesByFullPath {
   '/og/$': typeof OgSplatRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
+  '/labs/bsky-composer': typeof MainLabsBskyComposerRoute
+  '/labs/case': typeof MainLabsCaseRoute
+  '/labs/certs': typeof MainLabsCertsRoute
+  '/labs/colour': typeof MainLabsColourRoute
   '/labs/cron': typeof MainLabsCronRoute
+  '/labs/csv': typeof MainLabsCsvRoute
+  '/labs/curl': typeof MainLabsCurlRoute
+  '/labs/did-log': typeof MainLabsDidLogRoute
+  '/labs/diff': typeof MainLabsDiffRoute
+  '/labs/dns': typeof MainLabsDnsRoute
+  '/labs/encode': typeof MainLabsEncodeRoute
+  '/labs/fingerprint': typeof MainLabsFingerprintRoute
+  '/labs/firehose-stats': typeof MainLabsFirehoseStatsRoute
+  '/labs/handle-sniper': typeof MainLabsHandleSniperRoute
+  '/labs/hash': typeof MainLabsHashRoute
+  '/labs/hex-dump': typeof MainLabsHexDumpRoute
+  '/labs/http-headers': typeof MainLabsHttpHeadersRoute
+  '/labs/http-status': typeof MainLabsHttpStatusRoute
+  '/labs/ids': typeof MainLabsIdsRoute
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/labs/jetstream': typeof MainLabsJetstreamRoute
+  '/labs/json': typeof MainLabsJsonRoute
   '/labs/jwt': typeof MainLabsJwtRoute
+  '/labs/lexicon-validator': typeof MainLabsLexiconValidatorRoute
   '/labs/life': typeof MainLabsLifeRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
+  '/labs/matrix': typeof MainLabsMatrixRoute
   '/labs/og-preview': typeof MainLabsOgPreviewRoute
   '/labs/palette': typeof MainLabsPaletteRoute
+  '/labs/password': typeof MainLabsPasswordRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
+  '/labs/pds-health': typeof MainLabsPdsHealthRoute
+  '/labs/regex': typeof MainLabsRegexRoute
+  '/labs/schema': typeof MainLabsSchemaRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/labs/snake': typeof MainLabsSnakeRoute
+  '/labs/subnet': typeof MainLabsSubnetRoute
+  '/labs/terminal': typeof MainLabsTerminalRoute
+  '/labs/thread-tree': typeof MainLabsThreadTreeRoute
   '/labs/tid': typeof MainLabsTidRoute
+  '/labs/timestamp': typeof MainLabsTimestampRoute
   '/labs/typing': typeof MainLabsTypingRoute
+  '/labs/ua': typeof MainLabsUaRoute
+  '/labs/unicode': typeof MainLabsUnicodeRoute
   '/labs/verse-reveal': typeof MainLabsVerseRevealRoute
+  '/labs/whois': typeof MainLabsWhoisRoute
   '/labs/wordle': typeof MainLabsWordleRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
@@ -363,12 +608,15 @@ export interface FileRoutesByFullPath {
   '/labs/feed/$': typeof MainLabsFeedSplatRoute
   '/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
   '/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
+  '/pokedex/$rkey/$pokeId': typeof MainPokedexRkeyPokeIdRoute
   '/labs/at-uri/': typeof MainLabsAtUriIndexRoute
   '/labs/car-explorer/': typeof MainLabsCarExplorerIndexRoute
   '/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
   '/labs/feed/': typeof MainLabsFeedIndexRoute
   '/labs/lexicon/': typeof MainLabsLexiconIndexRoute
   '/labs/plc-log/': typeof MainLabsPlcLogIndexRoute
+  '/labs/year-in-review/': typeof MainLabsYearInReviewIndexRoute
+  '/labs/year-in-review/$handle/$year': typeof MainLabsYearInReviewHandleYearRoute
 }
 export interface FileRoutesByTo {
   '/ai': typeof MainAiRoute
@@ -387,20 +635,52 @@ export interface FileRoutesByTo {
   '/': typeof MainIndexRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
+  '/labs/bsky-composer': typeof MainLabsBskyComposerRoute
+  '/labs/case': typeof MainLabsCaseRoute
+  '/labs/certs': typeof MainLabsCertsRoute
+  '/labs/colour': typeof MainLabsColourRoute
   '/labs/cron': typeof MainLabsCronRoute
+  '/labs/csv': typeof MainLabsCsvRoute
+  '/labs/curl': typeof MainLabsCurlRoute
+  '/labs/did-log': typeof MainLabsDidLogRoute
+  '/labs/diff': typeof MainLabsDiffRoute
+  '/labs/dns': typeof MainLabsDnsRoute
+  '/labs/encode': typeof MainLabsEncodeRoute
+  '/labs/fingerprint': typeof MainLabsFingerprintRoute
+  '/labs/firehose-stats': typeof MainLabsFirehoseStatsRoute
+  '/labs/handle-sniper': typeof MainLabsHandleSniperRoute
+  '/labs/hash': typeof MainLabsHashRoute
+  '/labs/hex-dump': typeof MainLabsHexDumpRoute
+  '/labs/http-headers': typeof MainLabsHttpHeadersRoute
+  '/labs/http-status': typeof MainLabsHttpStatusRoute
+  '/labs/ids': typeof MainLabsIdsRoute
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/labs/jetstream': typeof MainLabsJetstreamRoute
+  '/labs/json': typeof MainLabsJsonRoute
   '/labs/jwt': typeof MainLabsJwtRoute
+  '/labs/lexicon-validator': typeof MainLabsLexiconValidatorRoute
   '/labs/life': typeof MainLabsLifeRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
+  '/labs/matrix': typeof MainLabsMatrixRoute
   '/labs/og-preview': typeof MainLabsOgPreviewRoute
   '/labs/palette': typeof MainLabsPaletteRoute
+  '/labs/password': typeof MainLabsPasswordRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
+  '/labs/pds-health': typeof MainLabsPdsHealthRoute
+  '/labs/regex': typeof MainLabsRegexRoute
+  '/labs/schema': typeof MainLabsSchemaRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/labs/snake': typeof MainLabsSnakeRoute
+  '/labs/subnet': typeof MainLabsSubnetRoute
+  '/labs/terminal': typeof MainLabsTerminalRoute
+  '/labs/thread-tree': typeof MainLabsThreadTreeRoute
   '/labs/tid': typeof MainLabsTidRoute
+  '/labs/timestamp': typeof MainLabsTimestampRoute
   '/labs/typing': typeof MainLabsTypingRoute
+  '/labs/ua': typeof MainLabsUaRoute
+  '/labs/unicode': typeof MainLabsUnicodeRoute
   '/labs/verse-reveal': typeof MainLabsVerseRevealRoute
+  '/labs/whois': typeof MainLabsWhoisRoute
   '/labs/wordle': typeof MainLabsWordleRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
@@ -415,12 +695,15 @@ export interface FileRoutesByTo {
   '/labs/feed/$': typeof MainLabsFeedSplatRoute
   '/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
   '/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
+  '/pokedex/$rkey/$pokeId': typeof MainPokedexRkeyPokeIdRoute
   '/labs/at-uri': typeof MainLabsAtUriIndexRoute
   '/labs/car-explorer': typeof MainLabsCarExplorerIndexRoute
   '/labs/css-battles': typeof MainLabsCssBattlesIndexRoute
   '/labs/feed': typeof MainLabsFeedIndexRoute
   '/labs/lexicon': typeof MainLabsLexiconIndexRoute
   '/labs/plc-log': typeof MainLabsPlcLogIndexRoute
+  '/labs/year-in-review': typeof MainLabsYearInReviewIndexRoute
+  '/labs/year-in-review/$handle/$year': typeof MainLabsYearInReviewHandleYearRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -441,20 +724,52 @@ export interface FileRoutesById {
   '/_main/': typeof MainIndexRoute
   '/_main/blog/$rkey': typeof MainBlogRkeyRoute
   '/_main/games/$rkey': typeof MainGamesRkeyRoute
+  '/_main/labs/bsky-composer': typeof MainLabsBskyComposerRoute
+  '/_main/labs/case': typeof MainLabsCaseRoute
+  '/_main/labs/certs': typeof MainLabsCertsRoute
+  '/_main/labs/colour': typeof MainLabsColourRoute
   '/_main/labs/cron': typeof MainLabsCronRoute
+  '/_main/labs/csv': typeof MainLabsCsvRoute
+  '/_main/labs/curl': typeof MainLabsCurlRoute
+  '/_main/labs/did-log': typeof MainLabsDidLogRoute
+  '/_main/labs/diff': typeof MainLabsDiffRoute
+  '/_main/labs/dns': typeof MainLabsDnsRoute
+  '/_main/labs/encode': typeof MainLabsEncodeRoute
+  '/_main/labs/fingerprint': typeof MainLabsFingerprintRoute
+  '/_main/labs/firehose-stats': typeof MainLabsFirehoseStatsRoute
+  '/_main/labs/handle-sniper': typeof MainLabsHandleSniperRoute
+  '/_main/labs/hash': typeof MainLabsHashRoute
+  '/_main/labs/hex-dump': typeof MainLabsHexDumpRoute
+  '/_main/labs/http-headers': typeof MainLabsHttpHeadersRoute
+  '/_main/labs/http-status': typeof MainLabsHttpStatusRoute
+  '/_main/labs/ids': typeof MainLabsIdsRoute
   '/_main/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/_main/labs/jetstream': typeof MainLabsJetstreamRoute
+  '/_main/labs/json': typeof MainLabsJsonRoute
   '/_main/labs/jwt': typeof MainLabsJwtRoute
+  '/_main/labs/lexicon-validator': typeof MainLabsLexiconValidatorRoute
   '/_main/labs/life': typeof MainLabsLifeRoute
   '/_main/labs/list-cleaner': typeof MainLabsListCleanerRoute
+  '/_main/labs/matrix': typeof MainLabsMatrixRoute
   '/_main/labs/og-preview': typeof MainLabsOgPreviewRoute
   '/_main/labs/palette': typeof MainLabsPaletteRoute
+  '/_main/labs/password': typeof MainLabsPasswordRoute
   '/_main/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
+  '/_main/labs/pds-health': typeof MainLabsPdsHealthRoute
+  '/_main/labs/regex': typeof MainLabsRegexRoute
+  '/_main/labs/schema': typeof MainLabsSchemaRoute
   '/_main/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/_main/labs/snake': typeof MainLabsSnakeRoute
+  '/_main/labs/subnet': typeof MainLabsSubnetRoute
+  '/_main/labs/terminal': typeof MainLabsTerminalRoute
+  '/_main/labs/thread-tree': typeof MainLabsThreadTreeRoute
   '/_main/labs/tid': typeof MainLabsTidRoute
+  '/_main/labs/timestamp': typeof MainLabsTimestampRoute
   '/_main/labs/typing': typeof MainLabsTypingRoute
+  '/_main/labs/ua': typeof MainLabsUaRoute
+  '/_main/labs/unicode': typeof MainLabsUnicodeRoute
   '/_main/labs/verse-reveal': typeof MainLabsVerseRevealRoute
+  '/_main/labs/whois': typeof MainLabsWhoisRoute
   '/_main/labs/wordle': typeof MainLabsWordleRoute
   '/_main/projects/$name': typeof MainProjectsNameRoute
   '/_main/watching/$rkey': typeof MainWatchingRkeyRoute
@@ -469,12 +784,15 @@ export interface FileRoutesById {
   '/_main/labs/feed/$': typeof MainLabsFeedSplatRoute
   '/_main/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
   '/_main/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
+  '/_main/pokedex/$rkey/$pokeId': typeof MainPokedexRkeyPokeIdRoute
   '/_main/labs/at-uri/': typeof MainLabsAtUriIndexRoute
   '/_main/labs/car-explorer/': typeof MainLabsCarExplorerIndexRoute
   '/_main/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
   '/_main/labs/feed/': typeof MainLabsFeedIndexRoute
   '/_main/labs/lexicon/': typeof MainLabsLexiconIndexRoute
   '/_main/labs/plc-log/': typeof MainLabsPlcLogIndexRoute
+  '/_main/labs/year-in-review/': typeof MainLabsYearInReviewIndexRoute
+  '/_main/labs/year-in-review/$handle/$year': typeof MainLabsYearInReviewHandleYearRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -495,20 +813,52 @@ export interface FileRouteTypes {
     | '/og/$'
     | '/blog/$rkey'
     | '/games/$rkey'
+    | '/labs/bsky-composer'
+    | '/labs/case'
+    | '/labs/certs'
+    | '/labs/colour'
     | '/labs/cron'
+    | '/labs/csv'
+    | '/labs/curl'
+    | '/labs/did-log'
+    | '/labs/diff'
+    | '/labs/dns'
+    | '/labs/encode'
+    | '/labs/fingerprint'
+    | '/labs/firehose-stats'
+    | '/labs/handle-sniper'
+    | '/labs/hash'
+    | '/labs/hex-dump'
+    | '/labs/http-headers'
+    | '/labs/http-status'
+    | '/labs/ids'
     | '/labs/infinite-canvas'
     | '/labs/jetstream'
+    | '/labs/json'
     | '/labs/jwt'
+    | '/labs/lexicon-validator'
     | '/labs/life'
     | '/labs/list-cleaner'
+    | '/labs/matrix'
     | '/labs/og-preview'
     | '/labs/palette'
+    | '/labs/password'
     | '/labs/pdf-uploader'
+    | '/labs/pds-health'
+    | '/labs/regex'
+    | '/labs/schema'
     | '/labs/screenshot-maker'
     | '/labs/snake'
+    | '/labs/subnet'
+    | '/labs/terminal'
+    | '/labs/thread-tree'
     | '/labs/tid'
+    | '/labs/timestamp'
     | '/labs/typing'
+    | '/labs/ua'
+    | '/labs/unicode'
     | '/labs/verse-reveal'
+    | '/labs/whois'
     | '/labs/wordle'
     | '/projects/$name'
     | '/watching/$rkey'
@@ -523,12 +873,15 @@ export interface FileRouteTypes {
     | '/labs/feed/$'
     | '/labs/lexicon/$nsid'
     | '/labs/plc-log/$'
+    | '/pokedex/$rkey/$pokeId'
     | '/labs/at-uri/'
     | '/labs/car-explorer/'
     | '/labs/css-battles/'
     | '/labs/feed/'
     | '/labs/lexicon/'
     | '/labs/plc-log/'
+    | '/labs/year-in-review/'
+    | '/labs/year-in-review/$handle/$year'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/ai'
@@ -547,20 +900,52 @@ export interface FileRouteTypes {
     | '/'
     | '/blog/$rkey'
     | '/games/$rkey'
+    | '/labs/bsky-composer'
+    | '/labs/case'
+    | '/labs/certs'
+    | '/labs/colour'
     | '/labs/cron'
+    | '/labs/csv'
+    | '/labs/curl'
+    | '/labs/did-log'
+    | '/labs/diff'
+    | '/labs/dns'
+    | '/labs/encode'
+    | '/labs/fingerprint'
+    | '/labs/firehose-stats'
+    | '/labs/handle-sniper'
+    | '/labs/hash'
+    | '/labs/hex-dump'
+    | '/labs/http-headers'
+    | '/labs/http-status'
+    | '/labs/ids'
     | '/labs/infinite-canvas'
     | '/labs/jetstream'
+    | '/labs/json'
     | '/labs/jwt'
+    | '/labs/lexicon-validator'
     | '/labs/life'
     | '/labs/list-cleaner'
+    | '/labs/matrix'
     | '/labs/og-preview'
     | '/labs/palette'
+    | '/labs/password'
     | '/labs/pdf-uploader'
+    | '/labs/pds-health'
+    | '/labs/regex'
+    | '/labs/schema'
     | '/labs/screenshot-maker'
     | '/labs/snake'
+    | '/labs/subnet'
+    | '/labs/terminal'
+    | '/labs/thread-tree'
     | '/labs/tid'
+    | '/labs/timestamp'
     | '/labs/typing'
+    | '/labs/ua'
+    | '/labs/unicode'
     | '/labs/verse-reveal'
+    | '/labs/whois'
     | '/labs/wordle'
     | '/projects/$name'
     | '/watching/$rkey'
@@ -575,12 +960,15 @@ export interface FileRouteTypes {
     | '/labs/feed/$'
     | '/labs/lexicon/$nsid'
     | '/labs/plc-log/$'
+    | '/pokedex/$rkey/$pokeId'
     | '/labs/at-uri'
     | '/labs/car-explorer'
     | '/labs/css-battles'
     | '/labs/feed'
     | '/labs/lexicon'
     | '/labs/plc-log'
+    | '/labs/year-in-review'
+    | '/labs/year-in-review/$handle/$year'
   id:
     | '__root__'
     | '/_main'
@@ -600,20 +988,52 @@ export interface FileRouteTypes {
     | '/_main/'
     | '/_main/blog/$rkey'
     | '/_main/games/$rkey'
+    | '/_main/labs/bsky-composer'
+    | '/_main/labs/case'
+    | '/_main/labs/certs'
+    | '/_main/labs/colour'
     | '/_main/labs/cron'
+    | '/_main/labs/csv'
+    | '/_main/labs/curl'
+    | '/_main/labs/did-log'
+    | '/_main/labs/diff'
+    | '/_main/labs/dns'
+    | '/_main/labs/encode'
+    | '/_main/labs/fingerprint'
+    | '/_main/labs/firehose-stats'
+    | '/_main/labs/handle-sniper'
+    | '/_main/labs/hash'
+    | '/_main/labs/hex-dump'
+    | '/_main/labs/http-headers'
+    | '/_main/labs/http-status'
+    | '/_main/labs/ids'
     | '/_main/labs/infinite-canvas'
     | '/_main/labs/jetstream'
+    | '/_main/labs/json'
     | '/_main/labs/jwt'
+    | '/_main/labs/lexicon-validator'
     | '/_main/labs/life'
     | '/_main/labs/list-cleaner'
+    | '/_main/labs/matrix'
     | '/_main/labs/og-preview'
     | '/_main/labs/palette'
+    | '/_main/labs/password'
     | '/_main/labs/pdf-uploader'
+    | '/_main/labs/pds-health'
+    | '/_main/labs/regex'
+    | '/_main/labs/schema'
     | '/_main/labs/screenshot-maker'
     | '/_main/labs/snake'
+    | '/_main/labs/subnet'
+    | '/_main/labs/terminal'
+    | '/_main/labs/thread-tree'
     | '/_main/labs/tid'
+    | '/_main/labs/timestamp'
     | '/_main/labs/typing'
+    | '/_main/labs/ua'
+    | '/_main/labs/unicode'
     | '/_main/labs/verse-reveal'
+    | '/_main/labs/whois'
     | '/_main/labs/wordle'
     | '/_main/projects/$name'
     | '/_main/watching/$rkey'
@@ -628,12 +1048,15 @@ export interface FileRouteTypes {
     | '/_main/labs/feed/$'
     | '/_main/labs/lexicon/$nsid'
     | '/_main/labs/plc-log/$'
+    | '/_main/pokedex/$rkey/$pokeId'
     | '/_main/labs/at-uri/'
     | '/_main/labs/car-explorer/'
     | '/_main/labs/css-battles/'
     | '/_main/labs/feed/'
     | '/_main/labs/lexicon/'
     | '/_main/labs/plc-log/'
+    | '/_main/labs/year-in-review/'
+    | '/_main/labs/year-in-review/$handle/$year'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -805,11 +1228,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsWordleRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/whois': {
+      id: '/_main/labs/whois'
+      path: '/labs/whois'
+      fullPath: '/labs/whois'
+      preLoaderRoute: typeof MainLabsWhoisRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/verse-reveal': {
       id: '/_main/labs/verse-reveal'
       path: '/labs/verse-reveal'
       fullPath: '/labs/verse-reveal'
       preLoaderRoute: typeof MainLabsVerseRevealRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/unicode': {
+      id: '/_main/labs/unicode'
+      path: '/labs/unicode'
+      fullPath: '/labs/unicode'
+      preLoaderRoute: typeof MainLabsUnicodeRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/ua': {
+      id: '/_main/labs/ua'
+      path: '/labs/ua'
+      fullPath: '/labs/ua'
+      preLoaderRoute: typeof MainLabsUaRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/typing': {
@@ -819,11 +1263,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsTypingRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/timestamp': {
+      id: '/_main/labs/timestamp'
+      path: '/labs/timestamp'
+      fullPath: '/labs/timestamp'
+      preLoaderRoute: typeof MainLabsTimestampRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/tid': {
       id: '/_main/labs/tid'
       path: '/labs/tid'
       fullPath: '/labs/tid'
       preLoaderRoute: typeof MainLabsTidRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/thread-tree': {
+      id: '/_main/labs/thread-tree'
+      path: '/labs/thread-tree'
+      fullPath: '/labs/thread-tree'
+      preLoaderRoute: typeof MainLabsThreadTreeRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/terminal': {
+      id: '/_main/labs/terminal'
+      path: '/labs/terminal'
+      fullPath: '/labs/terminal'
+      preLoaderRoute: typeof MainLabsTerminalRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/subnet': {
+      id: '/_main/labs/subnet'
+      path: '/labs/subnet'
+      fullPath: '/labs/subnet'
+      preLoaderRoute: typeof MainLabsSubnetRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/snake': {
@@ -840,11 +1312,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsScreenshotMakerRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/schema': {
+      id: '/_main/labs/schema'
+      path: '/labs/schema'
+      fullPath: '/labs/schema'
+      preLoaderRoute: typeof MainLabsSchemaRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/regex': {
+      id: '/_main/labs/regex'
+      path: '/labs/regex'
+      fullPath: '/labs/regex'
+      preLoaderRoute: typeof MainLabsRegexRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/pds-health': {
+      id: '/_main/labs/pds-health'
+      path: '/labs/pds-health'
+      fullPath: '/labs/pds-health'
+      preLoaderRoute: typeof MainLabsPdsHealthRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/pdf-uploader': {
       id: '/_main/labs/pdf-uploader'
       path: '/labs/pdf-uploader'
       fullPath: '/labs/pdf-uploader'
       preLoaderRoute: typeof MainLabsPdfUploaderRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/password': {
+      id: '/_main/labs/password'
+      path: '/labs/password'
+      fullPath: '/labs/password'
+      preLoaderRoute: typeof MainLabsPasswordRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/palette': {
@@ -861,6 +1361,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsOgPreviewRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/matrix': {
+      id: '/_main/labs/matrix'
+      path: '/labs/matrix'
+      fullPath: '/labs/matrix'
+      preLoaderRoute: typeof MainLabsMatrixRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/list-cleaner': {
       id: '/_main/labs/list-cleaner'
       path: '/labs/list-cleaner'
@@ -875,11 +1382,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsLifeRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/lexicon-validator': {
+      id: '/_main/labs/lexicon-validator'
+      path: '/labs/lexicon-validator'
+      fullPath: '/labs/lexicon-validator'
+      preLoaderRoute: typeof MainLabsLexiconValidatorRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/jwt': {
       id: '/_main/labs/jwt'
       path: '/labs/jwt'
       fullPath: '/labs/jwt'
       preLoaderRoute: typeof MainLabsJwtRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/json': {
+      id: '/_main/labs/json'
+      path: '/labs/json'
+      fullPath: '/labs/json'
+      preLoaderRoute: typeof MainLabsJsonRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/jetstream': {
@@ -896,11 +1417,137 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsInfiniteCanvasRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/ids': {
+      id: '/_main/labs/ids'
+      path: '/labs/ids'
+      fullPath: '/labs/ids'
+      preLoaderRoute: typeof MainLabsIdsRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/http-status': {
+      id: '/_main/labs/http-status'
+      path: '/labs/http-status'
+      fullPath: '/labs/http-status'
+      preLoaderRoute: typeof MainLabsHttpStatusRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/http-headers': {
+      id: '/_main/labs/http-headers'
+      path: '/labs/http-headers'
+      fullPath: '/labs/http-headers'
+      preLoaderRoute: typeof MainLabsHttpHeadersRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/hex-dump': {
+      id: '/_main/labs/hex-dump'
+      path: '/labs/hex-dump'
+      fullPath: '/labs/hex-dump'
+      preLoaderRoute: typeof MainLabsHexDumpRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/hash': {
+      id: '/_main/labs/hash'
+      path: '/labs/hash'
+      fullPath: '/labs/hash'
+      preLoaderRoute: typeof MainLabsHashRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/handle-sniper': {
+      id: '/_main/labs/handle-sniper'
+      path: '/labs/handle-sniper'
+      fullPath: '/labs/handle-sniper'
+      preLoaderRoute: typeof MainLabsHandleSniperRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/firehose-stats': {
+      id: '/_main/labs/firehose-stats'
+      path: '/labs/firehose-stats'
+      fullPath: '/labs/firehose-stats'
+      preLoaderRoute: typeof MainLabsFirehoseStatsRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/fingerprint': {
+      id: '/_main/labs/fingerprint'
+      path: '/labs/fingerprint'
+      fullPath: '/labs/fingerprint'
+      preLoaderRoute: typeof MainLabsFingerprintRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/encode': {
+      id: '/_main/labs/encode'
+      path: '/labs/encode'
+      fullPath: '/labs/encode'
+      preLoaderRoute: typeof MainLabsEncodeRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/dns': {
+      id: '/_main/labs/dns'
+      path: '/labs/dns'
+      fullPath: '/labs/dns'
+      preLoaderRoute: typeof MainLabsDnsRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/diff': {
+      id: '/_main/labs/diff'
+      path: '/labs/diff'
+      fullPath: '/labs/diff'
+      preLoaderRoute: typeof MainLabsDiffRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/did-log': {
+      id: '/_main/labs/did-log'
+      path: '/labs/did-log'
+      fullPath: '/labs/did-log'
+      preLoaderRoute: typeof MainLabsDidLogRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/curl': {
+      id: '/_main/labs/curl'
+      path: '/labs/curl'
+      fullPath: '/labs/curl'
+      preLoaderRoute: typeof MainLabsCurlRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/csv': {
+      id: '/_main/labs/csv'
+      path: '/labs/csv'
+      fullPath: '/labs/csv'
+      preLoaderRoute: typeof MainLabsCsvRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/cron': {
       id: '/_main/labs/cron'
       path: '/labs/cron'
       fullPath: '/labs/cron'
       preLoaderRoute: typeof MainLabsCronRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/colour': {
+      id: '/_main/labs/colour'
+      path: '/labs/colour'
+      fullPath: '/labs/colour'
+      preLoaderRoute: typeof MainLabsColourRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/certs': {
+      id: '/_main/labs/certs'
+      path: '/labs/certs'
+      fullPath: '/labs/certs'
+      preLoaderRoute: typeof MainLabsCertsRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/case': {
+      id: '/_main/labs/case'
+      path: '/labs/case'
+      fullPath: '/labs/case'
+      preLoaderRoute: typeof MainLabsCaseRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/bsky-composer': {
+      id: '/_main/labs/bsky-composer'
+      path: '/labs/bsky-composer'
+      fullPath: '/labs/bsky-composer'
+      preLoaderRoute: typeof MainLabsBskyComposerRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/games/$rkey': {
@@ -915,6 +1562,13 @@ declare module '@tanstack/react-router' {
       path: '/blog/$rkey'
       fullPath: '/blog/$rkey'
       preLoaderRoute: typeof MainBlogRkeyRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/year-in-review/': {
+      id: '/_main/labs/year-in-review/'
+      path: '/labs/year-in-review'
+      fullPath: '/labs/year-in-review/'
+      preLoaderRoute: typeof MainLabsYearInReviewIndexRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/plc-log/': {
@@ -959,6 +1613,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsAtUriIndexRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/pokedex/$rkey/$pokeId': {
+      id: '/_main/pokedex/$rkey/$pokeId'
+      path: '/pokedex/$rkey/$pokeId'
+      fullPath: '/pokedex/$rkey/$pokeId'
+      preLoaderRoute: typeof MainPokedexRkeyPokeIdRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/plc-log/$': {
       id: '/_main/labs/plc-log/$'
       path: '/labs/plc-log/$'
@@ -1001,6 +1662,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsAtUriSplatRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/year-in-review/$handle/$year': {
+      id: '/_main/labs/year-in-review/$handle/$year'
+      path: '/labs/year-in-review/$handle/$year'
+      fullPath: '/labs/year-in-review/$handle/$year'
+      preLoaderRoute: typeof MainLabsYearInReviewHandleYearRouteImport
+      parentRoute: typeof MainRoute
+    }
   }
 }
 
@@ -1019,20 +1687,52 @@ interface MainRouteChildren {
   MainIndexRoute: typeof MainIndexRoute
   MainBlogRkeyRoute: typeof MainBlogRkeyRoute
   MainGamesRkeyRoute: typeof MainGamesRkeyRoute
+  MainLabsBskyComposerRoute: typeof MainLabsBskyComposerRoute
+  MainLabsCaseRoute: typeof MainLabsCaseRoute
+  MainLabsCertsRoute: typeof MainLabsCertsRoute
+  MainLabsColourRoute: typeof MainLabsColourRoute
   MainLabsCronRoute: typeof MainLabsCronRoute
+  MainLabsCsvRoute: typeof MainLabsCsvRoute
+  MainLabsCurlRoute: typeof MainLabsCurlRoute
+  MainLabsDidLogRoute: typeof MainLabsDidLogRoute
+  MainLabsDiffRoute: typeof MainLabsDiffRoute
+  MainLabsDnsRoute: typeof MainLabsDnsRoute
+  MainLabsEncodeRoute: typeof MainLabsEncodeRoute
+  MainLabsFingerprintRoute: typeof MainLabsFingerprintRoute
+  MainLabsFirehoseStatsRoute: typeof MainLabsFirehoseStatsRoute
+  MainLabsHandleSniperRoute: typeof MainLabsHandleSniperRoute
+  MainLabsHashRoute: typeof MainLabsHashRoute
+  MainLabsHexDumpRoute: typeof MainLabsHexDumpRoute
+  MainLabsHttpHeadersRoute: typeof MainLabsHttpHeadersRoute
+  MainLabsHttpStatusRoute: typeof MainLabsHttpStatusRoute
+  MainLabsIdsRoute: typeof MainLabsIdsRoute
   MainLabsInfiniteCanvasRoute: typeof MainLabsInfiniteCanvasRoute
   MainLabsJetstreamRoute: typeof MainLabsJetstreamRoute
+  MainLabsJsonRoute: typeof MainLabsJsonRoute
   MainLabsJwtRoute: typeof MainLabsJwtRoute
+  MainLabsLexiconValidatorRoute: typeof MainLabsLexiconValidatorRoute
   MainLabsLifeRoute: typeof MainLabsLifeRoute
   MainLabsListCleanerRoute: typeof MainLabsListCleanerRoute
+  MainLabsMatrixRoute: typeof MainLabsMatrixRoute
   MainLabsOgPreviewRoute: typeof MainLabsOgPreviewRoute
   MainLabsPaletteRoute: typeof MainLabsPaletteRoute
+  MainLabsPasswordRoute: typeof MainLabsPasswordRoute
   MainLabsPdfUploaderRoute: typeof MainLabsPdfUploaderRoute
+  MainLabsPdsHealthRoute: typeof MainLabsPdsHealthRoute
+  MainLabsRegexRoute: typeof MainLabsRegexRoute
+  MainLabsSchemaRoute: typeof MainLabsSchemaRoute
   MainLabsScreenshotMakerRoute: typeof MainLabsScreenshotMakerRoute
   MainLabsSnakeRoute: typeof MainLabsSnakeRoute
+  MainLabsSubnetRoute: typeof MainLabsSubnetRoute
+  MainLabsTerminalRoute: typeof MainLabsTerminalRoute
+  MainLabsThreadTreeRoute: typeof MainLabsThreadTreeRoute
   MainLabsTidRoute: typeof MainLabsTidRoute
+  MainLabsTimestampRoute: typeof MainLabsTimestampRoute
   MainLabsTypingRoute: typeof MainLabsTypingRoute
+  MainLabsUaRoute: typeof MainLabsUaRoute
+  MainLabsUnicodeRoute: typeof MainLabsUnicodeRoute
   MainLabsVerseRevealRoute: typeof MainLabsVerseRevealRoute
+  MainLabsWhoisRoute: typeof MainLabsWhoisRoute
   MainLabsWordleRoute: typeof MainLabsWordleRoute
   MainProjectsNameRoute: typeof MainProjectsNameRoute
   MainWatchingRkeyRoute: typeof MainWatchingRkeyRoute
@@ -1047,12 +1747,15 @@ interface MainRouteChildren {
   MainLabsFeedSplatRoute: typeof MainLabsFeedSplatRoute
   MainLabsLexiconNsidRoute: typeof MainLabsLexiconNsidRoute
   MainLabsPlcLogSplatRoute: typeof MainLabsPlcLogSplatRoute
+  MainPokedexRkeyPokeIdRoute: typeof MainPokedexRkeyPokeIdRoute
   MainLabsAtUriIndexRoute: typeof MainLabsAtUriIndexRoute
   MainLabsCarExplorerIndexRoute: typeof MainLabsCarExplorerIndexRoute
   MainLabsCssBattlesIndexRoute: typeof MainLabsCssBattlesIndexRoute
   MainLabsFeedIndexRoute: typeof MainLabsFeedIndexRoute
   MainLabsLexiconIndexRoute: typeof MainLabsLexiconIndexRoute
   MainLabsPlcLogIndexRoute: typeof MainLabsPlcLogIndexRoute
+  MainLabsYearInReviewIndexRoute: typeof MainLabsYearInReviewIndexRoute
+  MainLabsYearInReviewHandleYearRoute: typeof MainLabsYearInReviewHandleYearRoute
 }
 
 const MainRouteChildren: MainRouteChildren = {
@@ -1070,20 +1773,52 @@ const MainRouteChildren: MainRouteChildren = {
   MainIndexRoute: MainIndexRoute,
   MainBlogRkeyRoute: MainBlogRkeyRoute,
   MainGamesRkeyRoute: MainGamesRkeyRoute,
+  MainLabsBskyComposerRoute: MainLabsBskyComposerRoute,
+  MainLabsCaseRoute: MainLabsCaseRoute,
+  MainLabsCertsRoute: MainLabsCertsRoute,
+  MainLabsColourRoute: MainLabsColourRoute,
   MainLabsCronRoute: MainLabsCronRoute,
+  MainLabsCsvRoute: MainLabsCsvRoute,
+  MainLabsCurlRoute: MainLabsCurlRoute,
+  MainLabsDidLogRoute: MainLabsDidLogRoute,
+  MainLabsDiffRoute: MainLabsDiffRoute,
+  MainLabsDnsRoute: MainLabsDnsRoute,
+  MainLabsEncodeRoute: MainLabsEncodeRoute,
+  MainLabsFingerprintRoute: MainLabsFingerprintRoute,
+  MainLabsFirehoseStatsRoute: MainLabsFirehoseStatsRoute,
+  MainLabsHandleSniperRoute: MainLabsHandleSniperRoute,
+  MainLabsHashRoute: MainLabsHashRoute,
+  MainLabsHexDumpRoute: MainLabsHexDumpRoute,
+  MainLabsHttpHeadersRoute: MainLabsHttpHeadersRoute,
+  MainLabsHttpStatusRoute: MainLabsHttpStatusRoute,
+  MainLabsIdsRoute: MainLabsIdsRoute,
   MainLabsInfiniteCanvasRoute: MainLabsInfiniteCanvasRoute,
   MainLabsJetstreamRoute: MainLabsJetstreamRoute,
+  MainLabsJsonRoute: MainLabsJsonRoute,
   MainLabsJwtRoute: MainLabsJwtRoute,
+  MainLabsLexiconValidatorRoute: MainLabsLexiconValidatorRoute,
   MainLabsLifeRoute: MainLabsLifeRoute,
   MainLabsListCleanerRoute: MainLabsListCleanerRoute,
+  MainLabsMatrixRoute: MainLabsMatrixRoute,
   MainLabsOgPreviewRoute: MainLabsOgPreviewRoute,
   MainLabsPaletteRoute: MainLabsPaletteRoute,
+  MainLabsPasswordRoute: MainLabsPasswordRoute,
   MainLabsPdfUploaderRoute: MainLabsPdfUploaderRoute,
+  MainLabsPdsHealthRoute: MainLabsPdsHealthRoute,
+  MainLabsRegexRoute: MainLabsRegexRoute,
+  MainLabsSchemaRoute: MainLabsSchemaRoute,
   MainLabsScreenshotMakerRoute: MainLabsScreenshotMakerRoute,
   MainLabsSnakeRoute: MainLabsSnakeRoute,
+  MainLabsSubnetRoute: MainLabsSubnetRoute,
+  MainLabsTerminalRoute: MainLabsTerminalRoute,
+  MainLabsThreadTreeRoute: MainLabsThreadTreeRoute,
   MainLabsTidRoute: MainLabsTidRoute,
+  MainLabsTimestampRoute: MainLabsTimestampRoute,
   MainLabsTypingRoute: MainLabsTypingRoute,
+  MainLabsUaRoute: MainLabsUaRoute,
+  MainLabsUnicodeRoute: MainLabsUnicodeRoute,
   MainLabsVerseRevealRoute: MainLabsVerseRevealRoute,
+  MainLabsWhoisRoute: MainLabsWhoisRoute,
   MainLabsWordleRoute: MainLabsWordleRoute,
   MainProjectsNameRoute: MainProjectsNameRoute,
   MainWatchingRkeyRoute: MainWatchingRkeyRoute,
@@ -1098,12 +1833,15 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsFeedSplatRoute: MainLabsFeedSplatRoute,
   MainLabsLexiconNsidRoute: MainLabsLexiconNsidRoute,
   MainLabsPlcLogSplatRoute: MainLabsPlcLogSplatRoute,
+  MainPokedexRkeyPokeIdRoute: MainPokedexRkeyPokeIdRoute,
   MainLabsAtUriIndexRoute: MainLabsAtUriIndexRoute,
   MainLabsCarExplorerIndexRoute: MainLabsCarExplorerIndexRoute,
   MainLabsCssBattlesIndexRoute: MainLabsCssBattlesIndexRoute,
   MainLabsFeedIndexRoute: MainLabsFeedIndexRoute,
   MainLabsLexiconIndexRoute: MainLabsLexiconIndexRoute,
   MainLabsPlcLogIndexRoute: MainLabsPlcLogIndexRoute,
+  MainLabsYearInReviewIndexRoute: MainLabsYearInReviewIndexRoute,
+  MainLabsYearInReviewHandleYearRoute: MainLabsYearInReviewHandleYearRoute,
 }
 
 const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
