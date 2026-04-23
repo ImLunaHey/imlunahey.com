@@ -44,3 +44,4 @@ declare module 'react-fps-stats' {
     constructor(props: any);
   }
 }
+

@@ -5,6 +5,14 @@
   "observability": {
     "enabled": true
   },
-  "main": "@tanstack/react-start/server-entry",
-  "compatibility_flags": ["nodejs_compat"]
+  "main": "./src/worker.ts",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [
+      { "name": "PRESENCE_DO", "class_name": "PresenceDO" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["PresenceDO"] }
+  ]
 }
