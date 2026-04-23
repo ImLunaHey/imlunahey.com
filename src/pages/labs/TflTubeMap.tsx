@@ -85,7 +85,7 @@ export default function TflTubeMapPage() {
                 <div className="count">{row.stops.length} stations</div>
               </div>
               {row.reason ? <div className="reason">{cleanReason(row.reason, row.color.label)}</div> : null}
-              <div className="track" style={{ '--line-bg': row.color.bg } as React.CSSProperties}>
+              <div className="track" style={{ '--line-bg': row.color.ink } as React.CSSProperties}>
                 <div className="track-inner">
                   {row.stops.map((s) => (
                     <button

@@ -7,7 +7,12 @@ export const TFL_BASE = 'https://api.tfl.gov.uk';
 // Official line colours (as on the tube map) — primary + text-on.
 // Sourced from tfl's open-data style guide; keep values in sync with the
 // palette our labs use in /design-system if we ever formalise it.
-export const LINE_COLORS: Record<string, { bg: string; fg: string; label: string }> = {
+// `bg` + `fg` are the official tube-map colour pair, used for line chips.
+// `ink` is the drawing colour used when a line is rendered as a stroke or
+// dot on our dark page background — for most lines this is identical to bg,
+// but Northern's official black would vanish on black, so we override it to
+// an off-white that stays legible. If `ink` is omitted it defaults to `bg`.
+export const LINE_COLORS: Record<string, { bg: string; fg: string; label: string; ink?: string }> = {
   'bakerloo':        { bg: '#b36305', fg: '#fff', label: 'Bakerloo' },
   'central':         { bg: '#e32017', fg: '#fff', label: 'Central' },
   'circle':          { bg: '#ffd300', fg: '#000', label: 'Circle' },
@@ -18,7 +23,7 @@ export const LINE_COLORS: Record<string, { bg: string; fg: string; label: string
   'hammersmith-city':{ bg: '#f3a9bb', fg: '#000', label: 'Hammersmith & City' },
   'jubilee':         { bg: '#a0a5a9', fg: '#000', label: 'Jubilee' },
   'metropolitan':    { bg: '#9b0056', fg: '#fff', label: 'Metropolitan' },
-  'northern':        { bg: '#000000', fg: '#fff', label: 'Northern' },
+  'northern':        { bg: '#000000', fg: '#fff', label: 'Northern', ink: '#e6e6e6' },
   'piccadilly':      { bg: '#003688', fg: '#fff', label: 'Piccadilly' },
   'victoria':        { bg: '#0098d4', fg: '#fff', label: 'Victoria' },
   'waterloo-city':   { bg: '#95cdba', fg: '#000', label: 'Waterloo & City' },
@@ -33,8 +38,9 @@ export const LINE_COLORS: Record<string, { bg: string; fg: string; label: string
   'london-overground': { bg: '#ee7c0e', fg: '#fff', label: 'Overground' },
 };
 
-export function lineColor(lineId: string): { bg: string; fg: string; label: string } {
-  return LINE_COLORS[lineId] ?? { bg: '#9a9a9a', fg: '#000', label: lineId };
+export function lineColor(lineId: string): { bg: string; fg: string; label: string; ink: string } {
+  const c = LINE_COLORS[lineId] ?? { bg: '#9a9a9a', fg: '#000', label: lineId };
+  return { ...c, ink: c.ink ?? c.bg };
 }
 
 // Status severity numbers TfL returns. 10 = Good Service, lower = worse.
