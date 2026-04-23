@@ -62,6 +62,7 @@ import { Route as MainLabsPdfUploaderRouteImport } from './routes/_main/labs/pdf
 import { Route as MainLabsPasswordRouteImport } from './routes/_main/labs/password'
 import { Route as MainLabsPaletteRouteImport } from './routes/_main/labs/palette'
 import { Route as MainLabsOgPreviewRouteImport } from './routes/_main/labs/og-preview'
+import { Route as MainLabsMpRouteImport } from './routes/_main/labs/mp'
 import { Route as MainLabsMatrixRouteImport } from './routes/_main/labs/matrix'
 import { Route as MainLabsListCleanerRouteImport } from './routes/_main/labs/list-cleaner'
 import { Route as MainLabsLightningRouteImport } from './routes/_main/labs/lightning'
@@ -73,6 +74,7 @@ import { Route as MainLabsJetstreamRouteImport } from './routes/_main/labs/jetst
 import { Route as MainLabsIssRouteImport } from './routes/_main/labs/iss'
 import { Route as MainLabsInfiniteCanvasRouteImport } from './routes/_main/labs/infinite-canvas'
 import { Route as MainLabsIdsRouteImport } from './routes/_main/labs/ids'
+import { Route as MainLabsHygieneRouteImport } from './routes/_main/labs/hygiene'
 import { Route as MainLabsHttpStatusRouteImport } from './routes/_main/labs/http-status'
 import { Route as MainLabsHttpHeadersRouteImport } from './routes/_main/labs/http-headers'
 import { Route as MainLabsHexDumpRouteImport } from './routes/_main/labs/hex-dump'
@@ -89,6 +91,7 @@ import { Route as MainLabsDidLogRouteImport } from './routes/_main/labs/did-log'
 import { Route as MainLabsCurlRouteImport } from './routes/_main/labs/curl'
 import { Route as MainLabsCsvRouteImport } from './routes/_main/labs/csv'
 import { Route as MainLabsCronRouteImport } from './routes/_main/labs/cron'
+import { Route as MainLabsCrimeRouteImport } from './routes/_main/labs/crime'
 import { Route as MainLabsColourRouteImport } from './routes/_main/labs/colour'
 import { Route as MainLabsCertsRouteImport } from './routes/_main/labs/certs'
 import { Route as MainLabsCaseRouteImport } from './routes/_main/labs/case'
@@ -377,6 +380,11 @@ const MainLabsOgPreviewRoute = MainLabsOgPreviewRouteImport.update({
   path: '/labs/og-preview',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsMpRoute = MainLabsMpRouteImport.update({
+  id: '/labs/mp',
+  path: '/labs/mp',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsMatrixRoute = MainLabsMatrixRouteImport.update({
   id: '/labs/matrix',
   path: '/labs/matrix',
@@ -431,6 +439,11 @@ const MainLabsInfiniteCanvasRoute = MainLabsInfiniteCanvasRouteImport.update({
 const MainLabsIdsRoute = MainLabsIdsRouteImport.update({
   id: '/labs/ids',
   path: '/labs/ids',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsHygieneRoute = MainLabsHygieneRouteImport.update({
+  id: '/labs/hygiene',
+  path: '/labs/hygiene',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsHttpStatusRoute = MainLabsHttpStatusRouteImport.update({
@@ -511,6 +524,11 @@ const MainLabsCsvRoute = MainLabsCsvRouteImport.update({
 const MainLabsCronRoute = MainLabsCronRouteImport.update({
   id: '/labs/cron',
   path: '/labs/cron',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsCrimeRoute = MainLabsCrimeRouteImport.update({
+  id: '/labs/crime',
+  path: '/labs/crime',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsColourRoute = MainLabsColourRouteImport.update({
@@ -657,6 +675,7 @@ export interface FileRoutesByFullPath {
   '/labs/case': typeof MainLabsCaseRoute
   '/labs/certs': typeof MainLabsCertsRoute
   '/labs/colour': typeof MainLabsColourRoute
+  '/labs/crime': typeof MainLabsCrimeRoute
   '/labs/cron': typeof MainLabsCronRoute
   '/labs/csv': typeof MainLabsCsvRoute
   '/labs/curl': typeof MainLabsCurlRoute
@@ -673,6 +692,7 @@ export interface FileRoutesByFullPath {
   '/labs/hex-dump': typeof MainLabsHexDumpRoute
   '/labs/http-headers': typeof MainLabsHttpHeadersRoute
   '/labs/http-status': typeof MainLabsHttpStatusRoute
+  '/labs/hygiene': typeof MainLabsHygieneRoute
   '/labs/ids': typeof MainLabsIdsRoute
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/labs/iss': typeof MainLabsIssRoute
@@ -684,6 +704,7 @@ export interface FileRoutesByFullPath {
   '/labs/lightning': typeof MainLabsLightningRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/labs/matrix': typeof MainLabsMatrixRoute
+  '/labs/mp': typeof MainLabsMpRoute
   '/labs/og-preview': typeof MainLabsOgPreviewRoute
   '/labs/palette': typeof MainLabsPaletteRoute
   '/labs/password': typeof MainLabsPasswordRoute
@@ -761,6 +782,7 @@ export interface FileRoutesByTo {
   '/labs/case': typeof MainLabsCaseRoute
   '/labs/certs': typeof MainLabsCertsRoute
   '/labs/colour': typeof MainLabsColourRoute
+  '/labs/crime': typeof MainLabsCrimeRoute
   '/labs/cron': typeof MainLabsCronRoute
   '/labs/csv': typeof MainLabsCsvRoute
   '/labs/curl': typeof MainLabsCurlRoute
@@ -777,6 +799,7 @@ export interface FileRoutesByTo {
   '/labs/hex-dump': typeof MainLabsHexDumpRoute
   '/labs/http-headers': typeof MainLabsHttpHeadersRoute
   '/labs/http-status': typeof MainLabsHttpStatusRoute
+  '/labs/hygiene': typeof MainLabsHygieneRoute
   '/labs/ids': typeof MainLabsIdsRoute
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/labs/iss': typeof MainLabsIssRoute
@@ -788,6 +811,7 @@ export interface FileRoutesByTo {
   '/labs/lightning': typeof MainLabsLightningRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/labs/matrix': typeof MainLabsMatrixRoute
+  '/labs/mp': typeof MainLabsMpRoute
   '/labs/og-preview': typeof MainLabsOgPreviewRoute
   '/labs/palette': typeof MainLabsPaletteRoute
   '/labs/password': typeof MainLabsPasswordRoute
@@ -867,6 +891,7 @@ export interface FileRoutesById {
   '/_main/labs/case': typeof MainLabsCaseRoute
   '/_main/labs/certs': typeof MainLabsCertsRoute
   '/_main/labs/colour': typeof MainLabsColourRoute
+  '/_main/labs/crime': typeof MainLabsCrimeRoute
   '/_main/labs/cron': typeof MainLabsCronRoute
   '/_main/labs/csv': typeof MainLabsCsvRoute
   '/_main/labs/curl': typeof MainLabsCurlRoute
@@ -883,6 +908,7 @@ export interface FileRoutesById {
   '/_main/labs/hex-dump': typeof MainLabsHexDumpRoute
   '/_main/labs/http-headers': typeof MainLabsHttpHeadersRoute
   '/_main/labs/http-status': typeof MainLabsHttpStatusRoute
+  '/_main/labs/hygiene': typeof MainLabsHygieneRoute
   '/_main/labs/ids': typeof MainLabsIdsRoute
   '/_main/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
   '/_main/labs/iss': typeof MainLabsIssRoute
@@ -894,6 +920,7 @@ export interface FileRoutesById {
   '/_main/labs/lightning': typeof MainLabsLightningRoute
   '/_main/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/_main/labs/matrix': typeof MainLabsMatrixRoute
+  '/_main/labs/mp': typeof MainLabsMpRoute
   '/_main/labs/og-preview': typeof MainLabsOgPreviewRoute
   '/_main/labs/palette': typeof MainLabsPaletteRoute
   '/_main/labs/password': typeof MainLabsPasswordRoute
@@ -973,6 +1000,7 @@ export interface FileRouteTypes {
     | '/labs/case'
     | '/labs/certs'
     | '/labs/colour'
+    | '/labs/crime'
     | '/labs/cron'
     | '/labs/csv'
     | '/labs/curl'
@@ -989,6 +1017,7 @@ export interface FileRouteTypes {
     | '/labs/hex-dump'
     | '/labs/http-headers'
     | '/labs/http-status'
+    | '/labs/hygiene'
     | '/labs/ids'
     | '/labs/infinite-canvas'
     | '/labs/iss'
@@ -1000,6 +1029,7 @@ export interface FileRouteTypes {
     | '/labs/lightning'
     | '/labs/list-cleaner'
     | '/labs/matrix'
+    | '/labs/mp'
     | '/labs/og-preview'
     | '/labs/palette'
     | '/labs/password'
@@ -1077,6 +1107,7 @@ export interface FileRouteTypes {
     | '/labs/case'
     | '/labs/certs'
     | '/labs/colour'
+    | '/labs/crime'
     | '/labs/cron'
     | '/labs/csv'
     | '/labs/curl'
@@ -1093,6 +1124,7 @@ export interface FileRouteTypes {
     | '/labs/hex-dump'
     | '/labs/http-headers'
     | '/labs/http-status'
+    | '/labs/hygiene'
     | '/labs/ids'
     | '/labs/infinite-canvas'
     | '/labs/iss'
@@ -1104,6 +1136,7 @@ export interface FileRouteTypes {
     | '/labs/lightning'
     | '/labs/list-cleaner'
     | '/labs/matrix'
+    | '/labs/mp'
     | '/labs/og-preview'
     | '/labs/palette'
     | '/labs/password'
@@ -1182,6 +1215,7 @@ export interface FileRouteTypes {
     | '/_main/labs/case'
     | '/_main/labs/certs'
     | '/_main/labs/colour'
+    | '/_main/labs/crime'
     | '/_main/labs/cron'
     | '/_main/labs/csv'
     | '/_main/labs/curl'
@@ -1198,6 +1232,7 @@ export interface FileRouteTypes {
     | '/_main/labs/hex-dump'
     | '/_main/labs/http-headers'
     | '/_main/labs/http-status'
+    | '/_main/labs/hygiene'
     | '/_main/labs/ids'
     | '/_main/labs/infinite-canvas'
     | '/_main/labs/iss'
@@ -1209,6 +1244,7 @@ export interface FileRouteTypes {
     | '/_main/labs/lightning'
     | '/_main/labs/list-cleaner'
     | '/_main/labs/matrix'
+    | '/_main/labs/mp'
     | '/_main/labs/og-preview'
     | '/_main/labs/palette'
     | '/_main/labs/password'
@@ -1643,6 +1679,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsOgPreviewRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/mp': {
+      id: '/_main/labs/mp'
+      path: '/labs/mp'
+      fullPath: '/labs/mp'
+      preLoaderRoute: typeof MainLabsMpRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/matrix': {
       id: '/_main/labs/matrix'
       path: '/labs/matrix'
@@ -1718,6 +1761,13 @@ declare module '@tanstack/react-router' {
       path: '/labs/ids'
       fullPath: '/labs/ids'
       preLoaderRoute: typeof MainLabsIdsRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/hygiene': {
+      id: '/_main/labs/hygiene'
+      path: '/labs/hygiene'
+      fullPath: '/labs/hygiene'
+      preLoaderRoute: typeof MainLabsHygieneRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/http-status': {
@@ -1830,6 +1880,13 @@ declare module '@tanstack/react-router' {
       path: '/labs/cron'
       fullPath: '/labs/cron'
       preLoaderRoute: typeof MainLabsCronRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/crime': {
+      id: '/_main/labs/crime'
+      path: '/labs/crime'
+      fullPath: '/labs/crime'
+      preLoaderRoute: typeof MainLabsCrimeRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/colour': {
@@ -2017,6 +2074,7 @@ interface MainRouteChildren {
   MainLabsCaseRoute: typeof MainLabsCaseRoute
   MainLabsCertsRoute: typeof MainLabsCertsRoute
   MainLabsColourRoute: typeof MainLabsColourRoute
+  MainLabsCrimeRoute: typeof MainLabsCrimeRoute
   MainLabsCronRoute: typeof MainLabsCronRoute
   MainLabsCsvRoute: typeof MainLabsCsvRoute
   MainLabsCurlRoute: typeof MainLabsCurlRoute
@@ -2033,6 +2091,7 @@ interface MainRouteChildren {
   MainLabsHexDumpRoute: typeof MainLabsHexDumpRoute
   MainLabsHttpHeadersRoute: typeof MainLabsHttpHeadersRoute
   MainLabsHttpStatusRoute: typeof MainLabsHttpStatusRoute
+  MainLabsHygieneRoute: typeof MainLabsHygieneRoute
   MainLabsIdsRoute: typeof MainLabsIdsRoute
   MainLabsInfiniteCanvasRoute: typeof MainLabsInfiniteCanvasRoute
   MainLabsIssRoute: typeof MainLabsIssRoute
@@ -2044,6 +2103,7 @@ interface MainRouteChildren {
   MainLabsLightningRoute: typeof MainLabsLightningRoute
   MainLabsListCleanerRoute: typeof MainLabsListCleanerRoute
   MainLabsMatrixRoute: typeof MainLabsMatrixRoute
+  MainLabsMpRoute: typeof MainLabsMpRoute
   MainLabsOgPreviewRoute: typeof MainLabsOgPreviewRoute
   MainLabsPaletteRoute: typeof MainLabsPaletteRoute
   MainLabsPasswordRoute: typeof MainLabsPasswordRoute
@@ -2119,6 +2179,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsCaseRoute: MainLabsCaseRoute,
   MainLabsCertsRoute: MainLabsCertsRoute,
   MainLabsColourRoute: MainLabsColourRoute,
+  MainLabsCrimeRoute: MainLabsCrimeRoute,
   MainLabsCronRoute: MainLabsCronRoute,
   MainLabsCsvRoute: MainLabsCsvRoute,
   MainLabsCurlRoute: MainLabsCurlRoute,
@@ -2135,6 +2196,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsHexDumpRoute: MainLabsHexDumpRoute,
   MainLabsHttpHeadersRoute: MainLabsHttpHeadersRoute,
   MainLabsHttpStatusRoute: MainLabsHttpStatusRoute,
+  MainLabsHygieneRoute: MainLabsHygieneRoute,
   MainLabsIdsRoute: MainLabsIdsRoute,
   MainLabsInfiniteCanvasRoute: MainLabsInfiniteCanvasRoute,
   MainLabsIssRoute: MainLabsIssRoute,
@@ -2146,6 +2208,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsLightningRoute: MainLabsLightningRoute,
   MainLabsListCleanerRoute: MainLabsListCleanerRoute,
   MainLabsMatrixRoute: MainLabsMatrixRoute,
+  MainLabsMpRoute: MainLabsMpRoute,
   MainLabsOgPreviewRoute: MainLabsOgPreviewRoute,
   MainLabsPaletteRoute: MainLabsPaletteRoute,
   MainLabsPasswordRoute: MainLabsPasswordRoute,

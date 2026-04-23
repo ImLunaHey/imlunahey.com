@@ -102,6 +102,9 @@ export type OgSlug =
   | 'lab/tfl-air'
   | 'lab/tfl-roads'
   | 'lab/tfl-tube-map'
+  | 'lab/crime'
+  | 'lab/mp'
+  | 'lab/hygiene'
   | 'lab/year-in-review';
 
 type OgEntry = {
@@ -199,6 +202,9 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/tfl-air': { title: 'air.', subtitle: 'london air quality · now + 24h forecast', glyph: '☁', slug: '/labs/tfl-air' },
   'lab/tfl-roads': { title: 'roads.', subtitle: 'every active tfl road disruption, severity-mapped', glyph: '◊', slug: '/labs/tfl-roads' },
   'lab/tfl-tube-map': { title: 'tube map.', subtitle: 'every station on every line, live-disruption overlay', glyph: '⎯', slug: '/labs/tfl-tube-map' },
+  'lab/crime': { title: 'crime.', subtitle: 'every reported street crime within 1 mile of any uk postcode', glyph: '⌖', slug: '/labs/crime' },
+  'lab/mp': { title: 'mp.', subtitle: 'postcode → your mp → their recent commons votes', glyph: '⚖', slug: '/labs/mp' },
+  'lab/hygiene': { title: 'hygiene.', subtitle: 'food standards rating for any uk eatery', glyph: '✓', slug: '/labs/hygiene' },
   'lab/year-in-review': { title: 'year in review.', subtitle: 'bluesky wrapped from any account\'s car file', glyph: '★', slug: '/labs/year-in-review' },
 };
 
