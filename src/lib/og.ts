@@ -90,6 +90,12 @@ export type OgSlug =
   | 'lab/exif'
   | 'lab/spectrogram'
   | 'lab/png-chunks'
+  | 'lab/ascii'
+  | 'lab/units'
+  | 'lab/browser'
+  | 'lab/iss'
+  | 'lab/lightning'
+  | 'lab/periodic'
   | 'lab/year-in-review';
 
 type OgEntry = {
@@ -175,6 +181,12 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/exif': { title: 'exif.', subtitle: 'drop a jpeg / png — see + strip every metadata tag', glyph: '◱', slug: '/labs/exif' },
   'lab/spectrogram': { title: 'spectrogram.', subtitle: 'webaudio fft · log-frequency, inferno colormap', glyph: '♪', slug: '/labs/spectrogram' },
   'lab/png-chunks': { title: 'png chunks.', subtitle: 'every chunk the file is built from, crc-validated', glyph: '▱', slug: '/labs/png-chunks' },
+  'lab/ascii': { title: 'ascii.', subtitle: 'photo → ascii with rec.709 luma + your pick of 6 ramps', glyph: '◪', slug: '/labs/ascii' },
+  'lab/units': { title: 'units.', subtitle: 'dimensional-analysis calculator — track units through arithmetic', glyph: '≈', slug: '/labs/units' },
+  'lab/browser': { title: 'browser.', subtitle: 'every web api this tab can run, live-detected', glyph: '◈', slug: '/labs/browser' },
+  'lab/iss': { title: 'iss.', subtitle: 'international space station · live position, 5s refresh', glyph: '✦', slug: '/labs/iss' },
+  'lab/lightning': { title: 'lightning.', subtitle: 'global storm-risk map · cape + lpi from open-meteo', glyph: '⚡', slug: '/labs/lightning' },
+  'lab/periodic': { title: 'periodic.', subtitle: '118 elements · category, mass, config, discovery year', glyph: '⚛', slug: '/labs/periodic' },
   'lab/year-in-review': { title: 'year in review.', subtitle: 'bluesky wrapped from any account\'s car file', glyph: '★', slug: '/labs/year-in-review' },
 };
 

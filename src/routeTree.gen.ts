@@ -35,6 +35,7 @@ import { Route as MainProjectsNameRouteImport } from './routes/_main/projects/$n
 import { Route as MainLabsWordleRouteImport } from './routes/_main/labs/wordle'
 import { Route as MainLabsWhoisRouteImport } from './routes/_main/labs/whois'
 import { Route as MainLabsVerseRevealRouteImport } from './routes/_main/labs/verse-reveal'
+import { Route as MainLabsUnitsRouteImport } from './routes/_main/labs/units'
 import { Route as MainLabsUnicodeRouteImport } from './routes/_main/labs/unicode'
 import { Route as MainLabsUaRouteImport } from './routes/_main/labs/ua'
 import { Route as MainLabsTypingRouteImport } from './routes/_main/labs/typing'
@@ -49,6 +50,7 @@ import { Route as MainLabsScreenshotMakerRouteImport } from './routes/_main/labs
 import { Route as MainLabsSchemaRouteImport } from './routes/_main/labs/schema'
 import { Route as MainLabsRegexRouteImport } from './routes/_main/labs/regex'
 import { Route as MainLabsPngChunksRouteImport } from './routes/_main/labs/png-chunks'
+import { Route as MainLabsPeriodicRouteImport } from './routes/_main/labs/periodic'
 import { Route as MainLabsPdsHealthRouteImport } from './routes/_main/labs/pds-health'
 import { Route as MainLabsPdfUploaderRouteImport } from './routes/_main/labs/pdf-uploader'
 import { Route as MainLabsPasswordRouteImport } from './routes/_main/labs/password'
@@ -56,11 +58,13 @@ import { Route as MainLabsPaletteRouteImport } from './routes/_main/labs/palette
 import { Route as MainLabsOgPreviewRouteImport } from './routes/_main/labs/og-preview'
 import { Route as MainLabsMatrixRouteImport } from './routes/_main/labs/matrix'
 import { Route as MainLabsListCleanerRouteImport } from './routes/_main/labs/list-cleaner'
+import { Route as MainLabsLightningRouteImport } from './routes/_main/labs/lightning'
 import { Route as MainLabsLifeRouteImport } from './routes/_main/labs/life'
 import { Route as MainLabsLexiconValidatorRouteImport } from './routes/_main/labs/lexicon-validator'
 import { Route as MainLabsJwtRouteImport } from './routes/_main/labs/jwt'
 import { Route as MainLabsJsonRouteImport } from './routes/_main/labs/json'
 import { Route as MainLabsJetstreamRouteImport } from './routes/_main/labs/jetstream'
+import { Route as MainLabsIssRouteImport } from './routes/_main/labs/iss'
 import { Route as MainLabsInfiniteCanvasRouteImport } from './routes/_main/labs/infinite-canvas'
 import { Route as MainLabsIdsRouteImport } from './routes/_main/labs/ids'
 import { Route as MainLabsHttpStatusRouteImport } from './routes/_main/labs/http-status'
@@ -83,6 +87,8 @@ import { Route as MainLabsColourRouteImport } from './routes/_main/labs/colour'
 import { Route as MainLabsCertsRouteImport } from './routes/_main/labs/certs'
 import { Route as MainLabsCaseRouteImport } from './routes/_main/labs/case'
 import { Route as MainLabsBskyComposerRouteImport } from './routes/_main/labs/bsky-composer'
+import { Route as MainLabsBrowserRouteImport } from './routes/_main/labs/browser'
+import { Route as MainLabsAsciiRouteImport } from './routes/_main/labs/ascii'
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
 import { Route as MainLabsYearInReviewIndexRouteImport } from './routes/_main/labs/year-in-review/index'
@@ -230,6 +236,11 @@ const MainLabsVerseRevealRoute = MainLabsVerseRevealRouteImport.update({
   path: '/labs/verse-reveal',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsUnitsRoute = MainLabsUnitsRouteImport.update({
+  id: '/labs/units',
+  path: '/labs/units',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsUnicodeRoute = MainLabsUnicodeRouteImport.update({
   id: '/labs/unicode',
   path: '/labs/unicode',
@@ -300,6 +311,11 @@ const MainLabsPngChunksRoute = MainLabsPngChunksRouteImport.update({
   path: '/labs/png-chunks',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsPeriodicRoute = MainLabsPeriodicRouteImport.update({
+  id: '/labs/periodic',
+  path: '/labs/periodic',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsPdsHealthRoute = MainLabsPdsHealthRouteImport.update({
   id: '/labs/pds-health',
   path: '/labs/pds-health',
@@ -335,6 +351,11 @@ const MainLabsListCleanerRoute = MainLabsListCleanerRouteImport.update({
   path: '/labs/list-cleaner',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsLightningRoute = MainLabsLightningRouteImport.update({
+  id: '/labs/lightning',
+  path: '/labs/lightning',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsLifeRoute = MainLabsLifeRouteImport.update({
   id: '/labs/life',
   path: '/labs/life',
@@ -359,6 +380,11 @@ const MainLabsJsonRoute = MainLabsJsonRouteImport.update({
 const MainLabsJetstreamRoute = MainLabsJetstreamRouteImport.update({
   id: '/labs/jetstream',
   path: '/labs/jetstream',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsIssRoute = MainLabsIssRouteImport.update({
+  id: '/labs/iss',
+  path: '/labs/iss',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsInfiniteCanvasRoute = MainLabsInfiniteCanvasRouteImport.update({
@@ -471,6 +497,16 @@ const MainLabsBskyComposerRoute = MainLabsBskyComposerRouteImport.update({
   path: '/labs/bsky-composer',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsBrowserRoute = MainLabsBrowserRouteImport.update({
+  id: '/labs/browser',
+  path: '/labs/browser',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsAsciiRoute = MainLabsAsciiRouteImport.update({
+  id: '/labs/ascii',
+  path: '/labs/ascii',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainGamesRkeyRoute = MainGamesRkeyRouteImport.update({
   id: '/games/$rkey',
   path: '/games/$rkey',
@@ -579,6 +615,8 @@ export interface FileRoutesByFullPath {
   '/og/$': typeof OgSplatRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
+  '/labs/ascii': typeof MainLabsAsciiRoute
+  '/labs/browser': typeof MainLabsBrowserRoute
   '/labs/bsky-composer': typeof MainLabsBskyComposerRoute
   '/labs/case': typeof MainLabsCaseRoute
   '/labs/certs': typeof MainLabsCertsRoute
@@ -601,11 +639,13 @@ export interface FileRoutesByFullPath {
   '/labs/http-status': typeof MainLabsHttpStatusRoute
   '/labs/ids': typeof MainLabsIdsRoute
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
+  '/labs/iss': typeof MainLabsIssRoute
   '/labs/jetstream': typeof MainLabsJetstreamRoute
   '/labs/json': typeof MainLabsJsonRoute
   '/labs/jwt': typeof MainLabsJwtRoute
   '/labs/lexicon-validator': typeof MainLabsLexiconValidatorRoute
   '/labs/life': typeof MainLabsLifeRoute
+  '/labs/lightning': typeof MainLabsLightningRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/labs/matrix': typeof MainLabsMatrixRoute
   '/labs/og-preview': typeof MainLabsOgPreviewRoute
@@ -613,6 +653,7 @@ export interface FileRoutesByFullPath {
   '/labs/password': typeof MainLabsPasswordRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/labs/pds-health': typeof MainLabsPdsHealthRoute
+  '/labs/periodic': typeof MainLabsPeriodicRoute
   '/labs/png-chunks': typeof MainLabsPngChunksRoute
   '/labs/regex': typeof MainLabsRegexRoute
   '/labs/schema': typeof MainLabsSchemaRoute
@@ -627,6 +668,7 @@ export interface FileRoutesByFullPath {
   '/labs/typing': typeof MainLabsTypingRoute
   '/labs/ua': typeof MainLabsUaRoute
   '/labs/unicode': typeof MainLabsUnicodeRoute
+  '/labs/units': typeof MainLabsUnitsRoute
   '/labs/verse-reveal': typeof MainLabsVerseRevealRoute
   '/labs/whois': typeof MainLabsWhoisRoute
   '/labs/wordle': typeof MainLabsWordleRoute
@@ -671,6 +713,8 @@ export interface FileRoutesByTo {
   '/': typeof MainIndexRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
+  '/labs/ascii': typeof MainLabsAsciiRoute
+  '/labs/browser': typeof MainLabsBrowserRoute
   '/labs/bsky-composer': typeof MainLabsBskyComposerRoute
   '/labs/case': typeof MainLabsCaseRoute
   '/labs/certs': typeof MainLabsCertsRoute
@@ -693,11 +737,13 @@ export interface FileRoutesByTo {
   '/labs/http-status': typeof MainLabsHttpStatusRoute
   '/labs/ids': typeof MainLabsIdsRoute
   '/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
+  '/labs/iss': typeof MainLabsIssRoute
   '/labs/jetstream': typeof MainLabsJetstreamRoute
   '/labs/json': typeof MainLabsJsonRoute
   '/labs/jwt': typeof MainLabsJwtRoute
   '/labs/lexicon-validator': typeof MainLabsLexiconValidatorRoute
   '/labs/life': typeof MainLabsLifeRoute
+  '/labs/lightning': typeof MainLabsLightningRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/labs/matrix': typeof MainLabsMatrixRoute
   '/labs/og-preview': typeof MainLabsOgPreviewRoute
@@ -705,6 +751,7 @@ export interface FileRoutesByTo {
   '/labs/password': typeof MainLabsPasswordRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/labs/pds-health': typeof MainLabsPdsHealthRoute
+  '/labs/periodic': typeof MainLabsPeriodicRoute
   '/labs/png-chunks': typeof MainLabsPngChunksRoute
   '/labs/regex': typeof MainLabsRegexRoute
   '/labs/schema': typeof MainLabsSchemaRoute
@@ -719,6 +766,7 @@ export interface FileRoutesByTo {
   '/labs/typing': typeof MainLabsTypingRoute
   '/labs/ua': typeof MainLabsUaRoute
   '/labs/unicode': typeof MainLabsUnicodeRoute
+  '/labs/units': typeof MainLabsUnitsRoute
   '/labs/verse-reveal': typeof MainLabsVerseRevealRoute
   '/labs/whois': typeof MainLabsWhoisRoute
   '/labs/wordle': typeof MainLabsWordleRoute
@@ -765,6 +813,8 @@ export interface FileRoutesById {
   '/_main/': typeof MainIndexRoute
   '/_main/blog/$rkey': typeof MainBlogRkeyRoute
   '/_main/games/$rkey': typeof MainGamesRkeyRoute
+  '/_main/labs/ascii': typeof MainLabsAsciiRoute
+  '/_main/labs/browser': typeof MainLabsBrowserRoute
   '/_main/labs/bsky-composer': typeof MainLabsBskyComposerRoute
   '/_main/labs/case': typeof MainLabsCaseRoute
   '/_main/labs/certs': typeof MainLabsCertsRoute
@@ -787,11 +837,13 @@ export interface FileRoutesById {
   '/_main/labs/http-status': typeof MainLabsHttpStatusRoute
   '/_main/labs/ids': typeof MainLabsIdsRoute
   '/_main/labs/infinite-canvas': typeof MainLabsInfiniteCanvasRoute
+  '/_main/labs/iss': typeof MainLabsIssRoute
   '/_main/labs/jetstream': typeof MainLabsJetstreamRoute
   '/_main/labs/json': typeof MainLabsJsonRoute
   '/_main/labs/jwt': typeof MainLabsJwtRoute
   '/_main/labs/lexicon-validator': typeof MainLabsLexiconValidatorRoute
   '/_main/labs/life': typeof MainLabsLifeRoute
+  '/_main/labs/lightning': typeof MainLabsLightningRoute
   '/_main/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/_main/labs/matrix': typeof MainLabsMatrixRoute
   '/_main/labs/og-preview': typeof MainLabsOgPreviewRoute
@@ -799,6 +851,7 @@ export interface FileRoutesById {
   '/_main/labs/password': typeof MainLabsPasswordRoute
   '/_main/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/_main/labs/pds-health': typeof MainLabsPdsHealthRoute
+  '/_main/labs/periodic': typeof MainLabsPeriodicRoute
   '/_main/labs/png-chunks': typeof MainLabsPngChunksRoute
   '/_main/labs/regex': typeof MainLabsRegexRoute
   '/_main/labs/schema': typeof MainLabsSchemaRoute
@@ -813,6 +866,7 @@ export interface FileRoutesById {
   '/_main/labs/typing': typeof MainLabsTypingRoute
   '/_main/labs/ua': typeof MainLabsUaRoute
   '/_main/labs/unicode': typeof MainLabsUnicodeRoute
+  '/_main/labs/units': typeof MainLabsUnitsRoute
   '/_main/labs/verse-reveal': typeof MainLabsVerseRevealRoute
   '/_main/labs/whois': typeof MainLabsWhoisRoute
   '/_main/labs/wordle': typeof MainLabsWordleRoute
@@ -859,6 +913,8 @@ export interface FileRouteTypes {
     | '/og/$'
     | '/blog/$rkey'
     | '/games/$rkey'
+    | '/labs/ascii'
+    | '/labs/browser'
     | '/labs/bsky-composer'
     | '/labs/case'
     | '/labs/certs'
@@ -881,11 +937,13 @@ export interface FileRouteTypes {
     | '/labs/http-status'
     | '/labs/ids'
     | '/labs/infinite-canvas'
+    | '/labs/iss'
     | '/labs/jetstream'
     | '/labs/json'
     | '/labs/jwt'
     | '/labs/lexicon-validator'
     | '/labs/life'
+    | '/labs/lightning'
     | '/labs/list-cleaner'
     | '/labs/matrix'
     | '/labs/og-preview'
@@ -893,6 +951,7 @@ export interface FileRouteTypes {
     | '/labs/password'
     | '/labs/pdf-uploader'
     | '/labs/pds-health'
+    | '/labs/periodic'
     | '/labs/png-chunks'
     | '/labs/regex'
     | '/labs/schema'
@@ -907,6 +966,7 @@ export interface FileRouteTypes {
     | '/labs/typing'
     | '/labs/ua'
     | '/labs/unicode'
+    | '/labs/units'
     | '/labs/verse-reveal'
     | '/labs/whois'
     | '/labs/wordle'
@@ -951,6 +1011,8 @@ export interface FileRouteTypes {
     | '/'
     | '/blog/$rkey'
     | '/games/$rkey'
+    | '/labs/ascii'
+    | '/labs/browser'
     | '/labs/bsky-composer'
     | '/labs/case'
     | '/labs/certs'
@@ -973,11 +1035,13 @@ export interface FileRouteTypes {
     | '/labs/http-status'
     | '/labs/ids'
     | '/labs/infinite-canvas'
+    | '/labs/iss'
     | '/labs/jetstream'
     | '/labs/json'
     | '/labs/jwt'
     | '/labs/lexicon-validator'
     | '/labs/life'
+    | '/labs/lightning'
     | '/labs/list-cleaner'
     | '/labs/matrix'
     | '/labs/og-preview'
@@ -985,6 +1049,7 @@ export interface FileRouteTypes {
     | '/labs/password'
     | '/labs/pdf-uploader'
     | '/labs/pds-health'
+    | '/labs/periodic'
     | '/labs/png-chunks'
     | '/labs/regex'
     | '/labs/schema'
@@ -999,6 +1064,7 @@ export interface FileRouteTypes {
     | '/labs/typing'
     | '/labs/ua'
     | '/labs/unicode'
+    | '/labs/units'
     | '/labs/verse-reveal'
     | '/labs/whois'
     | '/labs/wordle'
@@ -1044,6 +1110,8 @@ export interface FileRouteTypes {
     | '/_main/'
     | '/_main/blog/$rkey'
     | '/_main/games/$rkey'
+    | '/_main/labs/ascii'
+    | '/_main/labs/browser'
     | '/_main/labs/bsky-composer'
     | '/_main/labs/case'
     | '/_main/labs/certs'
@@ -1066,11 +1134,13 @@ export interface FileRouteTypes {
     | '/_main/labs/http-status'
     | '/_main/labs/ids'
     | '/_main/labs/infinite-canvas'
+    | '/_main/labs/iss'
     | '/_main/labs/jetstream'
     | '/_main/labs/json'
     | '/_main/labs/jwt'
     | '/_main/labs/lexicon-validator'
     | '/_main/labs/life'
+    | '/_main/labs/lightning'
     | '/_main/labs/list-cleaner'
     | '/_main/labs/matrix'
     | '/_main/labs/og-preview'
@@ -1078,6 +1148,7 @@ export interface FileRouteTypes {
     | '/_main/labs/password'
     | '/_main/labs/pdf-uploader'
     | '/_main/labs/pds-health'
+    | '/_main/labs/periodic'
     | '/_main/labs/png-chunks'
     | '/_main/labs/regex'
     | '/_main/labs/schema'
@@ -1092,6 +1163,7 @@ export interface FileRouteTypes {
     | '/_main/labs/typing'
     | '/_main/labs/ua'
     | '/_main/labs/unicode'
+    | '/_main/labs/units'
     | '/_main/labs/verse-reveal'
     | '/_main/labs/whois'
     | '/_main/labs/wordle'
@@ -1310,6 +1382,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsVerseRevealRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/units': {
+      id: '/_main/labs/units'
+      path: '/labs/units'
+      fullPath: '/labs/units'
+      preLoaderRoute: typeof MainLabsUnitsRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/unicode': {
       id: '/_main/labs/unicode'
       path: '/labs/unicode'
@@ -1408,6 +1487,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsPngChunksRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/periodic': {
+      id: '/_main/labs/periodic'
+      path: '/labs/periodic'
+      fullPath: '/labs/periodic'
+      preLoaderRoute: typeof MainLabsPeriodicRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/pds-health': {
       id: '/_main/labs/pds-health'
       path: '/labs/pds-health'
@@ -1457,6 +1543,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsListCleanerRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/lightning': {
+      id: '/_main/labs/lightning'
+      path: '/labs/lightning'
+      fullPath: '/labs/lightning'
+      preLoaderRoute: typeof MainLabsLightningRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/life': {
       id: '/_main/labs/life'
       path: '/labs/life'
@@ -1490,6 +1583,13 @@ declare module '@tanstack/react-router' {
       path: '/labs/jetstream'
       fullPath: '/labs/jetstream'
       preLoaderRoute: typeof MainLabsJetstreamRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/iss': {
+      id: '/_main/labs/iss'
+      path: '/labs/iss'
+      fullPath: '/labs/iss'
+      preLoaderRoute: typeof MainLabsIssRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/infinite-canvas': {
@@ -1646,6 +1746,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsBskyComposerRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/browser': {
+      id: '/_main/labs/browser'
+      path: '/labs/browser'
+      fullPath: '/labs/browser'
+      preLoaderRoute: typeof MainLabsBrowserRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/ascii': {
+      id: '/_main/labs/ascii'
+      path: '/labs/ascii'
+      fullPath: '/labs/ascii'
+      preLoaderRoute: typeof MainLabsAsciiRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/games/$rkey': {
       id: '/_main/games/$rkey'
       path: '/games/$rkey'
@@ -1783,6 +1897,8 @@ interface MainRouteChildren {
   MainIndexRoute: typeof MainIndexRoute
   MainBlogRkeyRoute: typeof MainBlogRkeyRoute
   MainGamesRkeyRoute: typeof MainGamesRkeyRoute
+  MainLabsAsciiRoute: typeof MainLabsAsciiRoute
+  MainLabsBrowserRoute: typeof MainLabsBrowserRoute
   MainLabsBskyComposerRoute: typeof MainLabsBskyComposerRoute
   MainLabsCaseRoute: typeof MainLabsCaseRoute
   MainLabsCertsRoute: typeof MainLabsCertsRoute
@@ -1805,11 +1921,13 @@ interface MainRouteChildren {
   MainLabsHttpStatusRoute: typeof MainLabsHttpStatusRoute
   MainLabsIdsRoute: typeof MainLabsIdsRoute
   MainLabsInfiniteCanvasRoute: typeof MainLabsInfiniteCanvasRoute
+  MainLabsIssRoute: typeof MainLabsIssRoute
   MainLabsJetstreamRoute: typeof MainLabsJetstreamRoute
   MainLabsJsonRoute: typeof MainLabsJsonRoute
   MainLabsJwtRoute: typeof MainLabsJwtRoute
   MainLabsLexiconValidatorRoute: typeof MainLabsLexiconValidatorRoute
   MainLabsLifeRoute: typeof MainLabsLifeRoute
+  MainLabsLightningRoute: typeof MainLabsLightningRoute
   MainLabsListCleanerRoute: typeof MainLabsListCleanerRoute
   MainLabsMatrixRoute: typeof MainLabsMatrixRoute
   MainLabsOgPreviewRoute: typeof MainLabsOgPreviewRoute
@@ -1817,6 +1935,7 @@ interface MainRouteChildren {
   MainLabsPasswordRoute: typeof MainLabsPasswordRoute
   MainLabsPdfUploaderRoute: typeof MainLabsPdfUploaderRoute
   MainLabsPdsHealthRoute: typeof MainLabsPdsHealthRoute
+  MainLabsPeriodicRoute: typeof MainLabsPeriodicRoute
   MainLabsPngChunksRoute: typeof MainLabsPngChunksRoute
   MainLabsRegexRoute: typeof MainLabsRegexRoute
   MainLabsSchemaRoute: typeof MainLabsSchemaRoute
@@ -1831,6 +1950,7 @@ interface MainRouteChildren {
   MainLabsTypingRoute: typeof MainLabsTypingRoute
   MainLabsUaRoute: typeof MainLabsUaRoute
   MainLabsUnicodeRoute: typeof MainLabsUnicodeRoute
+  MainLabsUnitsRoute: typeof MainLabsUnitsRoute
   MainLabsVerseRevealRoute: typeof MainLabsVerseRevealRoute
   MainLabsWhoisRoute: typeof MainLabsWhoisRoute
   MainLabsWordleRoute: typeof MainLabsWordleRoute
@@ -1873,6 +1993,8 @@ const MainRouteChildren: MainRouteChildren = {
   MainIndexRoute: MainIndexRoute,
   MainBlogRkeyRoute: MainBlogRkeyRoute,
   MainGamesRkeyRoute: MainGamesRkeyRoute,
+  MainLabsAsciiRoute: MainLabsAsciiRoute,
+  MainLabsBrowserRoute: MainLabsBrowserRoute,
   MainLabsBskyComposerRoute: MainLabsBskyComposerRoute,
   MainLabsCaseRoute: MainLabsCaseRoute,
   MainLabsCertsRoute: MainLabsCertsRoute,
@@ -1895,11 +2017,13 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsHttpStatusRoute: MainLabsHttpStatusRoute,
   MainLabsIdsRoute: MainLabsIdsRoute,
   MainLabsInfiniteCanvasRoute: MainLabsInfiniteCanvasRoute,
+  MainLabsIssRoute: MainLabsIssRoute,
   MainLabsJetstreamRoute: MainLabsJetstreamRoute,
   MainLabsJsonRoute: MainLabsJsonRoute,
   MainLabsJwtRoute: MainLabsJwtRoute,
   MainLabsLexiconValidatorRoute: MainLabsLexiconValidatorRoute,
   MainLabsLifeRoute: MainLabsLifeRoute,
+  MainLabsLightningRoute: MainLabsLightningRoute,
   MainLabsListCleanerRoute: MainLabsListCleanerRoute,
   MainLabsMatrixRoute: MainLabsMatrixRoute,
   MainLabsOgPreviewRoute: MainLabsOgPreviewRoute,
@@ -1907,6 +2031,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsPasswordRoute: MainLabsPasswordRoute,
   MainLabsPdfUploaderRoute: MainLabsPdfUploaderRoute,
   MainLabsPdsHealthRoute: MainLabsPdsHealthRoute,
+  MainLabsPeriodicRoute: MainLabsPeriodicRoute,
   MainLabsPngChunksRoute: MainLabsPngChunksRoute,
   MainLabsRegexRoute: MainLabsRegexRoute,
   MainLabsSchemaRoute: MainLabsSchemaRoute,
@@ -1921,6 +2046,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsTypingRoute: MainLabsTypingRoute,
   MainLabsUaRoute: MainLabsUaRoute,
   MainLabsUnicodeRoute: MainLabsUnicodeRoute,
+  MainLabsUnitsRoute: MainLabsUnitsRoute,
   MainLabsVerseRevealRoute: MainLabsVerseRevealRoute,
   MainLabsWhoisRoute: MainLabsWhoisRoute,
   MainLabsWordleRoute: MainLabsWordleRoute,
