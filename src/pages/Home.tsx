@@ -738,24 +738,28 @@ const HOME_CSS = `
     white-space: nowrap;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    /* fade both edges so overflow reads as "more this way" instead of cut-off */
-    mask-image: linear-gradient(
-      to right,
-      transparent 0,
-      #000 24px,
-      #000 calc(100% - 24px),
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0,
-      #000 24px,
-      #000 calc(100% - 24px),
-      transparent 100%
-    );
   }
   .cmdbar::-webkit-scrollbar { display: none; }
   .cmdbar > * { flex-shrink: 0; }
+  /* fade edges only on narrow screens where the bar actually scrolls */
+  @media (max-width: 760px) {
+    .cmdbar {
+      mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        #000 24px,
+        #000 calc(100% - 24px),
+        transparent 100%
+      );
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        #000 24px,
+        #000 calc(100% - 24px),
+        transparent 100%
+      );
+    }
+  }
   .cmdbar .ok { color: var(--color-accent); }
   .cmdbar .warn { color: var(--color-warn); }
   .cmdbar b { color: var(--color-fg-dim); font-weight: 400; }
