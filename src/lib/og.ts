@@ -86,6 +86,7 @@ export type OgSlug =
   | 'lab/http-headers'
   | 'lab/certs'
   | 'lab/schema'
+  | 'lab/dist'
   | 'lab/year-in-review';
 
 type OgEntry = {
@@ -167,6 +168,7 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/http-headers': { title: 'http headers.', subtitle: 'fetch any url, see redirect chain + headers', glyph: '⎘', slug: '/labs/http-headers' },
   'lab/certs': { title: 'certs.', subtitle: 'tls cert history from ct logs', glyph: '⌇', slug: '/labs/certs' },
   'lab/schema': { title: 'schema.', subtitle: 'infer a json schema from sample data', glyph: '◇', slug: '/labs/schema' },
+  'lab/dist': { title: 'distribution.', subtitle: 'histogram + kde + q-q plot + outlier hunt', glyph: '▂▅▇', slug: '/labs/dist' },
   'lab/year-in-review': { title: 'year in review.', subtitle: 'bluesky wrapped from any account\'s car file', glyph: '★', slug: '/labs/year-in-review' },
 };
 

@@ -69,6 +69,7 @@ import { Route as MainLabsFirehoseStatsRouteImport } from './routes/_main/labs/f
 import { Route as MainLabsFingerprintRouteImport } from './routes/_main/labs/fingerprint'
 import { Route as MainLabsEncodeRouteImport } from './routes/_main/labs/encode'
 import { Route as MainLabsDnsRouteImport } from './routes/_main/labs/dns'
+import { Route as MainLabsDistRouteImport } from './routes/_main/labs/dist'
 import { Route as MainLabsDiffRouteImport } from './routes/_main/labs/diff'
 import { Route as MainLabsDidLogRouteImport } from './routes/_main/labs/did-log'
 import { Route as MainLabsCurlRouteImport } from './routes/_main/labs/curl'
@@ -396,6 +397,11 @@ const MainLabsDnsRoute = MainLabsDnsRouteImport.update({
   path: '/labs/dns',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsDistRoute = MainLabsDistRouteImport.update({
+  id: '/labs/dist',
+  path: '/labs/dist',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsDiffRoute = MainLabsDiffRouteImport.update({
   id: '/labs/diff',
   path: '/labs/diff',
@@ -557,6 +563,7 @@ export interface FileRoutesByFullPath {
   '/labs/curl': typeof MainLabsCurlRoute
   '/labs/did-log': typeof MainLabsDidLogRoute
   '/labs/diff': typeof MainLabsDiffRoute
+  '/labs/dist': typeof MainLabsDistRoute
   '/labs/dns': typeof MainLabsDnsRoute
   '/labs/encode': typeof MainLabsEncodeRoute
   '/labs/fingerprint': typeof MainLabsFingerprintRoute
@@ -644,6 +651,7 @@ export interface FileRoutesByTo {
   '/labs/curl': typeof MainLabsCurlRoute
   '/labs/did-log': typeof MainLabsDidLogRoute
   '/labs/diff': typeof MainLabsDiffRoute
+  '/labs/dist': typeof MainLabsDistRoute
   '/labs/dns': typeof MainLabsDnsRoute
   '/labs/encode': typeof MainLabsEncodeRoute
   '/labs/fingerprint': typeof MainLabsFingerprintRoute
@@ -733,6 +741,7 @@ export interface FileRoutesById {
   '/_main/labs/curl': typeof MainLabsCurlRoute
   '/_main/labs/did-log': typeof MainLabsDidLogRoute
   '/_main/labs/diff': typeof MainLabsDiffRoute
+  '/_main/labs/dist': typeof MainLabsDistRoute
   '/_main/labs/dns': typeof MainLabsDnsRoute
   '/_main/labs/encode': typeof MainLabsEncodeRoute
   '/_main/labs/fingerprint': typeof MainLabsFingerprintRoute
@@ -822,6 +831,7 @@ export interface FileRouteTypes {
     | '/labs/curl'
     | '/labs/did-log'
     | '/labs/diff'
+    | '/labs/dist'
     | '/labs/dns'
     | '/labs/encode'
     | '/labs/fingerprint'
@@ -909,6 +919,7 @@ export interface FileRouteTypes {
     | '/labs/curl'
     | '/labs/did-log'
     | '/labs/diff'
+    | '/labs/dist'
     | '/labs/dns'
     | '/labs/encode'
     | '/labs/fingerprint'
@@ -997,6 +1008,7 @@ export interface FileRouteTypes {
     | '/_main/labs/curl'
     | '/_main/labs/did-log'
     | '/_main/labs/diff'
+    | '/_main/labs/dist'
     | '/_main/labs/dns'
     | '/_main/labs/encode'
     | '/_main/labs/fingerprint'
@@ -1487,6 +1499,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsDnsRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/dist': {
+      id: '/_main/labs/dist'
+      path: '/labs/dist'
+      fullPath: '/labs/dist'
+      preLoaderRoute: typeof MainLabsDistRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/diff': {
       id: '/_main/labs/diff'
       path: '/labs/diff'
@@ -1696,6 +1715,7 @@ interface MainRouteChildren {
   MainLabsCurlRoute: typeof MainLabsCurlRoute
   MainLabsDidLogRoute: typeof MainLabsDidLogRoute
   MainLabsDiffRoute: typeof MainLabsDiffRoute
+  MainLabsDistRoute: typeof MainLabsDistRoute
   MainLabsDnsRoute: typeof MainLabsDnsRoute
   MainLabsEncodeRoute: typeof MainLabsEncodeRoute
   MainLabsFingerprintRoute: typeof MainLabsFingerprintRoute
@@ -1782,6 +1802,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsCurlRoute: MainLabsCurlRoute,
   MainLabsDidLogRoute: MainLabsDidLogRoute,
   MainLabsDiffRoute: MainLabsDiffRoute,
+  MainLabsDistRoute: MainLabsDistRoute,
   MainLabsDnsRoute: MainLabsDnsRoute,
   MainLabsEncodeRoute: MainLabsEncodeRoute,
   MainLabsFingerprintRoute: MainLabsFingerprintRoute,

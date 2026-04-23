@@ -406,6 +406,14 @@ const LABS: Lab[] = [
     ready: true,
   },
   {
+    slug: 'dist',
+    title: 'distribution',
+    desc: 'paste numbers, get a full statistics panel — histogram + kde, q-q plot, box plot, outliers (iqr + z-score), normality verdict via k² test.',
+    tags: ['tool', 'stats'],
+    year: '2026',
+    ready: true,
+  },
+  {
     slug: 'year-in-review',
     title: 'year in review',
     desc: 'spotify-wrapped for bluesky. enter a handle, pick a year — fetches the full atproto repo car, parses it, surfaces posts / likes / follows / top hashtags / longest post.',
