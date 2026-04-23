@@ -173,12 +173,15 @@ export const signScore = createServerFn({ method: 'POST' })
 
 // ─── leaderboard listing ──────────────────────────────────────────────────
 
+export type LeaderboardScope = 'today' | 'all-time';
+
 export const getLeaderboard = createServerFn({ method: 'GET' })
-  .inputValidator((input: { game: GameId }) => input)
-  .handler(async ({ data }): Promise<LeaderboardRow[]> =>
-    cached(`leaderboard:${data.game}`, TTL.short, async () => {
-      // if the site hasn't been configured with a hmac secret yet we can't
-      // verify anything — return an empty board instead of 500ing the page.
+  .inputValidator((input: { game: GameId; scope?: LeaderboardScope }) => input)
+  .handler(async ({ data }): Promise<LeaderboardRow[]> => {
+    // wordle defaults to today (it resets daily); other games default to
+    // all-time (they don't have a meaningful daily reset).
+    const scope: LeaderboardScope = data.scope ?? (data.game === 'wordle' ? 'today' : 'all-time');
+    return cached(`leaderboard:${data.game}:${scope}`, TTL.short, async () => {
       const secret = trySecret();
       if (!secret) return [];
 
@@ -188,7 +191,8 @@ export const getLeaderboard = createServerFn({ method: 'GET' })
       const dids = [...new Set(links.map((l) => l.did))];
       const profiles = await fetchProfiles(dids);
 
-      // wordle resets daily — we only show scores achieved today (utc).
+      // Today = scores stamped on today's UTC date. Relevant for games like
+      // wordle where yesterday's puzzle is a different thing entirely.
       const todayIso = new Date().toISOString().slice(0, 10);
 
       const rows = await Promise.all(
@@ -199,7 +203,7 @@ export const getLeaderboard = createServerFn({ method: 'GET' })
           if (v.subject !== LEADERBOARD_MARKER_URI) return null;
           if (v.game !== data.game) return null;
           if (v.did !== l.did) return null;
-          if (data.game === 'wordle' && v.achievedAt.slice(0, 10) !== todayIso) return null;
+          if (scope === 'today' && v.achievedAt.slice(0, 10) !== todayIso) return null;
           const ok = await hmacVerify(
             secret,
             canonical({
@@ -239,8 +243,8 @@ export const getLeaderboard = createServerFn({ method: 'GET' })
         data.game === 'wordle' ? a.score - b.score : b.score - a.score,
       );
       return sorted.slice(0, 50);
-    }),
-  );
+    });
+  });
 
 // ─── atproto helpers (same shape as guestbook.ts; duplicated so each
 //     feature can evolve independently without coupling) ────────────────

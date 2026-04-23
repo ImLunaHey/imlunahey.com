@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { XRPC } from '@atcute/client';
 import { OAuthUserAgent, createAuthorizationUrl } from '@atcute/oauth-browser-client';
 import type { ActorIdentifier } from '@atcute/lexicons';
@@ -59,9 +59,10 @@ export default function WordlePage() {
   const { session } = useAtprotoSession();
   const { data: profile } = useProfile({ actor: session?.info.sub ?? '' });
   const queryClient = useQueryClient();
+  const [boardScope, setBoardScope] = useState<'today' | 'all-time'>('today');
   const { data: board } = useQuery({
-    queryKey: ['leaderboard', GAME_ID],
-    queryFn: () => getLeaderboard({ data: { game: GAME_ID } }),
+    queryKey: ['leaderboard', GAME_ID, boardScope],
+    queryFn: () => getLeaderboard({ data: { game: GAME_ID, scope: boardScope } }),
   });
   const [handleInput, setHandleInput] = useState('');
   const [publishState, setPublishState] = useState<'idle' | 'signing' | 'publishing' | 'published' | 'error'>('idle');
@@ -174,26 +175,32 @@ export default function WordlePage() {
     }
   }
 
-  // keyboard input
+  // keyboard input. Using refs for mode/finished/submit so the listener is
+  // registered once and always sees the latest values — previously `mode`
+  // was missing from the dep array, so after "play as guest" the closure
+  // still had mode === 'locked' and swallowed every keystroke.
+  const modeRef = useRef(mode);
+  const finishedRef = useRef(finished);
+  const submitRef = useRef(submit);
+  useEffect(() => { modeRef.current = mode; }, [mode]);
+  useEffect(() => { finishedRef.current = finished; }, [finished]);
+  useEffect(() => { submitRef.current = submit; }, [submit]);
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      const t = e.target as HTMLElement | null;
-      if (t?.tagName === 'INPUT' || t?.tagName === 'TEXTAREA' || t?.isContentEditable) return;
-      // don't capture input while the sign-in gate is up — otherwise the
-      // user's handle gets typed into the puzzle in the background.
-      if (finished || mode === 'locked') return;
+      if (finishedRef.current || modeRef.current === 'locked') return;
       const k = e.key;
       if (k === 'Enter') {
-        submit();
+        submitRef.current();
       } else if (k === 'Backspace') {
         setCurrent((c) => c.slice(0, -1));
-      } else if (/^[a-zA-Z]$/.test(k) && current.length < 5) {
-        setCurrent((c) => (c + k.toLowerCase()).slice(0, 5));
+      } else if (/^[a-zA-Z]$/.test(k)) {
+        setCurrent((c) => (c.length >= 5 ? c : c + k.toLowerCase()));
       }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [current.length, finished, submit]);
+  }, []);
 
   // compose all 6 rows (previous guesses + current + empty slots)
   const rows: { letters: string[]; states: LetterState[] }[] = [];
@@ -383,7 +390,12 @@ export default function WordlePage() {
           </section>
         ) : null}
 
-        <WordleBoard rows={board ?? null} myDid={session?.info.sub ?? null} />
+        <WordleBoard
+          rows={board ?? null}
+          myDid={session?.info.sub ?? null}
+          scope={boardScope}
+          onScopeChange={setBoardScope}
+        />
 
         <footer className="wordle-footer">
           <span>src: <span className="t-accent">hand-written · ~200 lines</span></span>
@@ -608,6 +620,10 @@ const CSS = `
     text-transform: uppercase; letter-spacing: 0.12em;
   }
   .wl-head .t-accent { color: var(--color-accent); }
+  .wl-scope { display: inline-flex; border: 1px solid var(--color-border); }
+  .wl-scope-btn { background: transparent; border: 0; color: var(--color-fg-faint); padding: 2px 8px; font-family: inherit; font-size: inherit; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; }
+  .wl-scope-btn + .wl-scope-btn { border-left: 1px solid var(--color-border); }
+  .wl-scope-btn.on { color: var(--color-accent); background: color-mix(in oklch, var(--color-accent) 6%, transparent); }
   .wl-empty { padding: var(--sp-5) var(--sp-4); color: var(--color-fg-faint); font-family: var(--font-mono); font-size: var(--fs-xs); text-align: center; }
   .wl-row {
     display: grid;
@@ -644,17 +660,30 @@ const CSS = `
   }
 `;
 
-function WordleBoard({ rows, myDid }: { rows: LeaderboardRow[] | null; myDid: string | null }) {
+function WordleBoard({
+  rows,
+  myDid,
+  scope,
+  onScopeChange,
+}: {
+  rows: LeaderboardRow[] | null;
+  myDid: string | null;
+  scope: 'today' | 'all-time';
+  onScopeChange: (s: 'today' | 'all-time') => void;
+}) {
   return (
     <div className="wl">
       <div className="wl-head">
-        <span className="t-accent">./today --leaderboard</span>
-        <span>lower is better · sig-verified</span>
+        <span className="t-accent">./{scope} --leaderboard</span>
+        <span className="wl-scope">
+          <button className={`wl-scope-btn ${scope === 'today' ? 'on' : ''}`} onClick={() => onScopeChange('today')}>today</button>
+          <button className={`wl-scope-btn ${scope === 'all-time' ? 'on' : ''}`} onClick={() => onScopeChange('all-time')}>all time</button>
+        </span>
       </div>
       {rows === null ? (
         <div className="wl-empty">loading scores…</div>
       ) : rows.length === 0 ? (
-        <div className="wl-empty">no one&apos;s solved today yet.</div>
+        <div className="wl-empty">{scope === 'today' ? "no one's solved today yet." : 'no scores yet.'}</div>
       ) : (
         rows.map((r, i) => (
           <div key={r.uri} className={`wl-row${r.did === myDid ? ' me' : ''}`}>
@@ -689,5 +718,12 @@ function relative(iso: string): string {
   if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
   if (h < 24) return `${h}h ago`;
-  return iso.slice(11, 16);
+  const d = Math.floor(h / 24);
+  if (d < 30) return `${d}d ago`;
+  // older — show a short date
+  try {
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  } catch {
+    return iso.slice(0, 10);
+  }
 }
