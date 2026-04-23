@@ -1,5 +1,7 @@
 import { Link, useLocation } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
+import { CommandPaletteHint } from './CommandPalette';
+import { PresencePulse } from './PresencePulse';
 
 const LINKS: { to: string; label: string; match?: (path: string) => boolean }[] = [
   { to: '/', label: '~/', match: (p) => p === '/' },
@@ -54,6 +56,8 @@ export const NavBar = () => {
         );
       })}
       <span className="sp" />
+      <PresencePulse />
+      <CommandPaletteHint />
       <Clock />
       <Link to={'/design-system' as never} className={'chip accent' + (pathname.startsWith('/design-system') ? ' active' : '')}>
         design.sys ↗
