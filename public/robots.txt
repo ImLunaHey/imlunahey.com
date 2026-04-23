@@ -1,0 +1,5 @@
+# every crawler welcome — nothing on this site is private
+User-agent: *
+Allow: /
+
+Sitemap: https://imlunahey.com/sitemap.xml

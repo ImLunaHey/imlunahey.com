@@ -87,6 +87,9 @@ export type OgSlug =
   | 'lab/certs'
   | 'lab/schema'
   | 'lab/dist'
+  | 'lab/exif'
+  | 'lab/spectrogram'
+  | 'lab/png-chunks'
   | 'lab/year-in-review';
 
 type OgEntry = {
@@ -169,6 +172,9 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/certs': { title: 'certs.', subtitle: 'tls cert history from ct logs', glyph: '⌇', slug: '/labs/certs' },
   'lab/schema': { title: 'schema.', subtitle: 'infer a json schema from sample data', glyph: '◇', slug: '/labs/schema' },
   'lab/dist': { title: 'distribution.', subtitle: 'histogram + kde + q-q plot + outlier hunt', glyph: '▂▅▇', slug: '/labs/dist' },
+  'lab/exif': { title: 'exif.', subtitle: 'drop a jpeg / png — see + strip every metadata tag', glyph: '◱', slug: '/labs/exif' },
+  'lab/spectrogram': { title: 'spectrogram.', subtitle: 'webaudio fft · log-frequency, inferno colormap', glyph: '♪', slug: '/labs/spectrogram' },
+  'lab/png-chunks': { title: 'png chunks.', subtitle: 'every chunk the file is built from, crc-validated', glyph: '▱', slug: '/labs/png-chunks' },
   'lab/year-in-review': { title: 'year in review.', subtitle: 'bluesky wrapped from any account\'s car file', glyph: '★', slug: '/labs/year-in-review' },
 };
 

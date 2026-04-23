@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as MainRouteImport } from './routes/_main'
 import { Route as MainIndexRouteImport } from './routes/_main/index'
 import { Route as OgSplatRouteImport } from './routes/og/$'
@@ -42,10 +43,12 @@ import { Route as MainLabsTidRouteImport } from './routes/_main/labs/tid'
 import { Route as MainLabsThreadTreeRouteImport } from './routes/_main/labs/thread-tree'
 import { Route as MainLabsTerminalRouteImport } from './routes/_main/labs/terminal'
 import { Route as MainLabsSubnetRouteImport } from './routes/_main/labs/subnet'
+import { Route as MainLabsSpectrogramRouteImport } from './routes/_main/labs/spectrogram'
 import { Route as MainLabsSnakeRouteImport } from './routes/_main/labs/snake'
 import { Route as MainLabsScreenshotMakerRouteImport } from './routes/_main/labs/screenshot-maker'
 import { Route as MainLabsSchemaRouteImport } from './routes/_main/labs/schema'
 import { Route as MainLabsRegexRouteImport } from './routes/_main/labs/regex'
+import { Route as MainLabsPngChunksRouteImport } from './routes/_main/labs/png-chunks'
 import { Route as MainLabsPdsHealthRouteImport } from './routes/_main/labs/pds-health'
 import { Route as MainLabsPdfUploaderRouteImport } from './routes/_main/labs/pdf-uploader'
 import { Route as MainLabsPasswordRouteImport } from './routes/_main/labs/password'
@@ -67,6 +70,7 @@ import { Route as MainLabsHashRouteImport } from './routes/_main/labs/hash'
 import { Route as MainLabsHandleSniperRouteImport } from './routes/_main/labs/handle-sniper'
 import { Route as MainLabsFirehoseStatsRouteImport } from './routes/_main/labs/firehose-stats'
 import { Route as MainLabsFingerprintRouteImport } from './routes/_main/labs/fingerprint'
+import { Route as MainLabsExifRouteImport } from './routes/_main/labs/exif'
 import { Route as MainLabsEncodeRouteImport } from './routes/_main/labs/encode'
 import { Route as MainLabsDnsRouteImport } from './routes/_main/labs/dns'
 import { Route as MainLabsDistRouteImport } from './routes/_main/labs/dist'
@@ -97,6 +101,11 @@ import { Route as MainLabsCarExplorerSplatRouteImport } from './routes/_main/lab
 import { Route as MainLabsAtUriSplatRouteImport } from './routes/_main/labs/at-uri/$'
 import { Route as MainLabsYearInReviewHandleYearRouteImport } from './routes/_main/labs/year-in-review/$handle/$year'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MainRoute = MainRouteImport.update({
   id: '/_main',
   getParentRoute: () => rootRouteImport,
@@ -261,6 +270,11 @@ const MainLabsSubnetRoute = MainLabsSubnetRouteImport.update({
   path: '/labs/subnet',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsSpectrogramRoute = MainLabsSpectrogramRouteImport.update({
+  id: '/labs/spectrogram',
+  path: '/labs/spectrogram',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsSnakeRoute = MainLabsSnakeRouteImport.update({
   id: '/labs/snake',
   path: '/labs/snake',
@@ -279,6 +293,11 @@ const MainLabsSchemaRoute = MainLabsSchemaRouteImport.update({
 const MainLabsRegexRoute = MainLabsRegexRouteImport.update({
   id: '/labs/regex',
   path: '/labs/regex',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsPngChunksRoute = MainLabsPngChunksRouteImport.update({
+  id: '/labs/png-chunks',
+  path: '/labs/png-chunks',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsPdsHealthRoute = MainLabsPdsHealthRouteImport.update({
@@ -385,6 +404,11 @@ const MainLabsFirehoseStatsRoute = MainLabsFirehoseStatsRouteImport.update({
 const MainLabsFingerprintRoute = MainLabsFingerprintRouteImport.update({
   id: '/labs/fingerprint',
   path: '/labs/fingerprint',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsExifRoute = MainLabsExifRouteImport.update({
+  id: '/labs/exif',
+  path: '/labs/exif',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsEncodeRoute = MainLabsEncodeRouteImport.update({
@@ -539,6 +563,7 @@ const MainLabsYearInReviewHandleYearRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ai': typeof MainAiRoute
   '/bookmarks': typeof MainBookmarksRoute
   '/design-system': typeof MainDesignSystemRoute
@@ -566,6 +591,7 @@ export interface FileRoutesByFullPath {
   '/labs/dist': typeof MainLabsDistRoute
   '/labs/dns': typeof MainLabsDnsRoute
   '/labs/encode': typeof MainLabsEncodeRoute
+  '/labs/exif': typeof MainLabsExifRoute
   '/labs/fingerprint': typeof MainLabsFingerprintRoute
   '/labs/firehose-stats': typeof MainLabsFirehoseStatsRoute
   '/labs/handle-sniper': typeof MainLabsHandleSniperRoute
@@ -587,10 +613,12 @@ export interface FileRoutesByFullPath {
   '/labs/password': typeof MainLabsPasswordRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/labs/pds-health': typeof MainLabsPdsHealthRoute
+  '/labs/png-chunks': typeof MainLabsPngChunksRoute
   '/labs/regex': typeof MainLabsRegexRoute
   '/labs/schema': typeof MainLabsSchemaRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/labs/snake': typeof MainLabsSnakeRoute
+  '/labs/spectrogram': typeof MainLabsSpectrogramRoute
   '/labs/subnet': typeof MainLabsSubnetRoute
   '/labs/terminal': typeof MainLabsTerminalRoute
   '/labs/thread-tree': typeof MainLabsThreadTreeRoute
@@ -626,6 +654,7 @@ export interface FileRoutesByFullPath {
   '/labs/year-in-review/$handle/$year': typeof MainLabsYearInReviewHandleYearRoute
 }
 export interface FileRoutesByTo {
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ai': typeof MainAiRoute
   '/bookmarks': typeof MainBookmarksRoute
   '/design-system': typeof MainDesignSystemRoute
@@ -654,6 +683,7 @@ export interface FileRoutesByTo {
   '/labs/dist': typeof MainLabsDistRoute
   '/labs/dns': typeof MainLabsDnsRoute
   '/labs/encode': typeof MainLabsEncodeRoute
+  '/labs/exif': typeof MainLabsExifRoute
   '/labs/fingerprint': typeof MainLabsFingerprintRoute
   '/labs/firehose-stats': typeof MainLabsFirehoseStatsRoute
   '/labs/handle-sniper': typeof MainLabsHandleSniperRoute
@@ -675,10 +705,12 @@ export interface FileRoutesByTo {
   '/labs/password': typeof MainLabsPasswordRoute
   '/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/labs/pds-health': typeof MainLabsPdsHealthRoute
+  '/labs/png-chunks': typeof MainLabsPngChunksRoute
   '/labs/regex': typeof MainLabsRegexRoute
   '/labs/schema': typeof MainLabsSchemaRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/labs/snake': typeof MainLabsSnakeRoute
+  '/labs/spectrogram': typeof MainLabsSpectrogramRoute
   '/labs/subnet': typeof MainLabsSubnetRoute
   '/labs/terminal': typeof MainLabsTerminalRoute
   '/labs/thread-tree': typeof MainLabsThreadTreeRoute
@@ -716,6 +748,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_main': typeof MainRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_main/ai': typeof MainAiRoute
   '/_main/bookmarks': typeof MainBookmarksRoute
   '/_main/design-system': typeof MainDesignSystemRoute
@@ -744,6 +777,7 @@ export interface FileRoutesById {
   '/_main/labs/dist': typeof MainLabsDistRoute
   '/_main/labs/dns': typeof MainLabsDnsRoute
   '/_main/labs/encode': typeof MainLabsEncodeRoute
+  '/_main/labs/exif': typeof MainLabsExifRoute
   '/_main/labs/fingerprint': typeof MainLabsFingerprintRoute
   '/_main/labs/firehose-stats': typeof MainLabsFirehoseStatsRoute
   '/_main/labs/handle-sniper': typeof MainLabsHandleSniperRoute
@@ -765,10 +799,12 @@ export interface FileRoutesById {
   '/_main/labs/password': typeof MainLabsPasswordRoute
   '/_main/labs/pdf-uploader': typeof MainLabsPdfUploaderRoute
   '/_main/labs/pds-health': typeof MainLabsPdsHealthRoute
+  '/_main/labs/png-chunks': typeof MainLabsPngChunksRoute
   '/_main/labs/regex': typeof MainLabsRegexRoute
   '/_main/labs/schema': typeof MainLabsSchemaRoute
   '/_main/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/_main/labs/snake': typeof MainLabsSnakeRoute
+  '/_main/labs/spectrogram': typeof MainLabsSpectrogramRoute
   '/_main/labs/subnet': typeof MainLabsSubnetRoute
   '/_main/labs/terminal': typeof MainLabsTerminalRoute
   '/_main/labs/thread-tree': typeof MainLabsThreadTreeRoute
@@ -807,6 +843,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/sitemap.xml'
     | '/ai'
     | '/bookmarks'
     | '/design-system'
@@ -834,6 +871,7 @@ export interface FileRouteTypes {
     | '/labs/dist'
     | '/labs/dns'
     | '/labs/encode'
+    | '/labs/exif'
     | '/labs/fingerprint'
     | '/labs/firehose-stats'
     | '/labs/handle-sniper'
@@ -855,10 +893,12 @@ export interface FileRouteTypes {
     | '/labs/password'
     | '/labs/pdf-uploader'
     | '/labs/pds-health'
+    | '/labs/png-chunks'
     | '/labs/regex'
     | '/labs/schema'
     | '/labs/screenshot-maker'
     | '/labs/snake'
+    | '/labs/spectrogram'
     | '/labs/subnet'
     | '/labs/terminal'
     | '/labs/thread-tree'
@@ -894,6 +934,7 @@ export interface FileRouteTypes {
     | '/labs/year-in-review/$handle/$year'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/sitemap.xml'
     | '/ai'
     | '/bookmarks'
     | '/design-system'
@@ -922,6 +963,7 @@ export interface FileRouteTypes {
     | '/labs/dist'
     | '/labs/dns'
     | '/labs/encode'
+    | '/labs/exif'
     | '/labs/fingerprint'
     | '/labs/firehose-stats'
     | '/labs/handle-sniper'
@@ -943,10 +985,12 @@ export interface FileRouteTypes {
     | '/labs/password'
     | '/labs/pdf-uploader'
     | '/labs/pds-health'
+    | '/labs/png-chunks'
     | '/labs/regex'
     | '/labs/schema'
     | '/labs/screenshot-maker'
     | '/labs/snake'
+    | '/labs/spectrogram'
     | '/labs/subnet'
     | '/labs/terminal'
     | '/labs/thread-tree'
@@ -983,6 +1027,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_main'
+    | '/sitemap.xml'
     | '/_main/ai'
     | '/_main/bookmarks'
     | '/_main/design-system'
@@ -1011,6 +1056,7 @@ export interface FileRouteTypes {
     | '/_main/labs/dist'
     | '/_main/labs/dns'
     | '/_main/labs/encode'
+    | '/_main/labs/exif'
     | '/_main/labs/fingerprint'
     | '/_main/labs/firehose-stats'
     | '/_main/labs/handle-sniper'
@@ -1032,10 +1078,12 @@ export interface FileRouteTypes {
     | '/_main/labs/password'
     | '/_main/labs/pdf-uploader'
     | '/_main/labs/pds-health'
+    | '/_main/labs/png-chunks'
     | '/_main/labs/regex'
     | '/_main/labs/schema'
     | '/_main/labs/screenshot-maker'
     | '/_main/labs/snake'
+    | '/_main/labs/spectrogram'
     | '/_main/labs/subnet'
     | '/_main/labs/terminal'
     | '/_main/labs/thread-tree'
@@ -1073,12 +1121,20 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   MainRoute: typeof MainRouteWithChildren
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   OauthCallbackRoute: typeof OauthCallbackRoute
   OgSplatRoute: typeof OgSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_main': {
       id: '/_main'
       path: ''
@@ -1310,6 +1366,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsSubnetRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/spectrogram': {
+      id: '/_main/labs/spectrogram'
+      path: '/labs/spectrogram'
+      fullPath: '/labs/spectrogram'
+      preLoaderRoute: typeof MainLabsSpectrogramRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/snake': {
       id: '/_main/labs/snake'
       path: '/labs/snake'
@@ -1336,6 +1399,13 @@ declare module '@tanstack/react-router' {
       path: '/labs/regex'
       fullPath: '/labs/regex'
       preLoaderRoute: typeof MainLabsRegexRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/png-chunks': {
+      id: '/_main/labs/png-chunks'
+      path: '/labs/png-chunks'
+      fullPath: '/labs/png-chunks'
+      preLoaderRoute: typeof MainLabsPngChunksRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/pds-health': {
@@ -1483,6 +1553,13 @@ declare module '@tanstack/react-router' {
       path: '/labs/fingerprint'
       fullPath: '/labs/fingerprint'
       preLoaderRoute: typeof MainLabsFingerprintRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/exif': {
+      id: '/_main/labs/exif'
+      path: '/labs/exif'
+      fullPath: '/labs/exif'
+      preLoaderRoute: typeof MainLabsExifRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/encode': {
@@ -1718,6 +1795,7 @@ interface MainRouteChildren {
   MainLabsDistRoute: typeof MainLabsDistRoute
   MainLabsDnsRoute: typeof MainLabsDnsRoute
   MainLabsEncodeRoute: typeof MainLabsEncodeRoute
+  MainLabsExifRoute: typeof MainLabsExifRoute
   MainLabsFingerprintRoute: typeof MainLabsFingerprintRoute
   MainLabsFirehoseStatsRoute: typeof MainLabsFirehoseStatsRoute
   MainLabsHandleSniperRoute: typeof MainLabsHandleSniperRoute
@@ -1739,10 +1817,12 @@ interface MainRouteChildren {
   MainLabsPasswordRoute: typeof MainLabsPasswordRoute
   MainLabsPdfUploaderRoute: typeof MainLabsPdfUploaderRoute
   MainLabsPdsHealthRoute: typeof MainLabsPdsHealthRoute
+  MainLabsPngChunksRoute: typeof MainLabsPngChunksRoute
   MainLabsRegexRoute: typeof MainLabsRegexRoute
   MainLabsSchemaRoute: typeof MainLabsSchemaRoute
   MainLabsScreenshotMakerRoute: typeof MainLabsScreenshotMakerRoute
   MainLabsSnakeRoute: typeof MainLabsSnakeRoute
+  MainLabsSpectrogramRoute: typeof MainLabsSpectrogramRoute
   MainLabsSubnetRoute: typeof MainLabsSubnetRoute
   MainLabsTerminalRoute: typeof MainLabsTerminalRoute
   MainLabsThreadTreeRoute: typeof MainLabsThreadTreeRoute
@@ -1805,6 +1885,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsDistRoute: MainLabsDistRoute,
   MainLabsDnsRoute: MainLabsDnsRoute,
   MainLabsEncodeRoute: MainLabsEncodeRoute,
+  MainLabsExifRoute: MainLabsExifRoute,
   MainLabsFingerprintRoute: MainLabsFingerprintRoute,
   MainLabsFirehoseStatsRoute: MainLabsFirehoseStatsRoute,
   MainLabsHandleSniperRoute: MainLabsHandleSniperRoute,
@@ -1826,10 +1907,12 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsPasswordRoute: MainLabsPasswordRoute,
   MainLabsPdfUploaderRoute: MainLabsPdfUploaderRoute,
   MainLabsPdsHealthRoute: MainLabsPdsHealthRoute,
+  MainLabsPngChunksRoute: MainLabsPngChunksRoute,
   MainLabsRegexRoute: MainLabsRegexRoute,
   MainLabsSchemaRoute: MainLabsSchemaRoute,
   MainLabsScreenshotMakerRoute: MainLabsScreenshotMakerRoute,
   MainLabsSnakeRoute: MainLabsSnakeRoute,
+  MainLabsSpectrogramRoute: MainLabsSpectrogramRoute,
   MainLabsSubnetRoute: MainLabsSubnetRoute,
   MainLabsTerminalRoute: MainLabsTerminalRoute,
   MainLabsThreadTreeRoute: MainLabsThreadTreeRoute,
@@ -1869,6 +1952,7 @@ const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   MainRoute: MainRouteWithChildren,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   OauthCallbackRoute: OauthCallbackRoute,
   OgSplatRoute: OgSplatRoute,
 }
