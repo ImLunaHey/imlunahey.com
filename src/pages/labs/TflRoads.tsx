@@ -2,7 +2,8 @@ import { Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchRoadDisruptions, type RoadDisruption } from '../../lib/tfl';
-import { drawLondonBg, drawThamesOverlay, latLonToXY, inBbox } from '../../lib/london-bg';
+import { drawBoroughLabels, drawLondonBg, drawThamesOverlay, ensureLondonBoroughs, ensureLondonRoads, latLonToXY, inBbox } from '../../lib/london-bg';
+import { pointerToBuffer, screenToWorld, useCanvasViewport } from '../../lib/canvas-viewport';
 
 const SEVERITY_COLOR: Record<string, string> = {
   'Serious':    '#ff5a5a',
@@ -13,7 +14,11 @@ const SEVERITY_COLOR: Record<string, string> = {
 
 function parsePoint(p?: string): [number, number] | null {
   if (!p) return null;
-  const [lat, lon] = p.split(',').map(Number);
+  // TfL returns a stringified array like "[lon,lat]" (lon first, bracketed).
+  // Strip brackets and split; normalize to [lat, lon] to match the rest of
+  // the map code.
+  const cleaned = p.replace(/^\[|\]$/g, '');
+  const [lon, lat] = cleaned.split(',').map(Number);
   if (!isFinite(lat) || !isFinite(lon)) return null;
   return [lat, lon];
 }
@@ -29,6 +34,7 @@ export default function TflRoadsPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [severity, setSeverity] = useState<string>('all');
   const [selected, setSelected] = useState<RoadDisruption | null>(null);
+  const viewport = useCanvasViewport({ minScale: 1, maxScale: 12 });
 
   const severities = useMemo(() => {
     const set = new Set<string>();
@@ -41,10 +47,26 @@ export default function TflRoadsPage() {
     return f.slice().sort((a, b) => severityWeight(b.severity) - severityWeight(a.severity));
   }, [disruptions, severity]);
 
+  // rAF-batched redraw so rapid pan/zoom coalesces to one paint per frame.
+  const rafRef = useRef<number | null>(null);
   useEffect(() => {
     if (!canvasRef.current) return;
-    draw(canvasRef.current, filtered);
-  }, [filtered]);
+    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      if (canvasRef.current) draw(canvasRef.current, filtered, viewport.vp);
+    });
+    return () => {
+      if (rafRef.current != null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    };
+  }, [filtered, viewport.vp]);
+
+  useEffect(() => {
+    const redraw = () => { if (canvasRef.current) draw(canvasRef.current, filtered, viewport.vp); };
+    ensureLondonBoroughs().then(redraw);
+    ensureLondonRoads().then(redraw);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const counts: Record<string, number> = {};
   for (const d of disruptions) counts[d.severity] = (counts[d.severity] ?? 0) + 1;
@@ -85,17 +107,28 @@ export default function TflRoadsPage() {
 
         <section className="canvas-wrap">
           <canvas
-            ref={canvasRef}
+            ref={(el) => { canvasRef.current = el; viewport.setCanvasRef(el); }}
             width={1200}
             height={700}
             className="canvas"
+            style={{ cursor: viewport.dragging ? 'grabbing' : 'grab' }}
+            onPointerDown={viewport.onPointerDown}
+            onPointerMove={viewport.onPointerMove}
+            onPointerUp={viewport.onPointerUp}
             onClick={(e) => {
-              const rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
-              const x = ((e.clientX - rect.left) / rect.width) * 1200;
-              const y = ((e.clientY - rect.top) / rect.height) * 700;
-              setSelected(findNearest(filtered, x, y));
+              // Only treat as a click if the user didn't drag. We get a fresh
+              // event here; if the pointer moved at all we'd still receive
+              // this click — but dragging to pan rarely ends exactly on a pin
+              // so it's fine to try a hit test anyway.
+              const [bx, by] = pointerToBuffer(e, e.currentTarget);
+              const [wx, wy] = screenToWorld(bx, by, viewport.vp);
+              setSelected(findNearest(filtered, wx, wy, viewport.vp.scale));
             }}
           />
+          <div className="vp-ctrl">
+            <span>zoom · {viewport.vp.scale.toFixed(1)}×</span>
+            <button onClick={viewport.reset} disabled={viewport.vp.scale === 1 && viewport.vp.tx === 0 && viewport.vp.ty === 0}>reset</button>
+          </div>
         </section>
 
         {selected ? (
@@ -148,24 +181,42 @@ function severityWeight(s: string): number {
   }
 }
 
-function findNearest(list: RoadDisruption[], x: number, y: number): RoadDisruption | null {
+function findNearest(
+  list: RoadDisruption[],
+  wx: number,
+  wy: number,
+  scale: number,
+): RoadDisruption | null {
   let best: RoadDisruption | null = null;
-  let bestD = 18 * 18;
+  // hit-test radius in world units: 18px in screen at the current zoom
+  const hitR = 18 / scale;
+  let bestD = hitR * hitR;
   for (const d of list) {
     const p = parsePoint(d.point);
     if (!p || !inBbox(p[0], p[1])) continue;
     const [px, py] = latLonToXY(p[0], p[1], 1200, 700);
-    const dd = (px - x) ** 2 + (py - y) ** 2;
+    const dd = (px - wx) ** 2 + (py - wy) ** 2;
     if (dd < bestD) { bestD = dd; best = d; }
   }
   return best;
 }
 
-function draw(canvas: HTMLCanvasElement, list: RoadDisruption[]) {
+function draw(canvas: HTMLCanvasElement, list: RoadDisruption[], vp: import('../../lib/canvas-viewport').Viewport) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   const W = canvas.width, H = canvas.height;
-  drawLondonBg(ctx, W, H);
+
+  // Clear in identity first so panning doesn't leave trails.
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.save();
+  ctx.setTransform(vp.scale, 0, 0, vp.scale, vp.tx, vp.ty);
+
+  drawLondonBg(ctx, W, H, vp);
+
+  const vmin = [(0 - vp.tx) / vp.scale, (0 - vp.ty) / vp.scale];
+  const vmax = [(W - vp.tx) / vp.scale, (H - vp.ty) / vp.scale];
 
   // draw least-severe first so serious items sit on top
   const sorted = list.slice().sort((a, b) => severityWeight(a.severity) - severityWeight(b.severity));
@@ -173,11 +224,10 @@ function draw(canvas: HTMLCanvasElement, list: RoadDisruption[]) {
     const p = parsePoint(d.point);
     if (!p || !inBbox(p[0], p[1])) continue;
     const [x, y] = latLonToXY(p[0], p[1], W, H);
+    if (x < vmin[0] - 20 || x > vmax[0] + 20 || y < vmin[1] - 20 || y > vmax[1] + 20) continue;
     const c = SEVERITY_COLOR[d.severity] ?? '#9a9a9a';
-    const r = severityWeight(d.severity) + 3;
+    const r = (severityWeight(d.severity) + 3) / vp.scale;
 
-    // soft halo (smaller + lighter than the original 3× glow so the map
-    // underneath stays visible in dense clusters)
     const g = ctx.createRadialGradient(x, y, 0, x, y, r * 2);
     g.addColorStop(0, c + '55');
     g.addColorStop(1, c + '00');
@@ -187,11 +237,14 @@ function draw(canvas: HTMLCanvasElement, list: RoadDisruption[]) {
     ctx.fillStyle = c;
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,0.45)';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1 / vp.scale;
     ctx.stroke();
   }
 
-  drawThamesOverlay(ctx, W, H);
+  drawThamesOverlay(ctx, W, H, vp);
+  ctx.restore();
+
+  drawBoroughLabels(ctx, W, H, vp);
 }
 
 function fmtDate(s: string): string {
@@ -219,8 +272,18 @@ const CSS = `
   .seg-btn + .seg-btn { border-left: 1px solid var(--color-border); }
   .seg-btn.on { color: var(--color-accent); background: color-mix(in oklch, var(--color-accent) 6%, transparent); }
 
-  .canvas-wrap { margin-top: var(--sp-3); }
-  .canvas { width: 100%; height: auto; border: 1px solid var(--color-border); display: block; cursor: crosshair; }
+  .canvas-wrap { margin-top: var(--sp-3); position: relative; }
+  .canvas { width: 100%; height: auto; border: 1px solid var(--color-border); display: block; touch-action: none; user-select: none; }
+  .vp-ctrl {
+    position: absolute; top: 8px; right: 10px;
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--color-fg-faint);
+    background: color-mix(in oklch, var(--color-bg) 70%, transparent);
+    padding: 4px 8px; border: 1px solid var(--color-border);
+  }
+  .vp-ctrl button { background: transparent; border: 1px solid var(--color-border); color: var(--color-fg-dim); padding: 1px 8px; font-family: inherit; font-size: inherit; cursor: pointer; text-transform: lowercase; }
+  .vp-ctrl button:hover:not(:disabled) { color: var(--color-accent); border-color: var(--color-accent-dim); }
+  .vp-ctrl button:disabled { opacity: 0.4; cursor: default; }
 
   .sel { margin-top: var(--sp-3); border: 1px solid var(--color-accent-dim); background: var(--color-bg-panel); }
   .sel-hd { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3); border-bottom: 1px solid var(--color-border); }
