@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchBikePoints, type BikePoint } from '../../lib/tfl';
-import { drawLondonBg, latLonToXY, inBbox } from '../../lib/london-bg';
+import { drawLondonBg, drawThamesOverlay, latLonToXY, inBbox } from '../../lib/london-bg';
 
 type HoverState = { dock: BikePoint; x: number; y: number } | null;
 
@@ -139,28 +139,28 @@ function draw(canvas: HTMLCanvasElement, docks: BikePoint[], mode: 'bikes' | 'sp
   const W = canvas.width, H = canvas.height;
   drawLondonBg(ctx, W, H);
 
+  // Plot as plain filled circles. Earlier versions used a 3× radial glow per
+  // dot, but with 800 docks packed into zone 1–2 the glows overlapped so
+  // heavily that the Thames underneath disappeared. Flat dots + a re-stroked
+  // Thames overlay reads much better.
   for (const d of docks) {
     if (!inBbox(d.lat, d.lon)) continue;
     const [x, y] = latLonToXY(d.lat, d.lon, W, H);
     const c = dockColor(d, mode);
+    const r = 2 + Math.min(4, Math.sqrt(d.totalDocks) / 4);
 
-    // size by total capacity (so big docks near stations stand out)
-    const r = 2 + Math.min(5, Math.sqrt(d.totalDocks) / 3);
-
-    // glow
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 3);
-    g.addColorStop(0, c + 'cc');
-    g.addColorStop(1, c + '00');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(x, y, r * 3, 0, Math.PI * 2);
-    ctx.fill();
-
+    // subtle rim for legibility on dark bg
     ctx.fillStyle = c;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
   }
+
+  // Re-stroke the Thames so it always wins over the dot layer.
+  drawThamesOverlay(ctx, W, H);
 }
 
 const CSS = `

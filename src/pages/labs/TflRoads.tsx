@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchRoadDisruptions, type RoadDisruption } from '../../lib/tfl';
-import { drawLondonBg, latLonToXY, inBbox } from '../../lib/london-bg';
+import { drawLondonBg, drawThamesOverlay, latLonToXY, inBbox } from '../../lib/london-bg';
 
 const SEVERITY_COLOR: Record<string, string> = {
   'Serious':    '#ff5a5a',
@@ -176,15 +176,22 @@ function draw(canvas: HTMLCanvasElement, list: RoadDisruption[]) {
     const c = SEVERITY_COLOR[d.severity] ?? '#9a9a9a';
     const r = severityWeight(d.severity) + 3;
 
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 3);
-    g.addColorStop(0, c + 'bb');
+    // soft halo (smaller + lighter than the original 3× glow so the map
+    // underneath stays visible in dense clusters)
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 2);
+    g.addColorStop(0, c + '55');
     g.addColorStop(1, c + '00');
     ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(x, y, r * 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, r * 2, 0, Math.PI * 2); ctx.fill();
 
     ctx.fillStyle = c;
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
   }
+
+  drawThamesOverlay(ctx, W, H);
 }
 
 function fmtDate(s: string): string {

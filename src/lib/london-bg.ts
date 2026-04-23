@@ -70,8 +70,12 @@ function polyline(ctx: CanvasRenderingContext2D, pts: [number, number][], W: num
 }
 
 /**
- * Draws the london map background: black fill, faint grid, M25 ring, thames
- * river. Caller sizes the canvas; this fills the whole rect.
+ * Draws the london map background: black fill, grid, M25 ring, thames river.
+ * Caller sizes the canvas; this fills the whole rect.
+ *
+ * For scenes that plot 100+ dots (bike docks, road disruptions) call
+ * `drawThamesOverlay()` *after* plotting so the river stays recognisable
+ * above the dot layer.
  */
 export function drawLondonBg(ctx: CanvasRenderingContext2D, W: number, H: number) {
   ctx.fillStyle = '#000';
@@ -79,7 +83,7 @@ export function drawLondonBg(ctx: CanvasRenderingContext2D, W: number, H: number
 
   // faint grid — every 0.1° of lon and 0.05° of lat
   ctx.lineWidth = 1;
-  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
   for (let lon = -0.6; lon <= 0.5; lon += 0.1) {
     const x = lonToX(lon, W);
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
@@ -89,22 +93,37 @@ export function drawLondonBg(ctx: CanvasRenderingContext2D, W: number, H: number
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
   }
 
-  // M25 ring — dashed, dim
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  // M25 ring — dashed, visible but not busy
+  ctx.strokeStyle = 'rgba(255,255,255,0.20)';
   ctx.lineWidth = 2;
   ctx.setLineDash([6, 6]);
   polyline(ctx, M25, W, H);
   ctx.setLineDash([]);
 
-  // thames — phosphor blue-green
-  ctx.strokeStyle = '#2a5a80';
-  ctx.lineWidth = 4;
+  // thames body — broad navy stroke
+  ctx.strokeStyle = '#2c5d85';
+  ctx.lineWidth = 8;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   polyline(ctx, THAMES, W, H);
 
-  // thin highlight on top of the thames to make it pop
-  ctx.strokeStyle = 'rgba(100,180,220,0.6)';
-  ctx.lineWidth = 1.5;
+  // thames highlight — brighter core so it reads as water even before overlay
+  ctx.strokeStyle = 'rgba(110,190,230,0.75)';
+  ctx.lineWidth = 2.5;
   polyline(ctx, THAMES, W, H);
+}
+
+/**
+ * Redraws just the thames on top of whatever's been plotted since
+ * `drawLondonBg`. Used by cycles / roads to stop 800 dock glows from
+ * painting over the river.
+ */
+export function drawThamesOverlay(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(110,190,230,0.85)';
+  ctx.lineWidth = 2;
+  polyline(ctx, THAMES, W, H);
+  ctx.restore();
 }

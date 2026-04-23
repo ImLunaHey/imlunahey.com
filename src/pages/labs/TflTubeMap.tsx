@@ -11,8 +11,11 @@ import {
 
 // Tube-first line set — same list tfl-status covers, minus tram and cable-car
 // since those are single-route / not actually part of the central tube map.
+// TfL uses `elizabeth` as the line id, even though the mode name is
+// `elizabeth-line`. Likewise `hammersmith-city`/`waterloo-city` *are* the
+// line ids here (singular), matching what /Line/{id}/... expects.
 const LINE_IDS = [
-  'bakerloo', 'central', 'circle', 'district', 'elizabeth-line',
+  'bakerloo', 'central', 'circle', 'district', 'elizabeth',
   'hammersmith-city', 'jubilee', 'metropolitan', 'northern', 'piccadilly',
   'victoria', 'waterloo-city', 'dlr',
 ];
@@ -83,17 +86,19 @@ export default function TflTubeMapPage() {
               </div>
               {row.reason ? <div className="reason">{cleanReason(row.reason, row.color.label)}</div> : null}
               <div className="track" style={{ '--line-bg': row.color.bg } as React.CSSProperties}>
-                {row.stops.map((s) => (
-                  <button
-                    key={s.naptanId}
-                    className="stop"
-                    onClick={() => navigate({ to: '/labs/tfl-arrivals' as never, search: { id: s.naptanId, name: s.commonName } as never })}
-                    title={`${s.commonName} → open arrivals`}
-                  >
-                    <span className="stop-dot" />
-                    <span className="stop-label">{s.commonName}</span>
-                  </button>
-                ))}
+                <div className="track-inner">
+                  {row.stops.map((s) => (
+                    <button
+                      key={s.naptanId}
+                      className="stop"
+                      onClick={() => navigate({ to: '/labs/tfl-arrivals' as never, search: { id: s.naptanId, name: s.commonName } as never })}
+                      title={`${s.commonName} → open arrivals`}
+                    >
+                      <span className="stop-dot" />
+                      <span className="stop-label">{s.commonName}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           ))}
@@ -143,20 +148,24 @@ const CSS = `
 
   .reason { padding: 6px 0; color: var(--color-fg-dim); font-family: var(--font-mono); font-size: var(--fs-xs); line-height: 1.5; }
 
+  /* outer .track handles the horizontal scroll; inner .track-inner sizes
+   * to its contents so the coloured line spans every station even when the
+   * row overflows the viewport. */
   .track {
-    position: relative;
-    display: flex;
     overflow-x: auto;
-    gap: 0;
     padding: var(--sp-4) 0 var(--sp-3);
     scrollbar-width: thin;
   }
-  /* the coloured line running through every stop */
-  .track::before {
+  .track-inner {
+    position: relative;
+    display: flex;
+    min-width: max-content;
+  }
+  .track-inner::before {
     content: '';
     position: absolute;
     left: 0; right: 0;
-    top: calc(var(--sp-4) + 6px);
+    top: 6px;
     height: 4px;
     background: var(--line-bg);
     z-index: 0;

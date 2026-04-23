@@ -13,7 +13,8 @@ export const LINE_COLORS: Record<string, { bg: string; fg: string; label: string
   'circle':          { bg: '#ffd300', fg: '#000', label: 'Circle' },
   'district':        { bg: '#00782a', fg: '#fff', label: 'District' },
   'dlr':             { bg: '#00a4a7', fg: '#fff', label: 'DLR' },
-  'elizabeth-line':  { bg: '#6950a1', fg: '#fff', label: 'Elizabeth' },
+  'elizabeth':       { bg: '#6950a1', fg: '#fff', label: 'Elizabeth' },
+  'elizabeth-line':  { bg: '#6950a1', fg: '#fff', label: 'Elizabeth' }, // mode-name fallback
   'hammersmith-city':{ bg: '#f3a9bb', fg: '#000', label: 'Hammersmith & City' },
   'jubilee':         { bg: '#a0a5a9', fg: '#000', label: 'Jubilee' },
   'metropolitan':    { bg: '#9b0056', fg: '#fff', label: 'Metropolitan' },
