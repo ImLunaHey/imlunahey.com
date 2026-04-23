@@ -52,7 +52,41 @@ export type OgSlug =
   | 'lab/snake'
   | 'lab/life'
   | 'lab/wordle'
-  | 'lab/typing';
+  | 'lab/typing'
+  // 2026 additions
+  | 'lab/bsky-composer'
+  | 'lab/fingerprint'
+  | 'lab/whois'
+  | 'lab/ids'
+  | 'lab/unicode'
+  | 'lab/handle-sniper'
+  | 'lab/did-log'
+  | 'lab/thread-tree'
+  | 'lab/pds-health'
+  | 'lab/regex'
+  | 'lab/encode'
+  | 'lab/diff'
+  | 'lab/lexicon-validator'
+  | 'lab/firehose-stats'
+  | 'lab/dns'
+  | 'lab/json'
+  | 'lab/colour'
+  | 'lab/timestamp'
+  | 'lab/matrix'
+  | 'lab/terminal'
+  | 'lab/hash'
+  | 'lab/case'
+  | 'lab/password'
+  | 'lab/hex-dump'
+  | 'lab/ua'
+  | 'lab/http-status'
+  | 'lab/curl'
+  | 'lab/csv'
+  | 'lab/subnet'
+  | 'lab/http-headers'
+  | 'lab/certs'
+  | 'lab/schema'
+  | 'lab/year-in-review';
 
 type OgEntry = {
   title: string;
@@ -101,6 +135,39 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/life': { title: 'life.', subtitle: "conway's automaton on a torus", glyph: '◫', slug: '/labs/life' },
   'lab/wordle': { title: 'wordle.', subtitle: 'one word a day, six guesses', glyph: '▦', slug: '/labs/wordle' },
   'lab/typing': { title: 'typing.', subtitle: 'wpm + accuracy, bring-your-own-keyboard', glyph: '⎇', slug: '/labs/typing' },
+  'lab/bsky-composer': { title: 'bsky composer.', subtitle: 'draft a post with a live link-card preview', glyph: '✎', slug: '/labs/bsky-composer' },
+  'lab/fingerprint': { title: 'fingerprint.', subtitle: 'everything your browser silently tells every site', glyph: '✾', slug: '/labs/fingerprint' },
+  'lab/whois': { title: 'whois.', subtitle: 'rdap domain lookup — registrar, expiry, nameservers', glyph: '?', slug: '/labs/whois' },
+  'lab/ids': { title: 'ids.', subtitle: 'generate + inspect uuid / ulid / tid / snowflake', glyph: '#', slug: '/labs/ids' },
+  'lab/unicode': { title: 'unicode.', subtitle: 'graphemes, codepoints, normalization forms', glyph: 'U', slug: '/labs/unicode' },
+  'lab/handle-sniper': { title: 'handle sniper.', subtitle: 'check bluesky handle availability everywhere', glyph: '⌖', slug: '/labs/handle-sniper' },
+  'lab/did-log': { title: 'did log.', subtitle: 'atproto identity history — handles, pds, keys', glyph: '⊗', slug: '/labs/did-log' },
+  'lab/thread-tree': { title: 'thread tree.', subtitle: 'bluesky conversation as an indented tree', glyph: '⌥', slug: '/labs/thread-tree' },
+  'lab/pds-health': { title: 'pds health.', subtitle: 'probe any atproto pds for health + metadata', glyph: '◉', slug: '/labs/pds-health' },
+  'lab/regex': { title: 'regex.', subtitle: 'live tester with matches + capture groups', glyph: '*', slug: '/labs/regex' },
+  'lab/encode': { title: 'encode.', subtitle: 'base64 / url / html / hex / binary / rot13', glyph: '↔', slug: '/labs/encode' },
+  'lab/diff': { title: 'diff.', subtitle: 'line-level diff — split + unified, lcs-based', glyph: '≠', slug: '/labs/diff' },
+  'lab/lexicon-validator': { title: 'lexicon validator.', subtitle: 'validate any atproto record against its schema', glyph: '✓', slug: '/labs/lexicon-validator' },
+  'lab/firehose-stats': { title: 'firehose stats.', subtitle: 'live aggregate of the bluesky jetstream', glyph: 'Σ', slug: '/labs/firehose-stats' },
+  'lab/dns': { title: 'dns.', subtitle: 'doh lookup for every common record type', glyph: 'Δ', slug: '/labs/dns' },
+  'lab/json': { title: 'json.', subtitle: 'collapsible tree viewer with jsonpath copier', glyph: '⟦⟧', slug: '/labs/json' },
+  'lab/colour': { title: 'colour.', subtitle: 'hex / rgb / hsl / oklch with wcag contrast', glyph: '◑', slug: '/labs/colour' },
+  'lab/timestamp': { title: 'timestamp.', subtitle: 'unix / iso / rfc + 8 timezones, live', glyph: '◷', slug: '/labs/timestamp' },
+  'lab/matrix': { title: 'matrix.', subtitle: 'falling-kana canvas screensaver', glyph: '▚', slug: '/labs/matrix' },
+  'lab/terminal': { title: 'terminal.', subtitle: 'a fake shell for the whole site', glyph: '$', slug: '/labs/terminal' },
+  'lab/hash': { title: 'hash.', subtitle: 'md5 + sha-1/256/384/512 of any text', glyph: '⨀', slug: '/labs/hash' },
+  'lab/case': { title: 'case.', subtitle: 'every case style at once — camel, snake, kebab', glyph: 'Aa', slug: '/labs/case' },
+  'lab/password': { title: 'password.', subtitle: 'generator with live entropy meter', glyph: '⎈', slug: '/labs/password' },
+  'lab/hex-dump': { title: 'hex dump.', subtitle: 'xxd-style hex + ascii of any bytes', glyph: '☰', slug: '/labs/hex-dump' },
+  'lab/ua': { title: 'ua.', subtitle: 'user-agent parser — browser / engine / os', glyph: '◎', slug: '/labs/ua' },
+  'lab/http-status': { title: 'http status.', subtitle: 'every code with descriptions + common causes', glyph: '⬢', slug: '/labs/http-status' },
+  'lab/curl': { title: 'curl → fetch.', subtitle: 'paste curl, get fetch() + axios', glyph: '↯', slug: '/labs/curl' },
+  'lab/csv': { title: 'csv.', subtitle: 'csv ↔ json with quoted fields + preview', glyph: '⊟', slug: '/labs/csv' },
+  'lab/subnet': { title: 'subnet.', subtitle: 'cidr calculator with bitwise breakdown', glyph: '⊜', slug: '/labs/subnet' },
+  'lab/http-headers': { title: 'http headers.', subtitle: 'fetch any url, see redirect chain + headers', glyph: '⎘', slug: '/labs/http-headers' },
+  'lab/certs': { title: 'certs.', subtitle: 'tls cert history from ct logs', glyph: '⌇', slug: '/labs/certs' },
+  'lab/schema': { title: 'schema.', subtitle: 'infer a json schema from sample data', glyph: '◇', slug: '/labs/schema' },
+  'lab/year-in-review': { title: 'year in review.', subtitle: 'bluesky wrapped from any account\'s car file', glyph: '★', slug: '/labs/year-in-review' },
 };
 
 const W = 1200;
