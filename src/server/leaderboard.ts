@@ -2,6 +2,13 @@ import { createServerFn } from '@tanstack/react-start';
 import { cached, TTL } from './cache';
 import { isWordleWord } from '../lib/wordle-dictionary';
 import { dailyWordleAnswer } from '../lib/wordle-answers';
+import {
+  canonical,
+  hmacSign,
+  hmacVerify,
+  validateScore,
+  type GameId as SigGameId,
+} from '../lib/leaderboard-sig';
 
 /**
  * AT-URI of the marker record written by `npm run leaderboard:marker`.
@@ -11,7 +18,7 @@ export const LEADERBOARD_MARKER_URI =
   'at://did:plc:k6acu4chiwkixvdedcmdgmal/com.imlunahey.leaderboard.marker/self';
 export const LEADERBOARD_SCORE_COLLECTION = 'com.imlunahey.leaderboard.score';
 
-export type GameId = 'snake' | 'wordle' | 'typing-15' | 'typing-30' | 'typing-60';
+export type GameId = SigGameId;
 
 export type LeaderboardRow = {
   uri: string;
@@ -54,64 +61,6 @@ type BskyProfile = {
   displayName?: string;
   avatar?: string;
 };
-
-// ─── validation rules per-game ────────────────────────────────────────────
-
-function validateScore(game: GameId, score: number): string | null {
-  if (!Number.isInteger(score) || score < 0) return 'score must be a non-negative integer';
-  switch (game) {
-    case 'snake':
-      if (score > 400) return 'snake score exceeds plausible max (400)';
-      return null;
-    case 'wordle':
-      if (score > 6) return 'wordle score must be 1..6';
-      if (score < 1) return 'wordle score must be at least 1';
-      return null;
-    case 'typing-15':
-    case 'typing-30':
-    case 'typing-60':
-      if (score > 250) return 'typing wpm exceeds plausible max (250)';
-      return null;
-    default:
-      return `unknown game: ${String(game)}`;
-  }
-}
-
-// ─── hmac helpers ─────────────────────────────────────────────────────────
-
-function canonical(payload: { game: GameId; score: number; did: string; achievedAt: string }): string {
-  // sorted keys → deterministic serialisation. Any drift in this format
-  // would invalidate all previously signed records, so keep it stable.
-  return `${payload.achievedAt}|${payload.did}|${payload.game}|${payload.score}`;
-}
-
-function toBase64url(bytes: ArrayBuffer): string {
-  const bin = String.fromCharCode(...new Uint8Array(bytes));
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-async function hmacSign(secret: string, message: string): Promise<string> {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    enc.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  );
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
-  return toBase64url(sig);
-}
-
-async function hmacVerify(secret: string, message: string, expected: string): Promise<boolean> {
-  const actual = await hmacSign(secret, message);
-  // constant-time compare — node's timingSafeEqual isn't available in workers,
-  // but tokens are short and client-observable so the extra leak is tiny.
-  if (actual.length !== expected.length) return false;
-  let diff = 0;
-  for (let i = 0; i < actual.length; i++) diff |= actual.charCodeAt(i) ^ expected.charCodeAt(i);
-  return diff === 0;
-}
 
 function getSecret(): string {
   const s = process.env.LEADERBOARD_HMAC_SECRET;

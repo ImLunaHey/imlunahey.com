@@ -1,0 +1,46 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildOgSvg > is stable for a pinned slug — poisoning the cdn cache would bite 1`] = `
+"<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="ui-monospace, 'JetBrains Mono', 'Courier New', monospace">
+  <defs>
+    <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#555555" opacity="0.3"/>
+    </pattern>
+  </defs>
+
+  <!-- background -->
+  <rect width="1200" height="630" fill="#000000"/>
+  <rect width="1200" height="630" fill="url(#dots)"/>
+
+  <!-- corner brackets anchored to the image corners -->
+  <g stroke="#6aeaa0" stroke-width="2" fill="none">
+    <path d="M 48 72 L 48 48 L 72 48"/>
+    <path d="M 1128 582 L 1152 582 L 1152 558"/>
+  </g>
+
+  <!-- wordmark (top-left) -->
+  <text x="72" y="94" fill="#9a9a9a" font-size="24" letter-spacing="2">imlunahey<tspan fill="#6aeaa0">.com</tspan></text>
+  <text x="72" y="124" fill="#555555" font-size="16" letter-spacing="3">~ / labs/wordle</text>
+
+  <!-- glyph (top-right) -->
+  <text x="1128" y="164" text-anchor="end" fill="#6aeaa0" font-size="132" opacity="0.95">▦</text>
+
+  <!-- title (center-left, full bleed) -->
+  <text x="72" y="363" fill="#e6e6e6" font-size="148" font-weight="500" letter-spacing="-3">wordle.</text>
+
+  <!-- subtitle -->
+  <text x="72" y="415" fill="#9a9a9a" font-size="32" letter-spacing="1">one word a day, six guesses</text>
+
+  <!-- footer strip -->
+  <line x1="72" y1="522" x2="1128" y2="522" stroke="#1a1a1a"/>
+  <text x="72" y="558" fill="#555555" font-size="18" letter-spacing="3">
+    <tspan fill="#3f8463">●</tspan>
+    <tspan dx="10">online</tspan>
+    <tspan dx="20" fill="#555555">·</tspan>
+    <tspan dx="20">london, uk</tspan>
+    <tspan dx="20" fill="#555555">·</tspan>
+    <tspan dx="20">europe/london</tspan>
+  </text>
+  <text x="1128" y="558" text-anchor="end" fill="#555555" font-size="18" letter-spacing="3">imlunahey.com</text>
+</svg>"
+`;

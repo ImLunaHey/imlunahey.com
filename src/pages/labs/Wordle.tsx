@@ -9,6 +9,7 @@ import { useProfile } from '../../hooks/use-profile';
 import { ensureOAuthConfigured, LEADERBOARD_SCOPE, LEADERBOARD_WRITE_SCOPE, sessionHasScope } from '../../lib/oauth';
 import { dailyWordleAnswer } from '../../lib/wordle-answers';
 import { isWordleWord } from '../../lib/wordle-dictionary';
+import { judge, type LetterState } from '../../lib/wordle-judge';
 import {
   getLeaderboard,
   LEADERBOARD_MARKER_URI,
@@ -19,32 +20,15 @@ import {
 
 const GAME_ID = 'wordle' as const;
 
-type LetterState = 'correct' | 'present' | 'absent' | 'empty';
-
-function judge(guess: string, answer: string): LetterState[] {
-  // two-pass: first mark greens, then yellows using a letter-frequency map
-  // so double letters don't over-credit.
-  const res: LetterState[] = Array.from({ length: 5 }, () => 'absent');
-  const remaining: Record<string, number> = {};
-  for (let i = 0; i < 5; i++) {
-    if (guess[i] === answer[i]) {
-      res[i] = 'correct';
-    } else {
-      remaining[answer[i]] = (remaining[answer[i]] ?? 0) + 1;
-    }
-  }
-  for (let i = 0; i < 5; i++) {
-    if (res[i] === 'correct') continue;
-    const c = guess[i];
-    if ((remaining[c] ?? 0) > 0) {
-      res[i] = 'present';
-      remaining[c] -= 1;
-    }
-  }
-  return res;
-}
-
 const KEYBOARD_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+
+function describeLetter(letter: string, s: LetterState): string {
+  if (!letter) return '';
+  if (s === 'correct') return `${letter}, correct`;
+  if (s === 'present') return `${letter}, wrong position`;
+  if (s === 'absent') return `${letter}, not in word`;
+  return letter;
+}
 
 export default function WordlePage() {
   const today = useMemo(() => new Date(), []);
@@ -211,6 +195,20 @@ export default function WordlePage() {
   }
   while (rows.length < 6) rows.push({ letters: Array(5).fill(''), states: Array(5).fill('empty') });
 
+  // screen-reader announcement for the last guess / game outcome. rendered
+  // into a visually-hidden aria-live region so sr users get the result of
+  // each submission without having to re-read the (colour-only) board.
+  const announcement = useMemo(() => {
+    if (invalidMsg) return invalidMsg;
+    if (solved) return `solved in ${guesses.length} guess${guesses.length === 1 ? '' : 'es'}.`;
+    if (finished) return `out of guesses. the word was ${answer}.`;
+    if (guesses.length === 0) return '';
+    const last = guesses[guesses.length - 1];
+    const states = judge(last, answer);
+    const parts = last.split('').map((l, i) => describeLetter(l, states[i]));
+    return `guess ${guesses.length}: ${parts.join(', ')}.`;
+  }, [guesses, invalidMsg, solved, finished, answer]);
+
   // per-key state for the virtual keyboard: strongest signal wins
   // (correct > present > absent).
   const keyState: Record<string, LetterState> = {};
@@ -315,18 +313,25 @@ export default function WordlePage() {
             {publishError ? <div className="publish-err">{publishError}</div> : null}
           </section>
         ) : (
-          <section className="board">
+          <section className="board" aria-label="wordle board">
             {rows.map((row, i) => {
               const isActive = !finished && i === guesses.length;
               return (
                 <div key={i} className={`row${isActive && shake ? ' shake' : ''}`}>
                   {row.letters.map((l, j) => (
-                    <div key={j} className={`tile ${row.states[j]}`}>{l}</div>
+                    <div
+                      key={j}
+                      className={`tile ${row.states[j]}`}
+                      aria-label={l ? describeLetter(l, row.states[j]) : undefined}
+                    >
+                      {l}
+                    </div>
                   ))}
                 </div>
               );
             })}
-            {invalidMsg ? <div className="invalid-msg">{invalidMsg}</div> : null}
+            {invalidMsg ? <div className="invalid-msg" aria-hidden="true">{invalidMsg}</div> : null}
+            <div className="sr-only" role="status" aria-live="polite">{announcement}</div>
           </section>
         )}
 
@@ -563,6 +568,14 @@ const CSS = `
     40% { transform: translateX(6px); }
     60% { transform: translateX(-4px); }
     80% { transform: translateX(4px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .row.shake { animation: none; }
+  }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
   }
   .invalid-msg {
     margin-top: 8px;

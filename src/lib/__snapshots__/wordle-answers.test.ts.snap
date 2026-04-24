@@ -1,0 +1,21 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`dailyWordleAnswer > pins the seed → word mapping so accidental drift is caught 1`] = `
+[
+  {
+    "answer": "frost",
+    "date": "2026-01-01",
+    "puzzleIdx": 3,
+  },
+  {
+    "answer": "sword",
+    "date": "2026-04-24",
+    "puzzleIdx": 67,
+  },
+  {
+    "answer": "angle",
+    "date": "2030-12-31",
+    "puzzleIdx": 49,
+  },
+]
+`;
