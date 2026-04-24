@@ -438,7 +438,7 @@ export default function BskyComposerPage() {
               <div className="cmp-ident"><span className="cmp-ident-hint">checking session…</span></div>
             ) : signedIn && session ? (
               <div className="cmp-ident">
-                <label className="cmp-ident-lbl">signed in</label>
+                <span className="cmp-ident-lbl">signed in</span>
                 <span className="cmp-ident-input" style={{ padding: 0 }}>@{profile?.handle ?? session.info.sub}</span>
                 <button className="cmp-btn" onClick={signOut}>sign out</button>
               </div>
@@ -450,8 +450,9 @@ export default function BskyComposerPage() {
                   if (signInHandle.trim()) void startSignIn(signInHandle);
                 }}
               >
-                <label className="cmp-ident-lbl">sign in</label>
+                <label className="cmp-ident-lbl" htmlFor="cmp-signin-handle">sign in</label>
                 <input
+                  id="cmp-signin-handle"
                   className="cmp-ident-input"
                   type="text"
                   placeholder="your.handle.bsky.social"
@@ -471,8 +472,9 @@ export default function BskyComposerPage() {
               <>
                 <div className="cmp-label" style={{ marginTop: 16 }}>── preview as</div>
                 <div className="cmp-ident">
-                  <label className="cmp-ident-lbl">handle</label>
+                  <label className="cmp-ident-lbl" htmlFor="cmp-preview-handle">handle</label>
                   <input
+                    id="cmp-preview-handle"
                     className="cmp-ident-input"
                     value={actor}
                     onChange={(e) => setActor(e.target.value.trim())}

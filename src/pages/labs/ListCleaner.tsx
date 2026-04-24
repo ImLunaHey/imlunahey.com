@@ -1,10 +1,15 @@
-import { AtpSessionData, CredentialManager, XRPC } from '@atcute/client';
+import { simpleFetchHandler, XRPC } from '@atcute/client';
 import { AppBskyActorDefs, AppBskyGraphDefs } from '@atcute/client/lexicons';
+import type { ActorIdentifier } from '@atcute/lexicons';
+import { createAuthorizationUrl, deleteStoredSession, OAuthUserAgent } from '@atcute/oauth-browser-client';
 import { Link } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useConfirm } from '../../components/ConfirmDialog';
+import { useAtprotoSession } from '../../hooks/use-atproto-session';
+import { useProfile } from '../../hooks/use-profile';
+import { ensureOAuthConfigured, LISTBLOCK_DELETE_SCOPE, LISTBLOCK_SCOPE, sessionHasScope } from '../../lib/oauth';
 
-type Phase = 'idle' | 'logging-in' | 'fetching-lists' | 'ready' | 'deleting' | 'error';
+type Phase = 'idle' | 'fetching-lists' | 'ready' | 'deleting' | 'error';
 
 type Creator = AppBskyActorDefs.ProfileViewDetailed | AppBskyActorDefs.ProfileView | null;
 
@@ -21,56 +26,167 @@ type ListblockRecord = {
   value: { $type: 'app.bsky.graph.listblock'; subject: string; createdAt: string };
 };
 
-export default function ListCleanerPage() {
-  const [manager] = useState(() => new CredentialManager({ service: 'https://bsky.social' }));
-  const [rpc] = useState(() => new XRPC({ handler: manager }));
+// Public AppView — used for list lookups (app.bsky.graph.getList) so we
+// don't need an authed call for read-only data about lists. Writes
+// (deleteRecord) still go through the authed session's XRPC below.
+const pubRpc = new XRPC({ handler: simpleFetchHandler({ service: 'https://public.api.bsky.app' }) });
 
+export default function ListCleanerPage() {
+  const { session, loading: sessionLoading, refresh } = useAtprotoSession();
+  const { data: profile } = useProfile({ actor: session?.info.sub ?? '' });
+  const canDelete = sessionHasScope(session, LISTBLOCK_DELETE_SCOPE);
+
+  return (
+    <>
+      <style>{CSS}</style>
+      <main className="shell-lc">
+        <div className="crumbs">
+          <Link to="/labs">~ / labs</Link>
+          <span className="sep">/</span>
+          <span className="last">list-cleaner</span>
+        </div>
+
+        <header className="lc-hd">
+          <h1>
+            list cleaner<span className="dot">.</span>
+          </h1>
+          <p className="sub">
+            sweep away dead moderation-list subscriptions from your bluesky account. finds every{' '}
+            <code className="inline">app.bsky.graph.listblock</code> record you&apos;ve written, then pings{' '}
+            <code className="inline">app.bsky.graph.getList</code> on each to see if the source still resolves. lists
+            whose creator is deleted, deactivated, or took the list down are flagged — delete individually or in bulk.
+          </p>
+        </header>
+
+        {sessionLoading ? (
+          <div className="loading">checking session…</div>
+        ) : !session || !canDelete ? (
+          <SignInGate existingSession={!!session} onSignedIn={() => void refresh()} />
+        ) : (
+          <Cleaner session={session} profile={profile ?? null} onSignOut={() => void refresh()} />
+        )}
+
+        <footer className="lc-footer">
+          <span>
+            src: <span className="t-accent">atproto oauth · com.atproto.repo.listRecords · app.bsky.graph.getList</span>
+          </span>
+          <span>
+            ←{' '}
+            <Link to="/labs" className="t-accent">
+              all labs
+            </Link>
+          </span>
+        </footer>
+      </main>
+    </>
+  );
+}
+
+// ─── sign-in gate ──────────────────────────────────────────────────────────
+
+function SignInGate({ existingSession, onSignedIn }: { existingSession: boolean; onSignedIn: () => void }) {
   const [handle, setHandle] = useState('');
-  const [appPassword, setAppPassword] = useState('');
-  const [session, setSession] = useState<AtpSessionData | null>(null);
-  const [profile, setProfile] = useState<AppBskyActorDefs.ProfileViewDetailed | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [signing, setSigning] = useState(false);
+
+  async function go(e: React.FormEvent) {
+    e.preventDefault();
+    if (!handle.trim()) return;
+    setErr(null);
+    setSigning(true);
+    try {
+      ensureOAuthConfigured();
+      const url = await createAuthorizationUrl({
+        target: { type: 'account', identifier: handle.trim() as ActorIdentifier },
+        scope: LISTBLOCK_SCOPE,
+        state: { returnTo: window.location.pathname },
+      });
+      window.location.assign(url.toString());
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+      setSigning(false);
+    }
+  }
+
+  return (
+    <section className="gate">
+      <div className="gate-title">sign in to clean up</div>
+      <p className="gate-sub">
+        {existingSession
+          ? 'you\'re signed in, but this tab needs the listblock-delete scope. re-authorising grants only what\'s needed — other features you\'ve signed into stay intact.'
+          : 'oauth sign-in via your handle. the redirect will ask for permission to delete your own app.bsky.graph.listblock records — nothing else.'}
+      </p>
+      <form className="gate-form" onSubmit={(e) => void go(e)}>
+        <input
+          className="gate-input"
+          placeholder="your.handle.bsky.social"
+          aria-label="bluesky handle"
+          value={handle}
+          onChange={(e) => setHandle(e.target.value)}
+          autoComplete="username"
+          spellCheck={false}
+          disabled={signing}
+        />
+        <button className="gate-btn primary" type="submit" disabled={!handle.trim() || signing}>
+          {signing ? 'redirecting…' : 'sign in'}
+        </button>
+      </form>
+      {err ? <div className="err">{err}</div> : null}
+      <button type="button" className="gate-btn" onClick={onSignedIn} title="i already signed in in another tab — re-check my session">
+        already signed in? recheck
+      </button>
+    </section>
+  );
+}
+
+// ─── cleaner (signed-in state) ─────────────────────────────────────────────
+
+type MiniProfile = { did: string; handle: string; displayName?: string; avatar?: string };
+
+function Cleaner({
+  session,
+  profile,
+  onSignOut,
+}: {
+  session: { info: { sub: string } };
+  profile: MiniProfile | null;
+  onSignOut: () => void;
+}) {
+  const did = session.info.sub;
+  const agent = useMemo(
+    () => new OAuthUserAgent(session as unknown as ConstructorParameters<typeof OAuthUserAgent>[0]),
+    [session],
+  );
+  const rpc = useMemo(() => new XRPC({ handler: agent }), [agent]);
+
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [phase, setPhase] = useState<Phase>('idle');
+  const [phase, setPhase] = useState<Phase>('fetching-lists');
   const [msg, setMsg] = useState('');
   const { confirm, dialog: confirmDialog } = useConfirm();
 
-  const login = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMsg('');
-    setPhase('logging-in');
+  async function signOut() {
     try {
-      const next = await manager.login({ identifier: handle.trim(), password: appPassword });
-      setSession(next);
-      const { data } = await rpc.get('app.bsky.actor.getProfile', { params: { actor: handle.trim() } });
-      setProfile(data);
-    } catch (err) {
-      setPhase('error');
-      setMsg(err instanceof Error ? err.message : String(err));
+      await agent.signOut();
+    } catch {
+      try { deleteStoredSession(did as Parameters<typeof deleteStoredSession>[0]); } catch { /* ignore */ }
     }
-  };
-
-  const logout = () => {
-    setSession(null);
-    setProfile(null);
-    setEntries([]);
-    setPhase('idle');
-    setMsg('');
-    setAppPassword('');
-  };
+    onSignOut();
+  }
 
   useEffect(() => {
-    if (!session) return;
     let cancelled = false;
     const run = async () => {
       setPhase('fetching-lists');
       setMsg('');
       try {
         const res = await rpc.get('com.atproto.repo.listRecords', {
-          params: { repo: session.did, collection: 'app.bsky.graph.listblock', limit: 100 },
+          params: { repo: did as ActorIdentifier, collection: 'app.bsky.graph.listblock', limit: 100 },
         });
         const records = (res.data as { records: ListblockRecord[] }).records
           .sort((a, b) => b.value.createdAt.localeCompare(a.value.createdAt));
-        // dedupe by subject (list uri)
+        // dedupe by subject (list uri) — a user might re-subscribe and leave
+        // two listblock records pointing at the same list; show each list
+        // once.
         const seen = new Set<string>();
         const deduped = records.filter((r) => {
           if (seen.has(r.value.subject)) return false;
@@ -83,14 +199,16 @@ export default function ListCleanerPage() {
           if (cancelled) return;
           const rkey = rec.uri.split('/').pop() ?? '';
           try {
-            const { data } = await rpc.get('app.bsky.graph.getList', { params: { list: rec.value.subject } });
+            // public AppView — no auth needed to look up a list's metadata.
+            const { data } = await pubRpc.get('app.bsky.graph.getList', { params: { list: rec.value.subject } });
             out.push({ uri: rec.value.subject, list: data.list, creator: data.list.creator, rkey });
           } catch {
-            // list deleted — try to look up the creator anyway
+            // list deleted / source gone — try to look up the creator anyway
+            // so we can still name the account the list used to belong to.
             const creatorDid = rec.value.subject.split('//').pop()?.split('/')[0] ?? '';
             let creator: Creator = null;
             try {
-              const { data } = await rpc.get('app.bsky.actor.getProfile', { params: { actor: creatorDid } });
+              const { data } = await pubRpc.get('app.bsky.actor.getProfile', { params: { actor: creatorDid } });
               creator = data;
             } catch {
               /* creator also gone */
@@ -113,10 +231,9 @@ export default function ListCleanerPage() {
     return () => {
       cancelled = true;
     };
-  }, [session, rpc]);
+  }, [rpc, did]);
 
   const removeOne = async (rkey: string) => {
-    if (!session) return;
     const entry = entries.find((e) => e.rkey === rkey);
     const label = entry?.list?.name ?? 'this deleted list';
     const ok = await confirm({
@@ -124,8 +241,8 @@ export default function ListCleanerPage() {
       body: (
         <>
           removes your <code style={{ color: 'var(--color-accent)' }}>app.bsky.graph.listblock</code> record for{' '}
-          <b style={{ color: 'var(--color-fg)' }}>{label}</b>. this can't be undone from here — you'd have to re-block
-          the list on bluesky.
+          <b style={{ color: 'var(--color-fg)' }}>{label}</b>. this can&apos;t be undone from here — you&apos;d have to
+          re-block the list on bluesky.
         </>
       ),
       confirmLabel: 'unsubscribe',
@@ -136,7 +253,7 @@ export default function ListCleanerPage() {
     setMsg('');
     try {
       await rpc.call('com.atproto.repo.deleteRecord', {
-        data: { collection: 'app.bsky.graph.listblock', repo: session.did, rkey },
+        data: { collection: 'app.bsky.graph.listblock', repo: did as ActorIdentifier, rkey },
       });
       setEntries((es) => es.filter((e) => e.rkey !== rkey));
       setPhase('ready');
@@ -148,15 +265,15 @@ export default function ListCleanerPage() {
 
   const deadEntries = entries.filter((e) => !e.list);
   const removeAllDead = async () => {
-    if (!session || deadEntries.length === 0) return;
+    if (deadEntries.length === 0) return;
     const n = deadEntries.length;
     const ok = await confirm({
       title: `unsubscribe from ${n} dead list${n === 1 ? '' : 's'}?`,
       body: (
         <>
           deletes {n} <code style={{ color: 'var(--color-accent)' }}>app.bsky.graph.listblock</code> record
-          {n === 1 ? '' : 's'} whose source list no longer resolves. will run sequentially and can't be undone from
-          here.
+          {n === 1 ? '' : 's'} whose source list no longer resolves. will run sequentially and can&apos;t be undone
+          from here.
         </>
       ),
       confirmLabel: `remove ${n}`,
@@ -168,7 +285,7 @@ export default function ListCleanerPage() {
     try {
       for (const entry of deadEntries) {
         await rpc.call('com.atproto.repo.deleteRecord', {
-          data: { collection: 'app.bsky.graph.listblock', repo: session.did, rkey: entry.rkey },
+          data: { collection: 'app.bsky.graph.listblock', repo: did as ActorIdentifier, rkey: entry.rkey },
         });
       }
       setEntries((es) => es.filter((e) => e.list));
@@ -179,145 +296,65 @@ export default function ListCleanerPage() {
     }
   };
 
-  const busy = phase === 'logging-in' || phase === 'fetching-lists' || phase === 'deleting';
-  const canSubmit = handle.trim().length > 0 && appPassword.length > 0 && !busy;
+  const busy = phase === 'fetching-lists' || phase === 'deleting';
 
   return (
     <>
-      <style>{CSS}</style>
       {confirmDialog}
-      <main className="shell-lc">
-        <div className="crumbs">
-          <Link to="/labs">~ / labs</Link>
-          <span className="sep">/</span>
-          <span className="last">list-cleaner</span>
-        </div>
 
-        <header className="lc-hd">
-          <h1>
-            list cleaner<span className="dot">.</span>
-          </h1>
-          <p className="sub">
-            sweep away dead moderation-list subscriptions from your bluesky account. finds every{' '}
-            <code className="inline">app.bsky.graph.listblock</code> record you've written, then pings{' '}
-            <code className="inline">app.bsky.graph.getList</code> on each to see if the source still resolves. lists
-            whose creator is deleted, deactivated, or took the list down are flagged — delete individually or in bulk.
-          </p>
-          <div className="warn">
-            <b>heads up:</b> uses a bluesky <b>app password</b>. generate one at{' '}
-            <a href="https://bsky.app/settings/app-passwords" target="_blank" rel="noopener noreferrer" className="t-accent">
-              bsky.app/settings/app-passwords
-            </a>{' '}
-            — never paste your main password.
-          </div>
-        </header>
-
-        {!profile ? (
-          <form className="lc-form" onSubmit={login}>
-            <div className="row">
-              <label className="lbl">
-                <span>handle</span>
-                <input
-                  className="inp"
-                  type="text"
-                  placeholder="user.bsky.social"
-                  value={handle}
-                  onChange={(e) => setHandle(e.target.value)}
-                  required
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-              </label>
-              <label className="lbl">
-                <span>app password</span>
-                <input
-                  className="inp"
-                  type="password"
-                  placeholder="xxxx-xxxx-xxxx-xxxx"
-                  value={appPassword}
-                  onChange={(e) => setAppPassword(e.target.value)}
-                  required
-                  autoComplete="off"
-                />
-              </label>
-            </div>
-            <div className="actions">
-              <button type="submit" disabled={!canSubmit} className="go">
-                {phase === 'logging-in' ? 'logging in…' : 'log in'}
-              </button>
-              {msg && phase === 'error' ? <span className="err-inline">{msg}</span> : null}
-            </div>
-          </form>
+      <section className="profile">
+        {profile?.avatar ? (
+          <img src={profile.avatar} alt="" className="profile-avatar" />
         ) : (
-          <>
-            <section className="profile">
-              {profile.avatar ? (
-                <img src={profile.avatar} alt="" className="profile-avatar" />
-              ) : (
-                <div className="profile-avatar empty-avatar" />
-              )}
-              <div className="profile-meta">
-                <div className="profile-name">
-                  {profile.displayName ?? profile.handle}
-                  <span className="dot">.</span>
-                </div>
-                <div className="profile-handle">@{profile.handle}</div>
-              </div>
-              <button type="button" className="logout" onClick={logout}>
-                log out
-              </button>
-            </section>
-
-            <div className="lc-meta">
-              <span>
-                listblocks <b>{entries.length}</b>
-              </span>
-              <span>
-                dead <b className={deadEntries.length > 0 ? 't-warn' : ''}>{deadEntries.length}</b>
-              </span>
-              {deadEntries.length > 0 ? (
-                <button type="button" className="bulk" onClick={removeAllDead} disabled={busy}>
-                  {phase === 'deleting' ? 'deleting…' : `remove all ${deadEntries.length} dead →`}
-                </button>
-              ) : null}
-            </div>
-
-            {phase === 'fetching-lists' && entries.length === 0 ? (
-              <LoadingPanel label="scanning your listblocks…" />
-            ) : entries.length === 0 ? (
-              <section className="empty">
-                <div className="empty-glyph">◌</div>
-                <div className="empty-ttl">no listblocks found</div>
-                <div className="empty-sub">you haven't subscribed to any moderation lists.</div>
-              </section>
-            ) : (
-              <section className="entries">
-                {entries.map((entry) => (
-                  <EntryRow key={entry.rkey} entry={entry} onRemove={removeOne} busy={busy} />
-                ))}
-              </section>
-            )}
-
-            {msg ? (
-              <section className={`status ${phase === 'error' ? 'is-error' : ''}`}>
-                <div className="msg">{msg}</div>
-              </section>
-            ) : null}
-          </>
+          <div className="profile-avatar empty-avatar" />
         )}
+        <div className="profile-meta">
+          <div className="profile-name">
+            {profile?.displayName ?? profile?.handle ?? did}
+            <span className="dot">.</span>
+          </div>
+          <div className="profile-handle">@{profile?.handle ?? did}</div>
+        </div>
+        <button type="button" className="logout" onClick={() => void signOut()}>
+          sign out
+        </button>
+      </section>
 
-        <footer className="lc-footer">
-          <span>
-            src: <span className="t-accent">@atcute/client · com.atproto.repo.listRecords · app.bsky.graph.getList</span>
-          </span>
-          <span>
-            ←{' '}
-            <Link to="/labs" className="t-accent">
-              all labs
-            </Link>
-          </span>
-        </footer>
-      </main>
+      <div className="lc-meta">
+        <span>
+          listblocks <b>{entries.length}</b>
+        </span>
+        <span>
+          dead <b className={deadEntries.length > 0 ? 't-warn' : ''}>{deadEntries.length}</b>
+        </span>
+        {deadEntries.length > 0 ? (
+          <button type="button" className="bulk" onClick={() => void removeAllDead()} disabled={busy}>
+            {phase === 'deleting' ? 'deleting…' : `remove all ${deadEntries.length} dead →`}
+          </button>
+        ) : null}
+      </div>
+
+      {phase === 'fetching-lists' && entries.length === 0 ? (
+        <LoadingPanel label="scanning your listblocks…" />
+      ) : entries.length === 0 ? (
+        <section className="empty">
+          <div className="empty-glyph" aria-hidden="true">◌</div>
+          <div className="empty-ttl">no listblocks found</div>
+          <div className="empty-sub">you haven&apos;t subscribed to any moderation lists.</div>
+        </section>
+      ) : (
+        <section className="entries">
+          {entries.map((entry) => (
+            <EntryRow key={entry.rkey} entry={entry} onRemove={(rk) => void removeOne(rk)} busy={busy} />
+          ))}
+        </section>
+      )}
+
+      {msg ? (
+        <section className={`status ${phase === 'error' ? 'is-error' : ''}`}>
+          <div className="msg">{msg}</div>
+        </section>
+      ) : null}
     </>
   );
 }
@@ -408,62 +445,33 @@ const CSS = `
     color: var(--color-accent);
     font-family: var(--font-mono);
   }
-  .warn {
-    margin-top: var(--sp-4);
-    padding: var(--sp-3) var(--sp-4);
-    border: 1px solid color-mix(in oklch, var(--color-warn) 40%, var(--color-border));
-    background: color-mix(in oklch, var(--color-warn) 5%, var(--color-bg-panel));
-    font-size: var(--fs-xs);
-    color: var(--color-fg-dim);
-    font-family: var(--font-mono);
-    line-height: 1.55;
-  }
-  .warn b { color: var(--color-warn); font-weight: 400; }
 
-  .lc-form {
-    display: flex; flex-direction: column;
-    gap: var(--sp-4);
-    padding: var(--sp-6) 0;
-  }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
-  @media (max-width: 560px) {
-    .row { grid-template-columns: 1fr; }
-  }
-  .lbl {
-    display: flex; flex-direction: column; gap: 4px;
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    color: var(--color-fg-faint);
-    text-transform: lowercase;
-    letter-spacing: 0.06em;
-  }
-  .inp {
+  .loading {
+    margin-top: var(--sp-4);
+    padding: var(--sp-3);
     border: 1px solid var(--color-border);
     background: var(--color-bg-panel);
-    padding: 8px 12px;
-    font: inherit;
-    font-family: var(--font-mono);
-    font-size: var(--fs-sm);
-    color: var(--color-fg);
+    font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--color-fg-dim);
   }
-  .inp:focus { outline: none; border-color: var(--color-accent-dim); }
-  .inp::placeholder { color: var(--color-fg-ghost); }
-  .actions { display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap; }
-  .go {
+  .err { margin-top: var(--sp-3); padding: var(--sp-3); border: 1px solid var(--color-alert); color: var(--color-alert); font-family: var(--font-mono); font-size: var(--fs-xs); }
+
+  .gate {
+    margin: var(--sp-6) auto 0;
+    max-width: 520px;
+    display: flex; flex-direction: column; gap: var(--sp-3);
+    padding: var(--sp-5);
     border: 1px solid var(--color-accent-dim);
-    background: color-mix(in oklch, var(--color-accent) 8%, var(--color-bg-panel));
-    color: var(--color-accent);
-    font: inherit;
-    font-family: var(--font-mono);
-    font-size: var(--fs-sm);
-    padding: 8px 18px;
-    cursor: pointer;
-    text-transform: lowercase;
-    letter-spacing: 0.06em;
+    background: color-mix(in oklch, var(--color-accent) 5%, var(--color-bg-panel));
   }
-  .go:hover:not(:disabled) { background: color-mix(in oklch, var(--color-accent) 16%, var(--color-bg-panel)); }
-  .go:disabled { opacity: 0.4; cursor: not-allowed; }
-  .err-inline { color: var(--color-alert); font-family: var(--font-mono); font-size: var(--fs-xs); }
+  .gate-title { font-family: var(--font-display); font-size: 28px; color: var(--color-accent); text-shadow: 0 0 12px var(--accent-glow); }
+  .gate-sub { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--color-fg-dim); line-height: 1.55; }
+  .gate-form { display: flex; gap: 6px; }
+  .gate-input { flex: 1; min-width: 0; background: var(--color-bg); border: 1px solid var(--color-border-bright); color: var(--color-fg); font-family: var(--font-mono); font-size: var(--fs-sm); padding: 8px 10px; }
+  .gate-input:focus { outline: none; border-color: var(--color-accent); }
+  .gate-btn { font-family: var(--font-mono); font-size: var(--fs-xs); padding: 8px 14px; background: transparent; border: 1px solid var(--color-border-bright); color: var(--color-fg-dim); cursor: pointer; text-transform: lowercase; letter-spacing: 0.06em; }
+  .gate-btn:hover { color: var(--color-fg); border-color: var(--color-accent-dim); }
+  .gate-btn.primary { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-bg); }
+  .gate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
   /* profile bar (post-login) */
   .profile {
@@ -512,7 +520,7 @@ const CSS = `
     padding: 4px 12px;
     cursor: pointer;
   }
-  .logout:hover { color: var(--color-accent); border-color: var(--color-accent-dim); }
+  .logout:hover { color: var(--color-alert); border-color: var(--color-alert); }
 
   .lc-meta {
     display: flex; gap: var(--sp-5); flex-wrap: wrap;
