@@ -9,7 +9,10 @@ import { resolveIdentity } from '../server/atproto';
 
 type BlogRecord = {
   uri: string;
-  value: { createdAt?: string; visibility?: string; title?: string };
+  // visibility is 'public' | 'url' | 'author' per the lexicon (with 'public'
+  // the default when omitted). anything other than public/unset is excluded
+  // from the sitemap so unlisted/author-only drafts don't end up indexed.
+  value: { createdAt?: string; visibility?: 'public' | 'url' | 'author'; title?: string };
 };
 
 async function fetchBlogRkeys(): Promise<Array<{ rkey: string; updated: string }>> {
@@ -24,7 +27,7 @@ async function fetchBlogRkeys(): Promise<Array<{ rkey: string; updated: string }
     if (!r.ok) return [];
     const data = (await r.json()) as { records: BlogRecord[] };
     return data.records
-      .filter((rec) => rec.value.visibility !== 'private' && rec.value.title)
+      .filter((rec) => (rec.value.visibility === 'public' || rec.value.visibility === undefined) && rec.value.title)
       .map((rec) => ({
         rkey: rec.uri.split('/').pop() ?? '',
         updated: rec.value.createdAt ?? new Date().toISOString(),
@@ -47,8 +50,12 @@ export const Route = createFileRoute('/sitemap.xml')({
 
         const urls: Array<{ loc: string; lastmod: string; priority?: number }> = [];
 
-        // static + every registered page / lab (og entries carries the slug)
+        // static + every registered page / lab (og entries carries the slug).
+        // WIP pages are skipped so crawlers don't surface half-finished work —
+        // kept in sync with CommandPalette's NAV_ITEMS exclusions.
+        const WIP_SLUGS = new Set(['bookmarks', 'health', 'homelab', 'library']);
         for (const [slug, entry] of ogEntries()) {
+          if (WIP_SLUGS.has(slug)) continue;
           urls.push({
             loc: origin + entry.slug,
             lastmod: now,

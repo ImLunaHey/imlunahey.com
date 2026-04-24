@@ -36,10 +36,24 @@ export function ogMeta(input: OgMetaInput): Array<Record<string, string>> {
 /** Convenience: returns a full TanStack head() payload for a slug, pulling
  *  title + description from the shared registry. Each route just does:
  *    head: () => pageMeta('blog')
+ *
+ *  Also emits a <link rel="canonical"> so Ahrefs / Google consolidate
+ *  query-string variants (e.g. /labs/mp?q=SW1A%201AA vs /labs/mp?q=EC1A)
+ *  and trailing-slash variants into one indexable URL instead of flagging
+ *  them as "duplicate pages without canonical".
+ *
+ *  Dynamic sub-routes that share a slug (e.g. /labs/crypto/$id all use
+ *  slug='lab/crypto') will point to the parent URL — consolidating them
+ *  under the parent page is usually the right call; if a detail page
+ *  ever needs its own canonical, build the head() payload inline.
  */
-export function pageMeta(slug: OgSlug): { meta: Array<Record<string, string>> } {
+export function pageMeta(slug: OgSlug): {
+  meta: Array<Record<string, string>>;
+  links: Array<Record<string, string>>;
+} {
   const e = ogEntry(slug);
   const bareTitle = e.title.replace(/\.$/, '');
+  const canonicalUrl = `https://${SITE.domain}${e.slug}`;
   return {
     meta: [
       { title: `${bareTitle} · ${SITE.name}` },
@@ -48,8 +62,9 @@ export function pageMeta(slug: OgSlug): { meta: Array<Record<string, string>> } 
         slug,
         title: `${bareTitle} · ${SITE.name}`,
         description: e.subtitle,
-        url: `https://${SITE.domain}${e.slug}`,
+        url: canonicalUrl,
       }),
     ],
+    links: [{ rel: 'canonical', href: canonicalUrl }],
   };
 }
