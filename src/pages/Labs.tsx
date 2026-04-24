@@ -817,7 +817,7 @@ const LABS: Lab[] = [
   {
     slug: 'mahjong',
     title: 'mahjong',
-    desc: 'mahjong solitaire — 144 hand-drawn svg tiles in a five-layer pyramid. each deal is guaranteed to have a solution.',
+    desc: 'mahjong solitaire — 144 hand-drawn svg tiles, three custom shapes. layouts are baked into the seed so a single number conveys the exact deal.',
     tags: ['game'],
     year: '2026',
     ready: true,

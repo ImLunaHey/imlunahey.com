@@ -19,15 +19,17 @@ export type GameId =
   | 'sudoku-medium'
   | 'sudoku-hard'
   | 'sudoku-expert'
-  | 'mahjong';
+  | 'mahjong-pyramid'
+  | 'mahjong-wide'
+  | 'mahjong-tower';
 
 /** True for time-based games (score = seconds, lower wins). False for
  *  point-based games (score = points/wpm, higher wins). Centralised so
  *  sort, dedupe, and ranking all stay consistent. */
 export function lowerIsBetter(game: GameId): boolean {
   if (game === 'wordle') return true;
-  if (game === 'mahjong') return true;
   if (game.startsWith('sudoku-')) return true;
+  if (game.startsWith('mahjong-')) return true;
   return false;
 }
 
@@ -92,7 +94,9 @@ export function validateScore(game: GameId, score: number): string | null {
       if (score < 20) return 'sudoku time too short to be plausible';
       if (score > 3600) return 'sudoku time exceeds plausible max (1h)';
       return null;
-    case 'mahjong':
+    case 'mahjong-pyramid':
+    case 'mahjong-wide':
+    case 'mahjong-tower':
       // 144 tiles → fastest known human times sit around a minute.
       if (score < 60) return 'mahjong time too short to be plausible';
       if (score > 7200) return 'mahjong time exceeds plausible max (2h)';

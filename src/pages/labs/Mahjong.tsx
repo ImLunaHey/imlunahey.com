@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { XRPC } from '@atcute/client';
 import { OAuthUserAgent, createAuthorizationUrl } from '@atcute/oauth-browser-client';
@@ -17,10 +17,9 @@ import {
   LEADERBOARD_MARKER_URI,
   LEADERBOARD_SCORE_COLLECTION,
   signScore,
+  type GameId,
   type LeaderboardRow,
 } from '../../server/leaderboard';
-
-const GAME_ID = 'mahjong' as const;
 
 // ─── tile data model ─────────────────────────────────────────────────────────
 
@@ -91,23 +90,60 @@ function buildFacePairs(rng: () => number): Face[][] {
 
 type Slot = { id: number; layer: number; col: number; row: number };
 
-// stepped-pyramid layout that totals exactly 144:
-//   L0: 12 × 7 = 84
-//   L1:  8 × 5 = 40   (centred, cols 2-9, rows 1-5)
-//   L2:  4 × 3 = 12   (cols 4-7, rows 2-4)
-//   L3:  2 × 3 =  6   (cols 5-6, rows 2-4)
-//   L4:  2 × 1 =  2   (cols 5-6, row 3)
-function buildLayout(): Slot[] {
+export type LayoutId = 'pyramid' | 'wide' | 'tower';
+
+type LayoutDef = {
+  label: string;
+  blurb: string;
+  ranges: Array<[number, number, number, number, number]>; // [layer, c0, c1Excl, r0, r1Excl]
+};
+
+// every layout MUST sum to exactly 144 — the deck is hard-coded to that
+// number and the pair-up logic falls apart if it doesn't match.
+export const LAYOUTS: Record<LayoutId, LayoutDef> = {
+  pyramid: {
+    label: 'pyramid',
+    blurb: 'classic stepped pyramid',
+    // 84 + 40 + 12 + 6 + 2 = 144
+    ranges: [
+      [0, 0, 12, 0, 7],
+      [1, 2, 10, 1, 6],
+      [2, 4, 8, 2, 5],
+      [3, 5, 7, 2, 5],
+      [4, 5, 7, 3, 4],
+    ],
+  },
+  wide: {
+    label: 'wide',
+    blurb: 'low and broad — easier read',
+    // 108 + 24 + 12 = 144
+    ranges: [
+      [0, 0, 18, 0, 6],
+      [1, 3, 15, 2, 4],
+      [2, 6, 12, 2, 4],
+    ],
+  },
+  tower: {
+    label: 'tower',
+    blurb: 'narrow + tall — six layers deep',
+    // 48 + 36 + 24 + 16 + 12 + 8 = 144
+    ranges: [
+      [0, 0, 8, 0, 6],
+      [1, 1, 7, 0, 6],
+      [2, 1, 7, 1, 5],
+      [3, 2, 6, 1, 5],
+      [4, 2, 6, 1, 4],
+      [5, 2, 6, 2, 4],
+    ],
+  },
+};
+
+const LAYOUT_ORDER: LayoutId[] = ['pyramid', 'wide', 'tower'];
+
+function buildLayout(layoutId: LayoutId): Slot[] {
   const out: Slot[] = [];
   let id = 0;
-  const ranges: Array<[number, number, number, number, number]> = [
-    [0, 0, 12, 0, 7], // layer, c0, c1, r0, r1   (c1/r1 exclusive)
-    [1, 2, 10, 1, 6],
-    [2, 4, 8, 2, 5],
-    [3, 5, 7, 2, 5],
-    [4, 5, 7, 3, 4],
-  ];
-  for (const [layer, c0, c1, r0, r1] of ranges) {
+  for (const [layer, c0, c1, r0, r1] of LAYOUTS[layoutId].ranges) {
     for (let r = r0; r < r1; r++) {
       for (let c = c0; c < c1; c++) {
         out.push({ id: id++, layer, col: c, row: r });
@@ -115,6 +151,27 @@ function buildLayout(): Slot[] {
     }
   }
   return out;
+}
+
+// ─── seed encoding ───────────────────────────────────────────────────────────
+//
+// the seed is a single uint32 that bakes in the layout choice. high 2 bits
+// pick the layout (0 = pyramid, 1 = wide, 2 = tower), low 30 bits are the
+// rng seed for the deal. that means one shareable number — `1234567890` —
+// fully determines both the shape and the tile arrangement.
+
+function encodeSeed(layoutId: LayoutId, rand30: number): number {
+  const code = LAYOUT_ORDER.indexOf(layoutId);
+  return (((code & 0x3) << 30) | (rand30 & 0x3fffffff)) >>> 0;
+}
+
+function decodeSeed(seed: number): LayoutId {
+  const code = (seed >>> 30) & 0x3;
+  return LAYOUT_ORDER[code] ?? 'pyramid';
+}
+
+function freshSeed(layoutId: LayoutId): number {
+  return encodeSeed(layoutId, (Math.random() * 0x40000000) >>> 0);
 }
 
 // a tile is "free" iff:
@@ -178,8 +235,9 @@ function trySimulate(slots: Slot[], rng: () => number): Array<[Slot, Slot]> | nu
   return pairs;
 }
 
-function generateDeal(seed: number): { slots: Slot[]; faces: Map<number, Face> } {
-  const slots = buildLayout();
+function generateDeal(seed: number): { slots: Slot[]; faces: Map<number, Face>; layoutId: LayoutId } {
+  const layoutId = decodeSeed(seed);
+  const slots = buildLayout(layoutId);
   const rng = rngFromSeed(seed);
   let order: Array<[Slot, Slot]> | null = null;
   for (let attempt = 0; attempt < 50; attempt++) {
@@ -196,7 +254,7 @@ function generateDeal(seed: number): { slots: Slot[]; faces: Map<number, Face> }
       faces.set(slots[i].id, f[0]);
       faces.set(slots[i + 1].id, f[1]);
     }
-    return { slots, faces };
+    return { slots, faces, layoutId };
   }
   const pairs = shuffled(buildFacePairs(rng), rng);
   const faces = new Map<number, Face>();
@@ -205,7 +263,7 @@ function generateDeal(seed: number): { slots: Slot[]; faces: Map<number, Face> }
     faces.set(a.id, pairs[k][0]);
     faces.set(b.id, pairs[k][1]);
   }
-  return { slots, faces };
+  return { slots, faces, layoutId };
 }
 
 // ─── tile geometry ───────────────────────────────────────────────────────────
@@ -622,10 +680,6 @@ function savePersisted(p: Persisted) {
   }
 }
 
-function newSeed(): number {
-  return (Math.random() * 0xffffffff) >>> 0;
-}
-
 function formatTime(secs: number): string {
   const m = Math.floor(secs / 60);
   const s = Math.floor(secs % 60);
@@ -633,8 +687,28 @@ function formatTime(secs: number): string {
 }
 
 export default function MahjongPage() {
-  const [seed, setSeed] = useState<number>(() => newSeed());
-  const [{ slots, faces }, setDeal] = useState(() => generateDeal(seed));
+  const search = useSearch({ from: '/_main/labs/mahjong' });
+  const navigate = useNavigate();
+
+  // initial seed: prefer the URL → localStorage → fresh pyramid seed.
+  // captured once via useRef so the first render is stable; the URL
+  // gets backfilled on mount via the effect below.
+  const initialSeedRef = useRef<number | null>(null);
+  if (initialSeedRef.current === null) {
+    if (typeof search.seed === 'number') {
+      initialSeedRef.current = search.seed;
+    } else {
+      const persisted = loadPersisted();
+      initialSeedRef.current = persisted?.seed ?? freshSeed('pyramid');
+    }
+  }
+  const seed: number = typeof search.seed === 'number' ? search.seed : initialSeedRef.current;
+  const layoutId = decodeSeed(seed);
+  const gameId: GameId = `mahjong-${layoutId}`;
+
+  // generated deal is a pure function of the seed.
+  const { slots, faces } = useMemo(() => generateDeal(seed), [seed]);
+
   const [removed, setRemoved] = useState<Set<number>>(() => new Set());
   const [selected, setSelected] = useState<number | null>(null);
   const [hintPair, setHintPair] = useState<[number, number] | null>(null);
@@ -645,31 +719,52 @@ export default function MahjongPage() {
   const [publishState, setPublishState] = useState<'idle' | 'signing' | 'publishing' | 'published' | 'error'>('idle');
   const [publishError, setPublishError] = useState<string | null>(null);
   const [handleInput, setHandleInput] = useState('');
-  const restoredRef = useRef(false);
+  const [seedInput, setSeedInput] = useState('');
+  const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
 
   const { session } = useAtprotoSession();
   const { data: profile } = useProfile({ actor: session?.info.sub ?? '' });
   const queryClient = useQueryClient();
   const { data: leaderboardRows } = useQuery({
-    queryKey: ['leaderboard', GAME_ID],
-    queryFn: () => getLeaderboard({ data: { game: GAME_ID } }),
+    queryKey: ['leaderboard', gameId],
+    queryFn: () => getLeaderboard({ data: { game: gameId } }),
   });
   const canPublishScore = sessionHasScope(session, LEADERBOARD_WRITE_SCOPE);
 
-  // restore once on mount.
+  // backfill the url on mount so the page always has a stable, copyable
+  // ?seed=… link, even if the user landed without one.
   useEffect(() => {
-    if (restoredRef.current) return;
-    restoredRef.current = true;
-    const p = loadPersisted();
-    if (p) {
-      const fresh = generateDeal(p.seed);
-      setSeed(p.seed);
-      setDeal(fresh);
-      setRemoved(new Set(p.removed));
-      setBaseElapsed(p.baseElapsed);
-      setStartedAt(Date.now());
+    if (search.seed !== seed) {
+      navigate({ to: '/labs/mahjong', search: { seed }, replace: true });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // when the seed changes (new deal, layout switch, paste), reset the
+  // ephemeral game state — but on the very first mount, prefer to restore
+  // any persisted progress saved against this exact seed.
+  const isFirstSeedRef = useRef(true);
+  useEffect(() => {
+    if (isFirstSeedRef.current) {
+      isFirstSeedRef.current = false;
+      const p = loadPersisted();
+      if (p && p.seed === seed) {
+        setRemoved(new Set(p.removed));
+        setBaseElapsed(p.baseElapsed);
+        setStartedAt(Date.now());
+        return;
+      }
+    }
+    setRemoved(new Set());
+    setSelected(null);
+    setHintPair(null);
+    setStartedAt(Date.now());
+    setBaseElapsed(0);
+    setWinElapsed(null);
+    setPublishState('idle');
+    setPublishError(null);
+    setSeedInput('');
+  }, [seed]);
 
   // present = slots still on the board, used by isFree.
   const present = useMemo(() => {
@@ -731,19 +826,35 @@ export default function MahjongPage() {
     });
   }, [seed, removed, startedAt, baseElapsed]);
 
+  // a "new deal" stays in the same layout but rolls a new rng. layout
+  // changes go through pickLayout instead so the user picks the shape.
   const newGame = useCallback(() => {
-    const s = newSeed();
-    setSeed(s);
-    setDeal(generateDeal(s));
-    setRemoved(new Set());
-    setSelected(null);
-    setHintPair(null);
-    setStartedAt(Date.now());
-    setBaseElapsed(0);
-    setWinElapsed(null);
-    setPublishState('idle');
-    setPublishError(null);
-  }, []);
+    const next = freshSeed(layoutId);
+    navigate({ to: '/labs/mahjong', search: { seed: next }, replace: true });
+  }, [navigate, layoutId]);
+
+  const pickLayout = useCallback(
+    (id: LayoutId) => {
+      if (id === layoutId) return;
+      const next = freshSeed(id);
+      navigate({ to: '/labs/mahjong', search: { seed: next }, replace: true });
+    },
+    [navigate, layoutId],
+  );
+
+  // load a specific seed pasted by the user — could come from a friend's
+  // share link. clamp to a uint32 and replace the url; the seed-change
+  // effect above takes care of the rest.
+  const loadSeed = useCallback(
+    (raw: string) => {
+      const trimmed = raw.trim();
+      if (!trimmed) return;
+      const n = Number(trimmed);
+      if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > 0xffffffff) return;
+      navigate({ to: '/labs/mahjong', search: { seed: n >>> 0 }, replace: true });
+    },
+    [navigate],
+  );
 
   const restart = useCallback(() => {
     setRemoved(new Set());
@@ -755,6 +866,18 @@ export default function MahjongPage() {
     setPublishState('idle');
     setPublishError(null);
   }, []);
+
+  const copyShareLink = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    const url = `${window.location.origin}/labs/mahjong?seed=${seed}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopyState('copied');
+      window.setTimeout(() => setCopyState('idle'), 1500);
+    } catch {
+      /* clipboard unavailable — silent */
+    }
+  }, [seed]);
 
   async function startSignIn(handle: string) {
     setPublishError(null);
@@ -779,7 +902,7 @@ export default function MahjongPage() {
     try {
       const did = session.info.sub;
       const score = Math.round(winElapsed);
-      const signed = await signScore({ data: { game: GAME_ID, score, did } });
+      const signed = await signScore({ data: { game: gameId, score, did } });
       setPublishState('publishing');
       const agent = new OAuthUserAgent(session);
       const xrpc = new XRPC({ handler: agent });
@@ -800,7 +923,7 @@ export default function MahjongPage() {
       });
       setPublishState('published');
       window.setTimeout(
-        () => queryClient.invalidateQueries({ queryKey: ['leaderboard', GAME_ID] }),
+        () => queryClient.invalidateQueries({ queryKey: ['leaderboard', gameId] }),
         2000,
       );
     } catch (err) {
@@ -855,11 +978,28 @@ export default function MahjongPage() {
     [won, stuck, freeMap, selected, faces],
   );
 
-  // viewBox covers the whole pyramid plus a little margin around the edge.
-  const boardW = 12 * TILE_W + BEVEL;
-  const boardH = 7 * TILE_H + BEVEL;
+  // viewBox covers the whole shape plus a little margin. width/height
+  // come from the layout's actual extent, and we leave room for the
+  // upper layers' up-and-left shift so they don't clip on shapes with
+  // many layers (eg. tower).
+  const { boardW, boardH, layerShiftX, layerShiftY } = useMemo(() => {
+    let maxCol = 0;
+    let maxRow = 0;
+    let maxLayer = 0;
+    for (const s of slots) {
+      if (s.col > maxCol) maxCol = s.col;
+      if (s.row > maxRow) maxRow = s.row;
+      if (s.layer > maxLayer) maxLayer = s.layer;
+    }
+    return {
+      boardW: (maxCol + 1) * TILE_W + BEVEL,
+      boardH: (maxRow + 1) * TILE_H + BEVEL,
+      layerShiftX: maxLayer * LAYER_DX,
+      layerShiftY: maxLayer * LAYER_DY,
+    };
+  }, [slots]);
   const margin = 24;
-  const viewBox = `${-LAYER_DX * 4 - margin} ${-LAYER_DY * 4 - margin} ${boardW + 2 * margin + LAYER_DX * 4} ${boardH + 2 * margin + LAYER_DY * 4}`;
+  const viewBox = `${-layerShiftX - margin} ${-layerShiftY - margin} ${boardW + 2 * margin + layerShiftX} ${boardH + 2 * margin + layerShiftY}`;
 
   const sortedSlots = useMemo(() => {
     // render order: lower layers first; within a layer, top-to-bottom then
@@ -882,12 +1022,14 @@ export default function MahjongPage() {
           <div className="label">~/labs/mahjong</div>
           <h1>mahjong<span className="dot">.</span></h1>
           <p className="sub">
-            mahjong solitaire — 144 hand-rendered svg tiles in a five-layer pyramid.
+            mahjong solitaire — 144 hand-rendered svg tiles, three custom shapes.
             click two free tiles whose faces match to remove them. every deal is
             generated with a guaranteed solve sequence; you can still lose by making
-            the wrong matches first.
+            the wrong matches first. share the seed to challenge a friend on the
+            exact same deal.
           </p>
           <div className="meta">
+            <span>layout <b className="t-accent">{LAYOUTS[layoutId].label}</b></span>
             <span>tiles <b>{present.size}/144</b></span>
             <span>matches <b className="t-accent">{matchesMade}/72</b></span>
             <span>available <b className={availableMatches === 0 ? 't-alert' : 't-accent'}>{availableMatches}</b></span>
@@ -899,16 +1041,58 @@ export default function MahjongPage() {
         </header>
 
         <section className="controls">
-          <button type="button" className="ghost-btn" onClick={newGame}>new deal</button>
-          <button type="button" className="ghost-btn" onClick={restart}>restart this deal</button>
-          <button
-            type="button"
-            className="ghost-btn"
-            onClick={findHint}
-            disabled={won || stuck}
-          >
-            hint
+          <div className="layout-row">
+            {LAYOUT_ORDER.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={`diff-btn${id === layoutId ? ' on' : ''}`}
+                onClick={() => pickLayout(id)}
+                title={LAYOUTS[id].blurb}
+              >
+                {LAYOUTS[id].label}
+              </button>
+            ))}
+          </div>
+          <div className="action-row">
+            <button type="button" className="ghost-btn" onClick={newGame}>new deal</button>
+            <button type="button" className="ghost-btn" onClick={restart}>restart this deal</button>
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={findHint}
+              disabled={won || stuck}
+            >
+              hint
+            </button>
+          </div>
+        </section>
+
+        <section className="seed-row">
+          <span className="seed-label">seed</span>
+          <code className="seed-value">{seed}</code>
+          <button type="button" className="ghost-btn seed-copy" onClick={() => void copyShareLink()}>
+            {copyState === 'copied' ? '✓ copied' : 'copy share link'}
           </button>
+          <form
+            className="seed-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              loadSeed(seedInput);
+            }}
+          >
+            <input
+              className="seed-input"
+              placeholder="paste a friend's seed…"
+              value={seedInput}
+              onChange={(e) => setSeedInput(e.target.value)}
+              spellCheck={false}
+              inputMode="numeric"
+            />
+            <button type="submit" className="ghost-btn" disabled={!seedInput.trim()}>
+              load
+            </button>
+          </form>
         </section>
 
         <section className="stage-wrap">
@@ -1015,7 +1199,11 @@ export default function MahjongPage() {
           ) : null}
         </section>
 
-        <Leaderboard rows={leaderboardRows ?? null} myDid={session?.info.sub ?? null} />
+        <Leaderboard
+          rows={leaderboardRows ?? null}
+          myDid={session?.info.sub ?? null}
+          layoutId={layoutId}
+        />
 
         <footer className="mahjong-footer">
           <span>src: <span className="t-accent">hand-written · ~600 lines</span></span>
@@ -1053,10 +1241,12 @@ const CSS = `
   .page-hd .meta b.t-alert { color: var(--color-alert); }
 
   .controls {
-    display: flex; flex-wrap: wrap; gap: 6px;
+    display: flex; flex-wrap: wrap; gap: var(--sp-3);
     margin-top: var(--sp-5);
+    align-items: center; justify-content: space-between;
   }
-  .ghost-btn {
+  .layout-row, .action-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ghost-btn, .diff-btn {
     font-family: var(--font-mono); font-size: var(--fs-xs);
     padding: 6px 12px;
     background: transparent;
@@ -1066,11 +1256,46 @@ const CSS = `
     text-transform: lowercase;
     letter-spacing: 0.06em;
   }
-  .ghost-btn:hover:not(:disabled) {
+  .ghost-btn:hover:not(:disabled), .diff-btn:hover {
     color: var(--color-fg);
     border-color: var(--color-accent-dim);
   }
   .ghost-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .diff-btn.on {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+    background: color-mix(in oklch, var(--color-accent) 10%, transparent);
+  }
+
+  .seed-row {
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3);
+    margin-top: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    border: 1px dashed var(--color-border);
+    background: var(--color-bg-panel);
+    font-family: var(--font-mono); font-size: var(--fs-xs);
+    color: var(--color-fg-faint);
+  }
+  .seed-label { text-transform: uppercase; letter-spacing: 0.12em; }
+  .seed-value {
+    color: var(--color-accent);
+    font-size: var(--fs-sm);
+    user-select: all;
+    -webkit-user-select: all;
+    word-break: break-all;
+  }
+  .seed-copy { white-space: nowrap; }
+  .seed-form { display: flex; gap: 6px; flex: 1 1 220px; min-width: 200px; }
+  .seed-input {
+    flex: 1;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border-bright);
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    padding: 6px 10px;
+  }
+  .seed-input:focus { outline: none; border-color: var(--color-accent); }
 
   .stage-wrap {
     position: relative;
@@ -1231,14 +1456,16 @@ const CSS = `
 function Leaderboard({
   rows,
   myDid,
+  layoutId,
 }: {
   rows: LeaderboardRow[] | null;
   myDid: string | null;
+  layoutId: LayoutId;
 }) {
   return (
     <div className="lb">
       <div className="lb-head">
-        <span className="t-accent">./leaderboard --mahjong</span>
+        <span className="t-accent">./leaderboard --mahjong-{layoutId}</span>
         <span>constellation · sig-verified</span>
       </div>
       {rows === null ? (

@@ -91,18 +91,22 @@ describe('validateScore', () => {
     }
   });
 
-  it('mahjong times must be 60s..7200s', () => {
-    expect(validateScore('mahjong', 59)).toMatch(/too short/);
-    expect(validateScore('mahjong', 60)).toBeNull();
-    expect(validateScore('mahjong', 7200)).toBeNull();
-    expect(validateScore('mahjong', 7201)).toMatch(/plausible/);
+  it('mahjong times must be 60s..7200s on every layout', () => {
+    for (const g of ['mahjong-pyramid', 'mahjong-wide', 'mahjong-tower'] as const) {
+      expect(validateScore(g, 59)).toMatch(/too short/);
+      expect(validateScore(g, 60)).toBeNull();
+      expect(validateScore(g, 7200)).toBeNull();
+      expect(validateScore(g, 7201)).toMatch(/plausible/);
+    }
   });
 });
 
 describe('lowerIsBetter', () => {
   it('returns true for time-based games', () => {
     expect(lowerIsBetter('wordle')).toBe(true);
-    expect(lowerIsBetter('mahjong')).toBe(true);
+    expect(lowerIsBetter('mahjong-pyramid')).toBe(true);
+    expect(lowerIsBetter('mahjong-wide')).toBe(true);
+    expect(lowerIsBetter('mahjong-tower')).toBe(true);
     expect(lowerIsBetter('sudoku-easy')).toBe(true);
     expect(lowerIsBetter('sudoku-medium')).toBe(true);
     expect(lowerIsBetter('sudoku-hard')).toBe(true);
