@@ -33,10 +33,11 @@ export const listCerts = createServerFn({ method: 'GET' })
     if (!/^[a-z0-9.-]+$/.test(domain)) throw new Error('invalid domain');
 
     return cached(`crt-sh:${domain}`, TTL.medium, async () => {
+      // crt.sh's JSON endpoint is notoriously flaky — it routinely
+      // returns 502/504 while the underlying query is still running.
+      // Retry with short backoff; usually the second attempt succeeds.
       const url = `https://crt.sh/?q=${encodeURIComponent('%.' + domain)}&output=json`;
-      const res = await fetch(url, { headers: { accept: 'application/json' } });
-      if (!res.ok) throw new Error(`crt.sh ${res.status}`);
-      const rows = (await res.json()) as CrtShRow[];
+      const rows = await fetchJsonWithRetry<CrtShRow[]>(url, 3, 1500);
       const now = Date.now();
       const certs: Cert[] = rows.slice(0, 30).map((r) => {
         const notAfter = r.not_after + 'Z';
@@ -59,6 +60,28 @@ export const listCerts = createServerFn({ method: 'GET' })
       return certs;
     });
   });
+
+async function fetchJsonWithRetry<T>(url: string, attempts: number, baseDelayMs: number): Promise<T> {
+  let lastErr: unknown = null;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(url, {
+        headers: { accept: 'application/json' },
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (res.ok) return (await res.json()) as T;
+      // 5xx + 429: retry; 4xx (non-429): give up
+      if (res.status < 500 && res.status !== 429) throw new Error(`crt.sh ${res.status}`);
+      lastErr = new Error(`crt.sh ${res.status}`);
+    } catch (e) {
+      lastErr = e;
+    }
+    if (i < attempts - 1) {
+      await new Promise((r) => setTimeout(r, baseDelayMs * (i + 1)));
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error('crt.sh request failed');
+}
 
 function simplifyIssuer(raw: string): string {
   // crt.sh returns X.500 DN; pull the O= if present, else CN=
