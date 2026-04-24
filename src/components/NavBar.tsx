@@ -1,6 +1,6 @@
 import { Link, useLocation } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
-import { CommandPaletteHint } from './CommandPalette';
+import { CommandPaletteHint } from './CommandPaletteHint';
 import { PresencePulse } from './PresencePulse';
 
 const LINKS: { to: string; label: string; match?: (path: string) => boolean }[] = [

@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from '@tanstack/react-router';
 import { useEffect } from 'react';
-import CommandPalette from './CommandPalette';
+import CommandPaletteHost from './CommandPaletteHost';
 import { ErrorBoundary } from './ErrorBoundary';
 import { NavBar } from './NavBar';
 import { markSeen } from '../lib/lab-seen';
@@ -20,7 +20,7 @@ export default function Layout() {
   return (
     <>
       <NavBar />
-      <CommandPalette />
+      <CommandPaletteHost />
       <ErrorBoundary
         key={pathname}
         fallback={

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import {
   ArrowUpRight, Beaker, BookOpen, Camera, Clipboard,
-  Command, FileCode, Gamepad2, Globe, Hammer, Image,
+  FileCode, Gamepad2, Globe, Hammer, Image,
   MessageSquare, Monitor, Music, Palette, Search, Sparkles,
   Star, Tv, Wrench,
 } from 'lucide-react';
@@ -205,8 +205,8 @@ const LABS: Array<{ to: string; label: string; subtitle?: string }> = [
   { to: '/labs/screenshot-maker', label: 'screenshot maker', subtitle: 'polished screenshots' },
 ];
 
-export default function CommandPalette() {
-  const [open, setOpen] = useState(false);
+export default function CommandPalette({ initiallyOpen = false }: { initiallyOpen?: boolean } = {}) {
+  const [open, setOpen] = useState(initiallyOpen);
   const [query, setQuery] = useState('');
   const [idx, setIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -574,21 +574,6 @@ export default function CommandPalette() {
   );
 }
 
-export function CommandPaletteHint() {
-  return (
-    <button
-      className="cp-hint-btn"
-      onClick={() => {
-        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, ctrlKey: true }));
-      }}
-      title="open command palette (⌘K)"
-      aria-label="open command palette"
-    >
-      <Command size={11} />
-      <span className="cp-hint-label">k</span>
-    </button>
-  );
-}
 
 const CSS = `
   html.crt-off .crt,
@@ -815,29 +800,6 @@ const CSS = `
   .cp-foot-keys { display: inline-flex; gap: 8px; align-items: center; }
   .cp-foot-keys .cp-kbd { margin-right: 4px; }
 
-  /* hint button in navbar */
-  .cp-hint-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 7px;
-    background: var(--color-bg-raised);
-    border: 1px solid var(--color-border-bright);
-    color: var(--color-fg-faint);
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    cursor: pointer;
-    text-transform: lowercase;
-    transition: all 0.12s;
-  }
-  .cp-hint-btn:hover {
-    color: var(--color-accent);
-    border-color: var(--color-accent-dim);
-  }
-  .cp-hint-label {
-    color: inherit;
-  }
-
   @media (max-width: 640px) {
     .cp-wrap {
       top: 0;
@@ -853,7 +815,6 @@ const CSS = `
     }
     .cp-row-label { max-width: 140px; }
     .cp-hint { display: none; }
-    .cp-hint-btn { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {
