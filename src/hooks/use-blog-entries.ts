@@ -6,11 +6,12 @@ type BlogEntry<did extends string> = {
   cid: string;
   value: {
     $type: 'com.whtwnd.blog.entry';
-    theme: string;
-    title: string;
+    theme?: 'github-light';
+    title?: string;
     content: string;
-    createdAt: string;
-    visibility: 'public' | 'private';
+    createdAt?: string;
+    // real lexicon enum — see src/types/blog-entry.ts
+    visibility?: 'public' | 'url' | 'author';
     comments?: `at://${did}/com.whtwnd.blog.entry/${string}`;
   };
 };
@@ -28,8 +29,9 @@ export function useBlogEntries<T extends string>(did: T) {
         },
       });
       return (response.data.records as BlogEntry<typeof did>[])
-        .sort((a, b) => b.value.createdAt.localeCompare(a.value.createdAt))
-        .filter((entry) => entry.value.visibility === 'public');
+        .sort((a, b) => (b.value.createdAt ?? '').localeCompare(a.value.createdAt ?? ''))
+        // listable only: 'public' explicitly, or unset (lexicon default is 'public')
+        .filter((entry) => entry.value.visibility === 'public' || entry.value.visibility === undefined);
     },
   });
 

@@ -9,10 +9,13 @@ type ListRecordsResp = {
     cid: string;
     value: {
       $type: 'com.whtwnd.blog.entry';
-      title: string;
+      title?: string;
       content: string;
-      createdAt: string;
-      visibility?: 'public' | 'private';
+      createdAt?: string;
+      // Real lexicon enum — 'public' = indexable, 'url' = unlisted,
+      // 'author' = author-only (effectively private/draft). Missing field
+      // defaults to 'public' per the lexicon default.
+      visibility?: 'public' | 'url' | 'author';
     };
   }>;
 };
@@ -65,15 +68,18 @@ async function loadEntries(): Promise<BlogData> {
   const data = (await r.json()) as ListRecordsResp;
 
   const entries = data.records
-    .filter((rec) => rec.value.visibility !== 'private' && rec.value.title)
+    // only listable entries: 'public' (indexable) or unset (lexicon default
+    // is 'public'). 'url' and 'author' are unlisted / author-only — we
+    // don't include them in the blog index or sitemap.
+    .filter((rec) => (rec.value.visibility === 'public' || rec.value.visibility === undefined) && !!rec.value.title)
     .map((rec) => {
       const rkey = rec.uri.split('/').pop() ?? '';
       const words = plainText(rec.value.content).split(/\s+/).filter(Boolean).length;
       return {
         rkey,
-        title: rec.value.title,
+        title: rec.value.title!,
         excerpt: excerpt(rec.value.content),
-        createdAt: rec.value.createdAt,
+        createdAt: rec.value.createdAt ?? '',
         readMin: Math.max(1, Math.round(words / 200)),
         words,
       };
