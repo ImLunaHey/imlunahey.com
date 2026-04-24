@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml'
+import { Route as HumansDottxtRouteImport } from './routes/humans[.]txt'
 import { Route as MainRouteImport } from './routes/_main'
 import { Route as MainIndexRouteImport } from './routes/_main/index'
 import { Route as OgSplatRouteImport } from './routes/og/$'
@@ -149,6 +151,16 @@ import { Route as MainLabsYearInReviewHandleYearRouteImport } from './routes/_ma
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RssDotxmlRoute = RssDotxmlRouteImport.update({
+  id: '/rss.xml',
+  path: '/rss.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HumansDottxtRoute = HumansDottxtRouteImport.update({
+  id: '/humans.txt',
+  path: '/humans.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MainRoute = MainRouteImport.update({
@@ -835,6 +847,8 @@ const MainLabsYearInReviewHandleYearRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
+  '/humans.txt': typeof HumansDottxtRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ai': typeof MainAiRoute
   '/bookmarks': typeof MainBookmarksRoute
@@ -971,6 +985,8 @@ export interface FileRoutesByFullPath {
   '/labs/year-in-review/$handle/$year': typeof MainLabsYearInReviewHandleYearRoute
 }
 export interface FileRoutesByTo {
+  '/humans.txt': typeof HumansDottxtRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ai': typeof MainAiRoute
   '/bookmarks': typeof MainBookmarksRoute
@@ -1110,6 +1126,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_main': typeof MainRouteWithChildren
+  '/humans.txt': typeof HumansDottxtRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_main/ai': typeof MainAiRoute
   '/_main/bookmarks': typeof MainBookmarksRoute
@@ -1250,6 +1268,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/humans.txt'
+    | '/rss.xml'
     | '/sitemap.xml'
     | '/ai'
     | '/bookmarks'
@@ -1386,6 +1406,8 @@ export interface FileRouteTypes {
     | '/labs/year-in-review/$handle/$year'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/humans.txt'
+    | '/rss.xml'
     | '/sitemap.xml'
     | '/ai'
     | '/bookmarks'
@@ -1524,6 +1546,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_main'
+    | '/humans.txt'
+    | '/rss.xml'
     | '/sitemap.xml'
     | '/_main/ai'
     | '/_main/bookmarks'
@@ -1663,6 +1687,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   MainRoute: typeof MainRouteWithChildren
+  HumansDottxtRoute: typeof HumansDottxtRoute
+  RssDotxmlRoute: typeof RssDotxmlRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiMastodonStreamRoute: typeof ApiMastodonStreamRoute
   OauthCallbackRoute: typeof OauthCallbackRoute
@@ -1677,6 +1703,20 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rss.xml': {
+      id: '/rss.xml'
+      path: '/rss.xml'
+      fullPath: '/rss.xml'
+      preLoaderRoute: typeof RssDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/humans.txt': {
+      id: '/humans.txt'
+      path: '/humans.txt'
+      fullPath: '/humans.txt'
+      preLoaderRoute: typeof HumansDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_main': {
@@ -2897,6 +2937,8 @@ const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   MainRoute: MainRouteWithChildren,
+  HumansDottxtRoute: HumansDottxtRoute,
+  RssDotxmlRoute: RssDotxmlRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiMastodonStreamRoute: ApiMastodonStreamRoute,
   OauthCallbackRoute: OauthCallbackRoute,

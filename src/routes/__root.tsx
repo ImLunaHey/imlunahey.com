@@ -42,6 +42,17 @@ export const Route = createRootRoute({
     links: [
       { rel: 'preconnect', href: 'https://plausible.io', crossorigin: 'anonymous' },
       { rel: 'dns-prefetch', href: 'https://plausible.io' },
+      // Feed-reader autodiscovery — crawlers and rss readers find /rss.xml
+      // without anyone having to remember the exact path.
+      { rel: 'alternate', type: 'application/rss+xml', title: 'luna · writing', href: '/rss.xml' },
+      // humanstxt.org convention — pairs with the file at /humans.txt.
+      { rel: 'author', href: '/humans.txt' },
+      // webmention.io endpoints — other indieweb sites can notify this
+      // domain of replies/likes/reposts pointing at any of its pages.
+      // pingback is the legacy xmlrpc equivalent, kept for broader
+      // client compatibility (wordpress etc).
+      { rel: 'webmention', href: 'https://webmention.io/imlunahey.com/webmention' },
+      { rel: 'pingback', href: 'https://webmention.io/imlunahey.com/xmlrpc' },
     ],
     // Inline the critical above-the-fold CSS so first paint doesn't wait
     // for the external stylesheet. Tokens + nav + CRT overlay cover every
