@@ -8,6 +8,14 @@ import NotFoundPage from '../pages/NotFound';
 import { ogMeta } from '../lib/og-meta';
 import { CRITICAL_CSS } from '../lib/critical-css';
 
+// Font URLs resolved by vite at build time — each \`?url\` import
+// becomes a hashed asset path identical to the one referenced by the
+// bundled @font-face rule, so the preload below matches and the
+// browser doesn't double-fetch. Only the latin subsets are preloaded
+// — latin-ext / cyrillic / greek lazy-load on demand via unicode-range.
+import dotoLatinUrl from '@fontsource-variable/doto/files/doto-latin-wght-normal.woff2?url';
+import jetbrainsLatinUrl from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
+
 // Dev-only: react-query devtools + the debug-mode bug toggle. The
 // lazy import + the `DEV` guard together guarantee the entire
 // DevTools module (and @tanstack/react-query-devtools) is tree-shaken
@@ -42,6 +50,12 @@ export const Route = createRootRoute({
     links: [
       { rel: 'preconnect', href: 'https://plausible.io', crossorigin: 'anonymous' },
       { rel: 'dns-prefetch', href: 'https://plausible.io' },
+      // Preload the critical-path fonts so their download runs in
+      // parallel with the main stylesheet instead of starting only
+      // after the CSS parser discovers the @font-face rules. Cuts
+      // the critical-path waterfall by one full RTT on cold loads.
+      { rel: 'preload', as: 'font', type: 'font/woff2', crossorigin: 'anonymous', href: dotoLatinUrl },
+      { rel: 'preload', as: 'font', type: 'font/woff2', crossorigin: 'anonymous', href: jetbrainsLatinUrl },
       // Feed-reader autodiscovery — crawlers and rss readers find /rss.xml
       // without anyone having to remember the exact path.
       { rel: 'alternate', type: 'application/rss+xml', title: 'luna · writing', href: '/rss.xml' },
