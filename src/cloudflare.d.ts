@@ -30,3 +30,16 @@ declare module 'cloudflare:workers' {
     [key: string]: unknown;
   };
 }
+
+// Cloudflare exposes a non-standard `default` cache on `caches` that's used
+// across the workers runtime — not present in the DOM `CacheStorage` lib.
+interface CacheStorage {
+  readonly default: Cache;
+}
+
+// Vite's `?module` query returns a compiled `WebAssembly.Module` — used by
+// the OG renderer to initialise resvg in the worker.
+declare module '*.wasm?module' {
+  const module: WebAssembly.Module;
+  export default module;
+}

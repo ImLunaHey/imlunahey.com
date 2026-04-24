@@ -7,6 +7,7 @@ import { DevTools } from '../components/DevTools';
 import { SITE } from '../data';
 import NotFoundPage from '../pages/NotFound';
 import { ogMeta } from '../lib/og-meta';
+import { CRITICAL_CSS } from '../lib/critical-css';
 
 export const Route = createRootRoute({
   head: () => ({
@@ -22,6 +23,24 @@ export const Route = createRootRoute({
         url: `https://${SITE.domain}`,
       }),
     ],
+    // NB: no canonical <link> here. The root match contributes to every
+    // nested route, so emitting it from __root would render two competing
+    // canonicals on child pages (root's "/" and the child's own). The "/"
+    // canonical lives on the /_main/ index route instead.
+    //
+    // Preconnect to plausible so DNS + TCP + TLS run in parallel with the
+    // rest of the page render. The analytics script is `defer`'d, but the
+    // handshake to a third-party origin still has to happen eventually —
+    // this just starts it earlier. Typical mobile FCP win: ~150ms.
+    links: [
+      { rel: 'preconnect', href: 'https://plausible.io', crossorigin: 'anonymous' },
+      { rel: 'dns-prefetch', href: 'https://plausible.io' },
+    ],
+    // Inline the critical above-the-fold CSS so first paint doesn't wait
+    // for the external stylesheet. Tokens + nav + CRT overlay cover every
+    // visible pixel on first render; the rest of App.css still loads via
+    // <link rel="stylesheet"> and takes over as soon as it arrives.
+    styles: [{ children: CRITICAL_CSS }],
     scripts: [
       {
         defer: true,
