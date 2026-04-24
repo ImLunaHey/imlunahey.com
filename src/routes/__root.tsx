@@ -1,13 +1,20 @@
-import type { ReactNode } from 'react';
+import { lazy, type ReactNode } from 'react';
 import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/react-router';
 import '../App.css';
 import { Favicon } from '../components/Favicon';
 import { QueryProvider } from '../components/QueryProvider';
-import { DevTools } from '../components/DevTools';
 import { SITE } from '../data';
 import NotFoundPage from '../pages/NotFound';
 import { ogMeta } from '../lib/og-meta';
 import { CRITICAL_CSS } from '../lib/critical-css';
+
+// Dev-only: react-query devtools + the debug-mode bug toggle. The
+// lazy import + the `DEV` guard together guarantee the entire
+// DevTools module (and @tanstack/react-query-devtools) is tree-shaken
+// out of the production bundle — zero bytes shipped to visitors.
+const DevTools = import.meta.env.DEV
+  ? lazy(() => import('../components/DevTools').then((m) => ({ default: m.DevTools })))
+  : null;
 
 export const Route = createRootRoute({
   head: () => ({
@@ -61,7 +68,7 @@ function RootComponent() {
         <div className="noise" />
         <Favicon />
         <Outlet />
-        <DevTools />
+        {DevTools ? <DevTools /> : null}
       </QueryProvider>
     </RootDocument>
   );
