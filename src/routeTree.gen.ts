@@ -58,6 +58,7 @@ import { Route as MainLabsTflCyclesRouteImport } from './routes/_main/labs/tfl-c
 import { Route as MainLabsTflArrivalsRouteImport } from './routes/_main/labs/tfl-arrivals'
 import { Route as MainLabsTflAirRouteImport } from './routes/_main/labs/tfl-air'
 import { Route as MainLabsTerminalRouteImport } from './routes/_main/labs/terminal'
+import { Route as MainLabsSudokuRouteImport } from './routes/_main/labs/sudoku'
 import { Route as MainLabsSubnetRouteImport } from './routes/_main/labs/subnet'
 import { Route as MainLabsSpectrogramRouteImport } from './routes/_main/labs/spectrogram'
 import { Route as MainLabsSnakeRouteImport } from './routes/_main/labs/snake'
@@ -81,6 +82,7 @@ import { Route as MainLabsMetMuseumRouteImport } from './routes/_main/labs/met-m
 import { Route as MainLabsMediaInspectorRouteImport } from './routes/_main/labs/media-inspector'
 import { Route as MainLabsMatrixRouteImport } from './routes/_main/labs/matrix'
 import { Route as MainLabsMastodonRouteImport } from './routes/_main/labs/mastodon'
+import { Route as MainLabsMahjongRouteImport } from './routes/_main/labs/mahjong'
 import { Route as MainLabsListMembershipsRouteImport } from './routes/_main/labs/list-memberships'
 import { Route as MainLabsListCleanerRouteImport } from './routes/_main/labs/list-cleaner'
 import { Route as MainLabsLightningRouteImport } from './routes/_main/labs/lightning'
@@ -393,6 +395,11 @@ const MainLabsTerminalRoute = MainLabsTerminalRouteImport.update({
   path: '/labs/terminal',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsSudokuRoute = MainLabsSudokuRouteImport.update({
+  id: '/labs/sudoku',
+  path: '/labs/sudoku',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsSubnetRoute = MainLabsSubnetRouteImport.update({
   id: '/labs/subnet',
   path: '/labs/subnet',
@@ -506,6 +513,11 @@ const MainLabsMatrixRoute = MainLabsMatrixRouteImport.update({
 const MainLabsMastodonRoute = MainLabsMastodonRouteImport.update({
   id: '/labs/mastodon',
   path: '/labs/mastodon',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsMahjongRoute = MainLabsMahjongRouteImport.update({
+  id: '/labs/mahjong',
+  path: '/labs/mahjong',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsListMembershipsRoute = MainLabsListMembershipsRouteImport.update({
@@ -912,6 +924,7 @@ export interface FileRoutesByFullPath {
   '/labs/lightning': typeof MainLabsLightningRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/labs/list-memberships': typeof MainLabsListMembershipsRoute
+  '/labs/mahjong': typeof MainLabsMahjongRoute
   '/labs/mastodon': typeof MainLabsMastodonRoute
   '/labs/matrix': typeof MainLabsMatrixRoute
   '/labs/media-inspector': typeof MainLabsMediaInspectorRoute
@@ -935,6 +948,7 @@ export interface FileRoutesByFullPath {
   '/labs/snake': typeof MainLabsSnakeRoute
   '/labs/spectrogram': typeof MainLabsSpectrogramRoute
   '/labs/subnet': typeof MainLabsSubnetRoute
+  '/labs/sudoku': typeof MainLabsSudokuRoute
   '/labs/terminal': typeof MainLabsTerminalRoute
   '/labs/tfl-air': typeof MainLabsTflAirRoute
   '/labs/tfl-arrivals': typeof MainLabsTflArrivalsRoute
@@ -1051,6 +1065,7 @@ export interface FileRoutesByTo {
   '/labs/lightning': typeof MainLabsLightningRoute
   '/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/labs/list-memberships': typeof MainLabsListMembershipsRoute
+  '/labs/mahjong': typeof MainLabsMahjongRoute
   '/labs/mastodon': typeof MainLabsMastodonRoute
   '/labs/matrix': typeof MainLabsMatrixRoute
   '/labs/media-inspector': typeof MainLabsMediaInspectorRoute
@@ -1074,6 +1089,7 @@ export interface FileRoutesByTo {
   '/labs/snake': typeof MainLabsSnakeRoute
   '/labs/spectrogram': typeof MainLabsSpectrogramRoute
   '/labs/subnet': typeof MainLabsSubnetRoute
+  '/labs/sudoku': typeof MainLabsSudokuRoute
   '/labs/terminal': typeof MainLabsTerminalRoute
   '/labs/tfl-air': typeof MainLabsTflAirRoute
   '/labs/tfl-arrivals': typeof MainLabsTflArrivalsRoute
@@ -1192,6 +1208,7 @@ export interface FileRoutesById {
   '/_main/labs/lightning': typeof MainLabsLightningRoute
   '/_main/labs/list-cleaner': typeof MainLabsListCleanerRoute
   '/_main/labs/list-memberships': typeof MainLabsListMembershipsRoute
+  '/_main/labs/mahjong': typeof MainLabsMahjongRoute
   '/_main/labs/mastodon': typeof MainLabsMastodonRoute
   '/_main/labs/matrix': typeof MainLabsMatrixRoute
   '/_main/labs/media-inspector': typeof MainLabsMediaInspectorRoute
@@ -1215,6 +1232,7 @@ export interface FileRoutesById {
   '/_main/labs/snake': typeof MainLabsSnakeRoute
   '/_main/labs/spectrogram': typeof MainLabsSpectrogramRoute
   '/_main/labs/subnet': typeof MainLabsSubnetRoute
+  '/_main/labs/sudoku': typeof MainLabsSudokuRoute
   '/_main/labs/terminal': typeof MainLabsTerminalRoute
   '/_main/labs/tfl-air': typeof MainLabsTflAirRoute
   '/_main/labs/tfl-arrivals': typeof MainLabsTflArrivalsRoute
@@ -1333,6 +1351,7 @@ export interface FileRouteTypes {
     | '/labs/lightning'
     | '/labs/list-cleaner'
     | '/labs/list-memberships'
+    | '/labs/mahjong'
     | '/labs/mastodon'
     | '/labs/matrix'
     | '/labs/media-inspector'
@@ -1356,6 +1375,7 @@ export interface FileRouteTypes {
     | '/labs/snake'
     | '/labs/spectrogram'
     | '/labs/subnet'
+    | '/labs/sudoku'
     | '/labs/terminal'
     | '/labs/tfl-air'
     | '/labs/tfl-arrivals'
@@ -1472,6 +1492,7 @@ export interface FileRouteTypes {
     | '/labs/lightning'
     | '/labs/list-cleaner'
     | '/labs/list-memberships'
+    | '/labs/mahjong'
     | '/labs/mastodon'
     | '/labs/matrix'
     | '/labs/media-inspector'
@@ -1495,6 +1516,7 @@ export interface FileRouteTypes {
     | '/labs/snake'
     | '/labs/spectrogram'
     | '/labs/subnet'
+    | '/labs/sudoku'
     | '/labs/terminal'
     | '/labs/tfl-air'
     | '/labs/tfl-arrivals'
@@ -1612,6 +1634,7 @@ export interface FileRouteTypes {
     | '/_main/labs/lightning'
     | '/_main/labs/list-cleaner'
     | '/_main/labs/list-memberships'
+    | '/_main/labs/mahjong'
     | '/_main/labs/mastodon'
     | '/_main/labs/matrix'
     | '/_main/labs/media-inspector'
@@ -1635,6 +1658,7 @@ export interface FileRouteTypes {
     | '/_main/labs/snake'
     | '/_main/labs/spectrogram'
     | '/_main/labs/subnet'
+    | '/_main/labs/sudoku'
     | '/_main/labs/terminal'
     | '/_main/labs/tfl-air'
     | '/_main/labs/tfl-arrivals'
@@ -2041,6 +2065,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsTerminalRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/sudoku': {
+      id: '/_main/labs/sudoku'
+      path: '/labs/sudoku'
+      fullPath: '/labs/sudoku'
+      preLoaderRoute: typeof MainLabsSudokuRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/subnet': {
       id: '/_main/labs/subnet'
       path: '/labs/subnet'
@@ -2200,6 +2231,13 @@ declare module '@tanstack/react-router' {
       path: '/labs/mastodon'
       fullPath: '/labs/mastodon'
       preLoaderRoute: typeof MainLabsMastodonRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/mahjong': {
+      id: '/_main/labs/mahjong'
+      path: '/labs/mahjong'
+      fullPath: '/labs/mahjong'
+      preLoaderRoute: typeof MainLabsMahjongRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/list-memberships': {
@@ -2727,6 +2765,7 @@ interface MainRouteChildren {
   MainLabsLightningRoute: typeof MainLabsLightningRoute
   MainLabsListCleanerRoute: typeof MainLabsListCleanerRoute
   MainLabsListMembershipsRoute: typeof MainLabsListMembershipsRoute
+  MainLabsMahjongRoute: typeof MainLabsMahjongRoute
   MainLabsMastodonRoute: typeof MainLabsMastodonRoute
   MainLabsMatrixRoute: typeof MainLabsMatrixRoute
   MainLabsMediaInspectorRoute: typeof MainLabsMediaInspectorRoute
@@ -2750,6 +2789,7 @@ interface MainRouteChildren {
   MainLabsSnakeRoute: typeof MainLabsSnakeRoute
   MainLabsSpectrogramRoute: typeof MainLabsSpectrogramRoute
   MainLabsSubnetRoute: typeof MainLabsSubnetRoute
+  MainLabsSudokuRoute: typeof MainLabsSudokuRoute
   MainLabsTerminalRoute: typeof MainLabsTerminalRoute
   MainLabsTflAirRoute: typeof MainLabsTflAirRoute
   MainLabsTflArrivalsRoute: typeof MainLabsTflArrivalsRoute
@@ -2860,6 +2900,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsLightningRoute: MainLabsLightningRoute,
   MainLabsListCleanerRoute: MainLabsListCleanerRoute,
   MainLabsListMembershipsRoute: MainLabsListMembershipsRoute,
+  MainLabsMahjongRoute: MainLabsMahjongRoute,
   MainLabsMastodonRoute: MainLabsMastodonRoute,
   MainLabsMatrixRoute: MainLabsMatrixRoute,
   MainLabsMediaInspectorRoute: MainLabsMediaInspectorRoute,
@@ -2883,6 +2924,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsSnakeRoute: MainLabsSnakeRoute,
   MainLabsSpectrogramRoute: MainLabsSpectrogramRoute,
   MainLabsSubnetRoute: MainLabsSubnetRoute,
+  MainLabsSudokuRoute: MainLabsSudokuRoute,
   MainLabsTerminalRoute: MainLabsTerminalRoute,
   MainLabsTflAirRoute: MainLabsTflAirRoute,
   MainLabsTflArrivalsRoute: MainLabsTflArrivalsRoute,

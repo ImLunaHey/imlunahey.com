@@ -53,6 +53,8 @@ export type OgSlug =
   | 'lab/life'
   | 'lab/wordle'
   | 'lab/typing'
+  | 'lab/sudoku'
+  | 'lab/mahjong'
   // 2026 additions
   | 'lab/bsky-composer'
   | 'lab/fingerprint'
@@ -188,6 +190,8 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/life': { title: 'life.', subtitle: "conway's automaton on a torus", description: "conway's game of life on a 60×40 torus. click to paint, space to play, pre-seeded with glider, pulsar, and gosper glider gun patterns.", glyph: '◫', slug: '/labs/life' },
   'lab/wordle': { title: 'wordle.', subtitle: 'one word a day, six guesses', description: 'five-letter word, six guesses, one puzzle a day — seeded from the date so everyone gets the same word. leaderboard via atproto identity.', glyph: '▦', slug: '/labs/wordle' },
   'lab/typing': { title: 'typing.', subtitle: 'wpm + accuracy, bring-your-own-keyboard', description: 'short timed typing test — 15, 30, or 60 seconds. wpm, accuracy, and error rate tracked live. best scores persisted locally per device.', glyph: '⎇', slug: '/labs/typing' },
+  'lab/sudoku': { title: 'sudoku.', subtitle: 'classic 9×9, four difficulties, generated client-side', description: 'classic 9×9 sudoku — easy, medium, hard, expert — generated client-side with a unique-solution check. notes mode, hints, autosaved progress per device.', glyph: '⊞', slug: '/labs/sudoku' },
+  'lab/mahjong': { title: 'mahjong.', subtitle: '144 hand-drawn svg tiles, five-layer pyramid', description: 'mahjong solitaire — 144 hand-rendered svg tiles in a five-layer pyramid. every deal is generated with a guaranteed solve sequence, but you can still lose by matching the wrong pair first.', glyph: '⌖', slug: '/labs/mahjong' },
   'lab/bsky-composer': { title: 'bsky composer.', subtitle: 'draft a post with a live link-card preview', description: 'draft a bluesky post with a live link-card preview — paste any url, see the exact og card that will be embedded before you publish.', glyph: '✎', slug: '/labs/bsky-composer' },
   'lab/fingerprint': { title: 'fingerprint.', subtitle: 'everything your browser silently tells every site', description: 'everything your browser silently tells every site you visit — user agent, screen, canvas, webgl, audio, font, timezone, and network fingerprints.', glyph: '✾', slug: '/labs/fingerprint' },
   'lab/whois': { title: 'whois.', subtitle: 'rdap domain lookup — registrar, expiry, nameservers', description: 'rdap domain lookup — paste any domain, see registrar, registration + expiry dates, nameservers, dnssec, and contact records from the registry.', glyph: '?', slug: '/labs/whois' },

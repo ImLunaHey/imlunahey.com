@@ -806,6 +806,22 @@ const LABS: Lab[] = [
     year: '2026',
     ready: true,
   },
+  {
+    slug: 'sudoku',
+    title: 'sudoku',
+    desc: 'classic 9×9, four difficulties, generated client-side with a unique-solution check. notes, hints, autosaves locally.',
+    tags: ['game'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'mahjong',
+    title: 'mahjong',
+    desc: 'mahjong solitaire — 144 hand-drawn svg tiles in a five-layer pyramid. each deal is guaranteed to have a solution.',
+    tags: ['game'],
+    year: '2026',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {
