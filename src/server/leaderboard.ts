@@ -6,6 +6,7 @@ import {
   canonical,
   hmacSign,
   hmacVerify,
+  lowerIsBetter,
   validateScore,
   type GameId as SigGameId,
 } from '../lib/leaderboard-sig';
@@ -177,19 +178,20 @@ export const getLeaderboard = createServerFn({ method: 'GET' })
         }),
       );
 
-      // dedupe by (did, achievedAt) — replay-publish attempts collapse to
-      // one row. keep the highest score per did overall.
+      // dedupe by did — replay-publish attempts collapse to one row.
+      // keep the player's best score per game (lower or higher depending
+      // on the game's scoring direction).
+      const lower = lowerIsBetter(data.game);
       const byDid = new Map<string, LeaderboardRow>();
       for (const r of rows) {
         if (!r) continue;
         const cur = byDid.get(r.did);
-        // wordle: lower is better; everything else: higher is better.
-        const better = data.game === 'wordle' ? (!cur || r.score < cur.score) : (!cur || r.score > cur.score);
+        const better = lower ? (!cur || r.score < cur.score) : (!cur || r.score > cur.score);
         if (better) byDid.set(r.did, r);
       }
 
       const sorted = [...byDid.values()].sort((a, b) =>
-        data.game === 'wordle' ? a.score - b.score : b.score - a.score,
+        lower ? a.score - b.score : b.score - a.score,
       );
       return sorted.slice(0, 50);
     });

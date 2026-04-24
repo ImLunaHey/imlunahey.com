@@ -9,7 +9,27 @@
  * network, so don't touch it without a migration plan.
  */
 
-export type GameId = 'snake' | 'wordle' | 'typing-15' | 'typing-30' | 'typing-60';
+export type GameId =
+  | 'snake'
+  | 'wordle'
+  | 'typing-15'
+  | 'typing-30'
+  | 'typing-60'
+  | 'sudoku-easy'
+  | 'sudoku-medium'
+  | 'sudoku-hard'
+  | 'sudoku-expert'
+  | 'mahjong';
+
+/** True for time-based games (score = seconds, lower wins). False for
+ *  point-based games (score = points/wpm, higher wins). Centralised so
+ *  sort, dedupe, and ranking all stay consistent. */
+export function lowerIsBetter(game: GameId): boolean {
+  if (game === 'wordle') return true;
+  if (game === 'mahjong') return true;
+  if (game.startsWith('sudoku-')) return true;
+  return false;
+}
 
 export type ScorePayload = {
   game: GameId;
@@ -62,6 +82,20 @@ export function validateScore(game: GameId, score: number): string | null {
     case 'typing-30':
     case 'typing-60':
       if (score > 250) return 'typing wpm exceeds plausible max (250)';
+      return null;
+    case 'sudoku-easy':
+    case 'sudoku-medium':
+    case 'sudoku-hard':
+    case 'sudoku-expert':
+      // score = elapsed seconds. anything under 20s is a speedrun lie;
+      // anything over an hour is just a stale tab.
+      if (score < 20) return 'sudoku time too short to be plausible';
+      if (score > 3600) return 'sudoku time exceeds plausible max (1h)';
+      return null;
+    case 'mahjong':
+      // 144 tiles → fastest known human times sit around a minute.
+      if (score < 60) return 'mahjong time too short to be plausible';
+      if (score > 7200) return 'mahjong time exceeds plausible max (2h)';
       return null;
     default:
       return `unknown game: ${String(game)}`;

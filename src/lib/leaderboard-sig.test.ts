@@ -3,6 +3,7 @@ import {
   canonical,
   hmacSign,
   hmacVerify,
+  lowerIsBetter,
   validateScore,
 } from './leaderboard-sig';
 
@@ -79,5 +80,39 @@ describe('validateScore', () => {
       expect(validateScore(g, 250)).toBeNull();
       expect(validateScore(g, 251)).toMatch(/plausible/);
     }
+  });
+
+  it('sudoku times must be 20s..3600s on every difficulty', () => {
+    for (const g of ['sudoku-easy', 'sudoku-medium', 'sudoku-hard', 'sudoku-expert'] as const) {
+      expect(validateScore(g, 19)).toMatch(/too short/);
+      expect(validateScore(g, 20)).toBeNull();
+      expect(validateScore(g, 3600)).toBeNull();
+      expect(validateScore(g, 3601)).toMatch(/plausible/);
+    }
+  });
+
+  it('mahjong times must be 60s..7200s', () => {
+    expect(validateScore('mahjong', 59)).toMatch(/too short/);
+    expect(validateScore('mahjong', 60)).toBeNull();
+    expect(validateScore('mahjong', 7200)).toBeNull();
+    expect(validateScore('mahjong', 7201)).toMatch(/plausible/);
+  });
+});
+
+describe('lowerIsBetter', () => {
+  it('returns true for time-based games', () => {
+    expect(lowerIsBetter('wordle')).toBe(true);
+    expect(lowerIsBetter('mahjong')).toBe(true);
+    expect(lowerIsBetter('sudoku-easy')).toBe(true);
+    expect(lowerIsBetter('sudoku-medium')).toBe(true);
+    expect(lowerIsBetter('sudoku-hard')).toBe(true);
+    expect(lowerIsBetter('sudoku-expert')).toBe(true);
+  });
+
+  it('returns false for point-based games', () => {
+    expect(lowerIsBetter('snake')).toBe(false);
+    expect(lowerIsBetter('typing-15')).toBe(false);
+    expect(lowerIsBetter('typing-30')).toBe(false);
+    expect(lowerIsBetter('typing-60')).toBe(false);
   });
 });

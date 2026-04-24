@@ -1,5 +1,26 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { XRPC } from '@atcute/client';
+import { OAuthUserAgent, createAuthorizationUrl } from '@atcute/oauth-browser-client';
+import type { ActorIdentifier } from '@atcute/lexicons';
+import { useAtprotoSession } from '../../hooks/use-atproto-session';
+import { useProfile } from '../../hooks/use-profile';
+import {
+  ensureOAuthConfigured,
+  LEADERBOARD_SCOPE,
+  LEADERBOARD_WRITE_SCOPE,
+  sessionHasScope,
+} from '../../lib/oauth';
+import {
+  getLeaderboard,
+  LEADERBOARD_MARKER_URI,
+  LEADERBOARD_SCORE_COLLECTION,
+  signScore,
+  type LeaderboardRow,
+} from '../../server/leaderboard';
+
+const GAME_ID = 'mahjong' as const;
 
 // ─── tile data model ─────────────────────────────────────────────────────────
 
@@ -620,7 +641,20 @@ export default function MahjongPage() {
   const [startedAt, setStartedAt] = useState<number>(() => Date.now());
   const [baseElapsed, setBaseElapsed] = useState(0);
   const [now, setNow] = useState<number>(() => Date.now());
+  const [winElapsed, setWinElapsed] = useState<number | null>(null);
+  const [publishState, setPublishState] = useState<'idle' | 'signing' | 'publishing' | 'published' | 'error'>('idle');
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const [handleInput, setHandleInput] = useState('');
   const restoredRef = useRef(false);
+
+  const { session } = useAtprotoSession();
+  const { data: profile } = useProfile({ actor: session?.info.sub ?? '' });
+  const queryClient = useQueryClient();
+  const { data: leaderboardRows } = useQuery({
+    queryKey: ['leaderboard', GAME_ID],
+    queryFn: () => getLeaderboard({ data: { game: GAME_ID } }),
+  });
+  const canPublishScore = sessionHasScope(session, LEADERBOARD_WRITE_SCOPE);
 
   // restore once on mount.
   useEffect(() => {
@@ -677,7 +711,15 @@ export default function MahjongPage() {
     return () => window.clearInterval(id);
   }, [won, stuck]);
 
-  const elapsed = baseElapsed + (now - startedAt) / 1000;
+  // capture the elapsed seconds at the exact moment the board was cleared,
+  // so the published score doesn't drift past it.
+  useEffect(() => {
+    if (won && winElapsed === null) {
+      setWinElapsed(baseElapsed + (Date.now() - startedAt) / 1000);
+    }
+  }, [won, winElapsed, baseElapsed, startedAt]);
+
+  const elapsed = won && winElapsed !== null ? winElapsed : baseElapsed + (now - startedAt) / 1000;
 
   // persist on every change.
   useEffect(() => {
@@ -698,6 +740,9 @@ export default function MahjongPage() {
     setHintPair(null);
     setStartedAt(Date.now());
     setBaseElapsed(0);
+    setWinElapsed(null);
+    setPublishState('idle');
+    setPublishError(null);
   }, []);
 
   const restart = useCallback(() => {
@@ -706,7 +751,63 @@ export default function MahjongPage() {
     setHintPair(null);
     setStartedAt(Date.now());
     setBaseElapsed(0);
+    setWinElapsed(null);
+    setPublishState('idle');
+    setPublishError(null);
   }, []);
+
+  async function startSignIn(handle: string) {
+    setPublishError(null);
+    try {
+      ensureOAuthConfigured();
+      const url = await createAuthorizationUrl({
+        target: { type: 'account', identifier: handle.trim() as ActorIdentifier },
+        scope: LEADERBOARD_SCOPE,
+        state: { returnTo: window.location.pathname },
+      });
+      window.location.assign(url.toString());
+    } catch (err) {
+      setPublishError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function publish() {
+    if (!session || winElapsed === null) return;
+    if (publishState === 'signing' || publishState === 'publishing') return;
+    setPublishError(null);
+    setPublishState('signing');
+    try {
+      const did = session.info.sub;
+      const score = Math.round(winElapsed);
+      const signed = await signScore({ data: { game: GAME_ID, score, did } });
+      setPublishState('publishing');
+      const agent = new OAuthUserAgent(session);
+      const xrpc = new XRPC({ handler: agent });
+      await xrpc.call('com.atproto.repo.createRecord', {
+        data: {
+          repo: did,
+          collection: LEADERBOARD_SCORE_COLLECTION,
+          record: {
+            $type: LEADERBOARD_SCORE_COLLECTION,
+            game: signed.game,
+            score: signed.score,
+            subject: LEADERBOARD_MARKER_URI,
+            did: signed.did,
+            achievedAt: signed.achievedAt,
+            sig: signed.sig,
+          },
+        },
+      });
+      setPublishState('published');
+      window.setTimeout(
+        () => queryClient.invalidateQueries({ queryKey: ['leaderboard', GAME_ID] }),
+        2000,
+      );
+    } catch (err) {
+      setPublishError(err instanceof Error ? err.message : String(err));
+      setPublishState('error');
+    }
+  }
 
   const findHint = useCallback(() => {
     const free: Slot[] = [];
@@ -851,7 +952,54 @@ export default function MahjongPage() {
                 <span className="ov-score-val">{formatTime(elapsed)}</span>
                 <span className="ov-score-lbl">all 72 pairs</span>
               </div>
-              <button className="ov-btn" type="button" onClick={newGame}>new deal</button>
+
+              {session && canPublishScore ? (
+                publishState === 'published' ? (
+                  <div className="ov-sub">
+                    ✓ published as <b className="t-accent">@{profile?.handle ?? session.info.sub}</b>
+                  </div>
+                ) : (
+                  <button
+                    className="ov-btn"
+                    type="button"
+                    onClick={() => void publish()}
+                    disabled={publishState === 'signing' || publishState === 'publishing'}
+                  >
+                    {publishState === 'signing'
+                      ? 'signing…'
+                      : publishState === 'publishing'
+                        ? 'publishing…'
+                        : 'publish to leaderboard'}
+                  </button>
+                )
+              ) : session ? (
+                <div className="ov-sub t-faint">
+                  signed in, but session is missing leaderboard scope. sign in again below to publish.
+                </div>
+              ) : (
+                <form
+                  className="lock-form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (handleInput.trim()) void startSignIn(handleInput);
+                  }}
+                >
+                  <input
+                    className="lock-input"
+                    placeholder="your.handle.bsky.social"
+                    value={handleInput}
+                    onChange={(e) => setHandleInput(e.target.value)}
+                    autoComplete="username"
+                    spellCheck={false}
+                  />
+                  <button className="ov-btn" type="submit" disabled={!handleInput.trim()}>
+                    sign in to publish
+                  </button>
+                </form>
+              )}
+              {publishError ? <div className="ov-err">{publishError}</div> : null}
+
+              <button className="ov-btn-ghost" type="button" onClick={newGame}>new deal</button>
             </div>
           ) : stuck ? (
             <div className="overlay">
@@ -866,6 +1014,8 @@ export default function MahjongPage() {
             </div>
           ) : null}
         </section>
+
+        <Leaderboard rows={leaderboardRows ?? null} myDid={session?.info.sub ?? null} />
 
         <footer className="mahjong-footer">
           <span>src: <span className="t-accent">hand-written · ~600 lines</span></span>
@@ -993,6 +1143,78 @@ const CSS = `
   }
   .ov-btn-ghost:hover { color: var(--color-fg); border-color: var(--color-accent-dim); }
 
+  .lock-form {
+    display: flex; gap: 6px;
+    width: 100%; max-width: 360px;
+  }
+  .lock-input {
+    flex: 1;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border-bright);
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    padding: 8px 10px;
+  }
+  .lock-input:focus { outline: none; border-color: var(--color-accent); }
+  .ov-sub.t-faint { color: var(--color-fg-faint); }
+  .ov-err {
+    font-family: var(--font-mono); font-size: var(--fs-xs);
+    color: var(--color-alert);
+    max-width: 48ch; text-align: center;
+  }
+
+  .lb {
+    margin-top: var(--sp-6);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-panel);
+  }
+  .lb-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1px dashed var(--color-border);
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--color-fg-faint);
+    text-transform: uppercase; letter-spacing: 0.12em;
+  }
+  .lb-head .t-accent { color: var(--color-accent); }
+  .lb-empty { padding: var(--sp-5) var(--sp-4); color: var(--color-fg-faint); font-family: var(--font-mono); font-size: var(--fs-xs); text-align: center; }
+  .lb-row {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    gap: var(--sp-3);
+    padding: 8px var(--sp-4);
+    border-bottom: 1px dashed var(--color-border);
+    align-items: center;
+    font-family: var(--font-mono); font-size: var(--fs-sm);
+  }
+  .lb-row:last-child { border-bottom: 0; }
+  .lb-row.me { background: color-mix(in oklch, var(--color-accent) 8%, transparent); }
+  .lb-who-link, .lb-record-link {
+    display: flex; align-items: center; gap: var(--sp-2);
+    color: inherit; text-decoration: none;
+    min-width: 0;
+  }
+  .lb-who-link:hover .lb-name { color: var(--color-accent); }
+  .lb-record-link { gap: var(--sp-3); }
+  .lb-record-link:hover .lb-score { color: color-mix(in oklch, var(--color-accent) 85%, white); text-shadow: 0 0 8px var(--accent-glow); }
+  .lb-record-link:hover .lb-when { color: var(--color-fg-dim); }
+  .lb-rank { color: var(--color-fg-faint); font-size: var(--fs-xs); }
+  .lb-rank.top1 { color: var(--color-accent); }
+  .lb-avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--color-bg-raised);
+    border: 1px solid var(--color-border);
+    object-fit: cover;
+    display: block;
+  }
+  .lb-who { min-width: 0; display: flex; flex-direction: column; }
+  .lb-name { color: var(--color-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-handle { color: var(--color-fg-faint); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-score { color: var(--color-accent); font-weight: 500; }
+  .lb-when { color: var(--color-fg-faint); font-size: 10px; }
+
   .mahjong-footer {
     display: flex; justify-content: space-between;
     padding: var(--sp-8) 0 var(--sp-10);
@@ -1003,3 +1225,68 @@ const CSS = `
     color: var(--color-fg-faint);
   }
 `;
+
+// ─── leaderboard panel ──────────────────────────────────────────────────────
+
+function Leaderboard({
+  rows,
+  myDid,
+}: {
+  rows: LeaderboardRow[] | null;
+  myDid: string | null;
+}) {
+  return (
+    <div className="lb">
+      <div className="lb-head">
+        <span className="t-accent">./leaderboard --mahjong</span>
+        <span>constellation · sig-verified</span>
+      </div>
+      {rows === null ? (
+        <div className="lb-empty">loading scores…</div>
+      ) : rows.length === 0 ? (
+        <div className="lb-empty">no scores yet. be the first.</div>
+      ) : (
+        rows.map((r, i) => (
+          <div key={r.uri} className={`lb-row${r.did === myDid ? ' me' : ''}`}>
+            <span className={`lb-rank ${i === 0 ? 'top1' : ''}`}>#{i + 1}</span>
+            <a
+              className="lb-who-link"
+              href={`https://bsky.app/profile/${r.handle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {r.avatar ? (
+                <img src={r.avatar} alt="" className="lb-avatar" loading="lazy" />
+              ) : (
+                <span className="lb-avatar" />
+              )}
+              <span className="lb-who">
+                <span className="lb-name">{r.displayName}</span>
+                <span className="lb-handle">@{r.handle}</span>
+              </span>
+            </a>
+            <Link
+              className="lb-record-link"
+              to={`/labs/at-uri/${r.uri.replace('at://', '')}` as never}
+            >
+              <span className="lb-score">{formatTime(r.score)}</span>
+              <span className="lb-when">{relative(r.achievedAt)}</span>
+            </Link>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+function relative(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60_000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `${d}d ago`;
+  return iso.slice(0, 10);
+}
