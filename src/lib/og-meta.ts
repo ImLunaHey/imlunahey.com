@@ -42,26 +42,32 @@ export function ogMeta(input: OgMetaInput): Array<Record<string, string>> {
  *  and trailing-slash variants into one indexable URL instead of flagging
  *  them as "duplicate pages without canonical".
  *
- *  Dynamic sub-routes that share a slug (e.g. /labs/crypto/$id all use
- *  slug='lab/crypto') will point to the parent URL — consolidating them
- *  under the parent page is usually the right call; if a detail page
- *  ever needs its own canonical, build the head() payload inline.
+ *  Dynamic detail routes (e.g. /blog/$rkey, /projects/$name) should pass
+ *  `{ path: '/blog/abc123' }` so the canonical matches the actual URL
+ *  instead of pointing at the parent — otherwise Ahrefs/Google see the
+ *  unique content but a shared canonical and flag it. For lab detail
+ *  pages whose content isn't meant to be independently indexable
+ *  (e.g. `/labs/crypto/$id`), inherit the parent canonical by default.
  */
-export function pageMeta(slug: OgSlug): {
+export function pageMeta(
+  slug: OgSlug,
+  overrides: { path?: string; title?: string; description?: string } = {},
+): {
   meta: Array<Record<string, string>>;
   links: Array<Record<string, string>>;
 } {
   const e = ogEntry(slug);
-  const bareTitle = e.title.replace(/\.$/, '');
-  const canonicalUrl = `https://${SITE.domain}${e.slug}`;
+  const bareTitle = overrides.title ?? e.title.replace(/\.$/, '');
+  const description = overrides.description ?? e.subtitle;
+  const canonicalUrl = `https://${SITE.domain}${overrides.path ?? e.slug}`;
   return {
     meta: [
       { title: `${bareTitle} · ${SITE.name}` },
-      { name: 'description', content: e.subtitle },
+      { name: 'description', content: description },
       ...ogMeta({
         slug,
         title: `${bareTitle} · ${SITE.name}`,
-        description: e.subtitle,
+        description,
         url: canonicalUrl,
       }),
     ],
