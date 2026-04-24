@@ -44,6 +44,58 @@ type BskyProfile = {
   avatar?: string;
 };
 
+/**
+ * Fire a brrr.now push notification when a new guestbook entry is
+ * published. Called from the client immediately after createRecord
+ * succeeds. Runs server-side so the BRRR_WEBHOOK stays out of the
+ * client bundle.
+ *
+ * Silent no-op when BRRR_WEBHOOK is unset — lets the guestbook still
+ * work in dev/CI without a webhook configured. Failures are swallowed
+ * because notification delivery shouldn't block or error the publish
+ * flow (the entry is already on the user's pds).
+ *
+ * Trust model: the client passes its own did + handle + text, which
+ * the server forwards verbatim. Spoofing is possible but low-impact —
+ * the worst case is someone forging a notification to imlunahey's
+ * phone with fake contents, which is the kind of mild-annoyance
+ * attack that's mitigated by the fact that the secret isn't public
+ * and brrr itself can rate-limit / revoke the webhook.
+ */
+export const notifyGuestbookEntry = createServerFn({ method: 'POST' })
+  .inputValidator((input: { did: string; handle?: string; text: string }) => input)
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    const webhook = process.env.BRRR_WEBHOOK;
+    if (!webhook) return { ok: false };
+
+    // trim text to fit a push-notification body without exploding the
+    // lock-screen preview. 180 chars is roughly the ios truncation point.
+    const snippet = data.text.length > 180 ? data.text.slice(0, 177) + '…' : data.text;
+    const who = data.handle ? `@${data.handle}` : data.did;
+
+    try {
+      const res = await fetch('https://api.brrr.now/v1/send', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${webhook}`,
+        },
+        body: JSON.stringify({
+          title: 'new guestbook entry',
+          subtitle: who,
+          message: snippet,
+          // stable thread so subsequent entries stack into a single
+          // notification group rather than spamming the lock screen.
+          thread_id: 'imlunahey-guestbook',
+          open_url: 'https://imlunahey.com/guestbook',
+        }),
+      });
+      return { ok: res.ok };
+    } catch {
+      return { ok: false };
+    }
+  });
+
 export const getGuestbookEntries = createServerFn({ method: 'GET' }).handler(
   (): Promise<GuestbookEntry[]> =>
     cached('guestbook:entries', TTL.short, async () => {

@@ -8,7 +8,7 @@ import { SITE } from '../data';
 import { useAtprotoSession } from '../hooks/use-atproto-session';
 import { useProfile } from '../hooks/use-profile';
 import { ensureOAuthConfigured, GUESTBOOK_SCOPE, GUESTBOOK_WRITE_SCOPE, sessionHasScope } from '../lib/oauth';
-import { getGuestbookEntries, GUESTBOOK_ENTRY_COLLECTION, GUESTBOOK_MARKER_URI, type GuestbookEntry } from '../server/guestbook';
+import { getGuestbookEntries, GUESTBOOK_ENTRY_COLLECTION, GUESTBOOK_MARKER_URI, notifyGuestbookEntry, type GuestbookEntry } from '../server/guestbook';
 
 // Each entry is a record on the visitor's own pds with
 // `subject = GUESTBOOK_MARKER_URI`. We find them by asking
@@ -125,6 +125,12 @@ export default function GuestbookPage() {
       setDrafting(false);
       // give constellation a beat to index, then re-query
       setTimeout(() => queryClient.invalidateQueries({ queryKey: ['guestbook', 'entries'] }), 2000);
+      // fire-and-forget: ping brrr so luna gets a push on her phone.
+      // failure here (webhook unset, brrr down) should never surface to
+      // the visitor — their entry is already safely on their own pds.
+      void notifyGuestbookEntry({
+        data: { did: session.info.sub, handle: profile?.handle, text },
+      }).catch(() => { /* ignored */ });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setSignInError(msg);
@@ -194,6 +200,7 @@ export default function GuestbookPage() {
                   className="handle-input"
                   type="text"
                   placeholder="your.handle.bsky.social"
+                  aria-label="bluesky handle"
                   value={handleInput}
                   onChange={(e) => setHandleInput(e.target.value)}
                   autoComplete="username"
@@ -228,6 +235,7 @@ export default function GuestbookPage() {
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder="say hi, leave a thought, point out a bug…"
+                aria-label="guestbook entry"
                 maxLength={1000}
                 rows={4}
                 autoFocus
