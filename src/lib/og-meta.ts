@@ -58,7 +58,9 @@ export function pageMeta(
 } {
   const e = ogEntry(slug);
   const bareTitle = overrides.title ?? e.title.replace(/\.$/, '');
-  const description = overrides.description ?? e.subtitle;
+  // prefer the long-form `description` field on the og entry (backfilled
+  // for pages we care about ranking); fall back to the visual subtitle.
+  const description = overrides.description ?? e.description ?? e.subtitle;
   const canonicalUrl = `https://${SITE.domain}${overrides.path ?? e.slug}`;
   return {
     meta: [

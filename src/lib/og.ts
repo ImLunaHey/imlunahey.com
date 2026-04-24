@@ -135,7 +135,15 @@ export type OgSlug =
 
 type OgEntry = {
   title: string;
+  /** Visual subtitle on the OG card. Kept short so the SVG text
+   *  doesn't overflow; Google wants ~150-160 chars for meta
+   *  description, so use `description` below for longer-form copy. */
   subtitle: string;
+  /** Optional longer description (~150 chars) for <meta name="description">
+   *  and og:description. Falls back to `subtitle` if omitted. Search
+   *  engines ignore pages with too-short descriptions, so fill this on
+   *  any page you actually want ranking. */
+  description?: string;
   /** Single glyph rendered large in the top-right corner. Keep it ASCII/unicode-safe. */
   glyph: string;
   /** The path shown at the bottom-left. */
@@ -143,22 +151,22 @@ type OgEntry = {
 };
 
 const ENTRIES: Record<OgSlug, OgEntry> = {
-  home: { title: 'luna.', subtitle: 'software engineer, london', glyph: '~', slug: '/' },
-  blog: { title: 'writing.', subtitle: 'essays, devlogs, half-sentences', glyph: '¶', slug: '/blog' },
-  projects: { title: 'projects.', subtitle: 'open source + experiments', glyph: '◊', slug: '/projects' },
-  gallery: { title: 'gallery.', subtitle: 'photos + midjourney sessions', glyph: '▦', slug: '/gallery' },
-  watching: { title: 'watching.', subtitle: 'films + tv, rated out of ten', glyph: '▶', slug: '/watching' },
-  games: { title: 'games.', subtitle: 'played + reviewed via popfeed', glyph: '⌘', slug: '/games' },
-  music: { title: 'music.', subtitle: 'scrobbles from last.fm', glyph: '♪', slug: '/music' },
-  labs: { title: 'labs.', subtitle: 'experiments, demos, tools', glyph: '⚗', slug: '/labs' },
-  uses: { title: 'uses.', subtitle: 'the full rig', glyph: '◈', slug: '/uses' },
-  'design-system': { title: 'design.sys.', subtitle: 'tokens, elements, patterns', glyph: '◰', slug: '/design-system' },
-  bookmarks: { title: 'bookmarks.', subtitle: 'articles, talks, papers worth keeping', glyph: '❖', slug: '/bookmarks' },
-  library: { title: 'library.', subtitle: 'physical media shelf', glyph: '▥', slug: '/library' },
-  homelab: { title: 'homelab.', subtitle: 'rack, services, uptime', glyph: '⌸', slug: '/homelab' },
-  globe: { title: 'globe.', subtitle: 'places lived, visited, passed through', glyph: '◯', slug: '/globe' },
-  guestbook: { title: 'guestbook.', subtitle: 'signed entries via atproto', glyph: '✒', slug: '/guestbook' },
-  ai: { title: 'ai.usage.', subtitle: 'every token, every client, every dollar', glyph: '⌬', slug: '/ai' },
+  home: { title: 'luna.', subtitle: 'software engineer, london', description: "luna · software engineer in london building on the atproto / bluesky stack. writing, open-source projects, and ~80 small interactive labs in one place.", glyph: '~', slug: '/' },
+  blog: { title: 'writing.', subtitle: 'essays, devlogs, half-sentences', description: 'essays, devlogs, and half-finished notes on software engineering, the atproto ecosystem, web performance, and whatever else has my attention this week.', glyph: '¶', slug: '/blog' },
+  projects: { title: 'projects.', subtitle: 'open source + experiments', description: 'open-source projects, libraries, and experiments — spanning atproto tooling, react components, canvas demos, and small command-line utilities.', glyph: '◊', slug: '/projects' },
+  gallery: { title: 'gallery.', subtitle: 'photos + midjourney sessions', description: 'photography from around london and further afield, plus ongoing midjourney / stable-diffusion sessions and generative-art experiments.', glyph: '▦', slug: '/gallery' },
+  watching: { title: 'watching.', subtitle: 'films + tv, rated out of ten', description: 'films and tv shows i actually finished, each with a short review and a score out of ten. queried live from my popfeed watch history.', glyph: '▶', slug: '/watching' },
+  games: { title: 'games.', subtitle: 'played + reviewed via popfeed', description: 'video games i finished (or gave up on), each with a short review and score. pulled live from my popfeed library so the list stays current.', glyph: '⌘', slug: '/games' },
+  music: { title: 'music.', subtitle: 'scrobbles from last.fm', description: 'recent listening habits pulled from last.fm — top artists, recent tracks, and what happens to be playing right now. updates roughly daily.', glyph: '♪', slug: '/music' },
+  labs: { title: 'labs.', subtitle: 'experiments, demos, tools', description: '80+ small interactive labs — atproto tools, dev utilities, data explorers on uk open-gov / twitch / mastodon firehoses, media converters, and games.', glyph: '⚗', slug: '/labs' },
+  uses: { title: 'uses.', subtitle: 'the full rig', description: 'hardware, software, and day-to-day tools i actually use — full rig breakdown covering the mac, keyboard, terminal, editor, browser, and home-lab setup.', glyph: '◈', slug: '/uses' },
+  'design-system': { title: 'design.sys.', subtitle: 'tokens, elements, patterns', description: 'the crt/phosphor design system this site is built on — colour tokens, typography, spacing, form elements, and shared interaction patterns.', glyph: '◰', slug: '/design-system' },
+  bookmarks: { title: 'bookmarks.', subtitle: 'articles, talks, papers worth keeping', description: 'articles, talks, and papers worth returning to — mostly software engineering, computer science, design, typography, and the occasional physics paper.', glyph: '❖', slug: '/bookmarks' },
+  library: { title: 'library.', subtitle: 'physical media shelf', description: 'the physical media shelf — books, dvds, vinyl, and anything else worth keeping on a shelf. each entry links out to where you can find a copy.', glyph: '▥', slug: '/library' },
+  homelab: { title: 'homelab.', subtitle: 'rack, services, uptime', description: 'homelab rack contents, running services, and live uptime stats. covers the mini-pc cluster, nas, self-hosted apps, and networking setup.', glyph: '⌸', slug: '/homelab' },
+  globe: { title: 'globe.', subtitle: 'places lived, visited, passed through', description: 'places i have lived, visited, or passed through, rendered on an interactive 3d globe. pan, zoom, and click any city for a short note.', glyph: '◯', slug: '/globe' },
+  guestbook: { title: 'guestbook.', subtitle: 'signed entries via atproto', description: 'the guestbook — sign in with your atproto / bluesky identity and leave a message on your own pds. entries are cryptographically signed and portable.', glyph: '✒', slug: '/guestbook' },
+  ai: { title: 'ai.usage.', subtitle: 'every token, every client, every dollar', description: 'every ai token i used — across claude, chatgpt, gemini, and local models — with per-client, per-day cost breakdowns and a rolling spend total.', glyph: '⌬', slug: '/ai' },
   'lab/css-battles': { title: 'css battles.', subtitle: 'daily prompts from cssbattle.dev', glyph: '□', slug: '/labs/css-battles' },
   'lab/verse-reveal': { title: 'verse reveal.', subtitle: 'staggered ascii text effect', glyph: 'A', slug: '/labs/verse-reveal' },
   'lab/infinite-canvas': { title: 'infinite canvas.', subtitle: 'canvas2d pan + zoom', glyph: '⊞', slug: '/labs/infinite-canvas' },
