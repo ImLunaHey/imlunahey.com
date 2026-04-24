@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import {
-  ArrowUpRight, Beaker, BookOpen, Bookmark, Camera, Clipboard,
-  Command, FileCode, Gamepad2, Globe, Hammer, Heart, Image,
-  MessageSquare, Monitor, Music, Palette, Search, Server, Sparkles,
+  ArrowUpRight, Beaker, BookOpen, Camera, Clipboard,
+  Command, FileCode, Gamepad2, Globe, Hammer, Image,
+  MessageSquare, Monitor, Music, Palette, Search, Sparkles,
   Star, Tv, Wrench,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
@@ -92,16 +92,15 @@ const NAV_ITEMS: Array<{ to: string; label: string; subtitle: string; icon: Icon
   { to: '/gallery', label: 'gallery', subtitle: 'photos', icon: Image, keywords: ['photos', 'pictures'] },
   { to: '/watching', label: 'watching', subtitle: 'movies & tv reviews', icon: Tv, keywords: ['movies', 'films', 'shows', 'reviews'] },
   { to: '/games', label: 'games', subtitle: 'game reviews', icon: Gamepad2, keywords: ['reviews', 'video games'] },
-  { to: '/library', label: 'library', subtitle: 'physical media shelf', icon: BookOpen, keywords: ['criterion', 'blu-ray', 'dvd', 'collection'] },
   { to: '/music', label: 'music', subtitle: 'what i listen to', icon: Music, keywords: ['lastfm', 'scrobbles'] },
-  { to: '/bookmarks', label: 'bookmarks', subtitle: 'saved links', icon: Bookmark },
-  { to: '/homelab', label: 'homelab', subtitle: 'infra & services', icon: Server, keywords: ['servers', 'infra'] },
   { to: '/labs', label: 'labs', subtitle: 'experiments & tools', icon: Beaker, keywords: ['experiments', 'tools'] },
   { to: '/globe', label: 'globe', subtitle: 'places on a map', icon: Globe, keywords: ['travel', 'map'] },
   { to: '/ai', label: 'ai', subtitle: 'ai sandbox', icon: Sparkles, keywords: ['llm', 'chat'] },
   { to: '/guestbook', label: 'guestbook', subtitle: 'leave a note', icon: MessageSquare, keywords: ['comments'] },
-  { to: '/health', label: 'health', subtitle: 'vitals & metrics', icon: Heart, keywords: ['fitness', 'stats'] },
   { to: '/uses', label: 'uses', subtitle: 'hardware & software', icon: Wrench, keywords: ['setup', 'gear'] },
+  // /bookmarks, /health, /homelab, /library are WIP and intentionally
+  // omitted — they're also filtered out of the sitemap. Routes still
+  // work via direct URL for local testing.
 ];
 
 const LABS: Array<{ to: string; label: string; subtitle?: string }> = [
@@ -172,7 +171,32 @@ const LABS: Array<{ to: string; label: string; subtitle?: string }> = [
   { to: '/labs/mp', label: 'mp', subtitle: 'your mp + recent commons votes' },
   { to: '/labs/hygiene', label: 'hygiene', subtitle: 'fsa food-safety ratings' },
   { to: '/labs/crypto', label: 'crypto', subtitle: 'live top-50 crypto prices + sparklines' },
+  { to: '/labs/bsky-cards', label: 'bsky cards', subtitle: 'any bluesky account as a holo trading card' },
+  { to: '/labs/whtwnd', label: 'whtwnd', subtitle: 'write + edit whitewind blog posts on your own pds' },
+  { to: '/labs/backlinks', label: 'backlinks', subtitle: 'who liked/reposted/quoted/replied/followed/linked anything on atproto' },
+  { to: '/labs/top-posts', label: 'top posts', subtitle: 'an account\'s greatest hits, ranked by engagement' },
+  { to: '/labs/list-memberships', label: 'list memberships', subtitle: 'every moderation list that includes an account' },
+  { to: '/labs/engagement-timeline', label: 'engagement timeline', subtitle: 'when a post got its likes / reposts / quotes / replies' },
+  { to: '/labs/labels', label: 'labels', subtitle: 'every moderation label applied to a post or account' },
+  { to: '/labs/quote-tree', label: 'quote tree', subtitle: 'recursive quote-of-quotes graph for any bsky post' },
+  { to: '/labs/reply-ratio', label: 'reply ratio', subtitle: 'how much of an account is replies vs original posts' },
+  { to: '/labs/top-domains', label: 'top domains', subtitle: 'what sites an account links to most often' },
   { to: '/labs/year-in-review', label: 'year in review', subtitle: 'bluesky wrapped — from any handle\'s car file' },
+  { to: '/labs/met-museum', label: 'met museum', subtitle: '470k objects from the met — search by artist, medium, culture' },
+  { to: '/labs/poetry', label: 'poetry', subtitle: 'public-domain poems searchable by author / title / line' },
+  { to: '/labs/scryfall', label: 'scryfall', subtitle: 'every magic: the gathering card ever printed' },
+  { to: '/labs/xkcd', label: 'xkcd', subtitle: 'randall munroe\'s webcomic — every strip + transcript + alt-text' },
+  { to: '/labs/aic', label: 'art institute', subtitle: 'art institute of chicago — 120k works with iiif images' },
+  { to: '/labs/open-library', label: 'open library', subtitle: 'archive.org book catalog — title / author / isbn' },
+  { to: '/labs/tvmaze', label: 'tvmaze', subtitle: 'tv schedule by country + show metadata' },
+  { to: '/labs/f1', label: 'f1', subtitle: 'every f1 race 1950+ — standings, schedule, results' },
+  { to: '/labs/mastodon', label: 'mastodon', subtitle: 'live public firehose of any mastodon instance' },
+  { to: '/labs/media-inspector', label: 'media inspector', subtitle: 'every track + metadata tag in any media file' },
+  { to: '/labs/frame-extractor', label: 'frame extractor', subtitle: 'scrub any video + pull exact frames as png' },
+  { to: '/labs/audio-extractor', label: 'audio extractor', subtitle: 'pull audio out of any video as mp3 or wav' },
+  { to: '/labs/clipper', label: 'clipper', subtitle: 'trim any video to a range + save the clip' },
+  { to: '/labs/converter', label: 'converter', subtitle: 'mp4 ↔ webm ↔ mkv ↔ mov, + audio to mp3/wav/ogg/flac' },
+  { to: '/labs/twitch-live', label: 'twitch live', subtitle: 'top live streams right now — filter by game + language' },
   { to: '/labs/jwt', label: 'jwt', subtitle: 'decode & inspect' },
   { to: '/labs/cron', label: 'cron', subtitle: 'cron expression helper' },
   { to: '/labs/tid', label: 'tid', subtitle: 'atproto tid converter' },
@@ -187,6 +211,9 @@ export default function CommandPalette() {
   const [idx, setIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  // element that was focused before the palette opened — so keyboard
+  // users land back where they were after dismissing.
+  const previousFocus = useRef<HTMLElement | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -238,11 +265,19 @@ export default function CommandPalette() {
 
   useEffect(() => {
     if (open) {
+      previousFocus.current = (document.activeElement as HTMLElement | null) ?? null;
       setQuery('');
       setIdx(0);
       const t = window.setTimeout(() => inputRef.current?.focus(), 20);
       return () => window.clearTimeout(t);
     }
+    // closing — return focus to whatever triggered the open.
+    // skip if the close was a navigation (route change also closes the
+    // palette, and we don't want to yank focus back to a button on the
+    // previous page).
+    const prev = previousFocus.current;
+    previousFocus.current = null;
+    if (prev && document.contains(prev)) prev.focus?.();
   }, [open]);
 
   useEffect(() => { setOpen(false); }, [location.pathname]);
@@ -454,11 +489,11 @@ export default function CommandPalette() {
   return (
     <>
       <style>{CSS}</style>
-      <div className="cp-backdrop" onClick={close} />
-      <div className="cp-wrap" role="dialog" aria-label="command palette">
+      <div className="cp-backdrop" onClick={close} aria-hidden="true" />
+      <div className="cp-wrap" role="dialog" aria-modal="true" aria-label="command palette">
         <div className="cp-panel panel ticks">
           <div className="cp-head">
-            <span className="cp-prompt">
+            <span className="cp-prompt" aria-hidden="true">
               <Search size={14} />
               <span className="cp-caret">{'>'}</span>
             </span>
@@ -503,8 +538,8 @@ export default function CommandPalette() {
                           onMouseEnter={() => setIdx(currentIdx)}
                           onClick={() => { close(); queueMicrotask(() => it.run()); }}
                         >
-                          <span className="cp-row-pointer">▸</span>
-                          <span className="cp-row-icon"><Icon size={14} /></span>
+                          <span className="cp-row-pointer" aria-hidden="true">▸</span>
+                          <span className="cp-row-icon" aria-hidden="true"><Icon size={14} /></span>
                           <span className="cp-row-body">
                             <span className="cp-row-label">
                               {it.positions.length > 0 ? highlight(it.label, it.positions) : it.label}
@@ -513,7 +548,7 @@ export default function CommandPalette() {
                           </span>
                           <span className="cp-row-right">
                             {it.shortcut ? <span className="cp-kbd">{it.shortcut}</span> : null}
-                            {it.external ? <ArrowUpRight size={12} className="cp-ext" /> : null}
+                            {it.external ? <ArrowUpRight size={12} className="cp-ext" aria-hidden="true" /> : null}
                             {it.hint ? <span className="cp-hint">{it.hint}</span> : null}
                           </span>
                         </button>

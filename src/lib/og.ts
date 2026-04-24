@@ -106,7 +106,32 @@ export type OgSlug =
   | 'lab/mp'
   | 'lab/hygiene'
   | 'lab/crypto'
-  | 'lab/year-in-review';
+  | 'lab/bsky-cards'
+  | 'lab/whtwnd'
+  | 'lab/backlinks'
+  | 'lab/top-posts'
+  | 'lab/list-memberships'
+  | 'lab/engagement-timeline'
+  | 'lab/labels'
+  | 'lab/quote-tree'
+  | 'lab/reply-ratio'
+  | 'lab/top-domains'
+  | 'lab/year-in-review'
+  | 'lab/met-museum'
+  | 'lab/poetry'
+  | 'lab/scryfall'
+  | 'lab/xkcd'
+  | 'lab/aic'
+  | 'lab/open-library'
+  | 'lab/tvmaze'
+  | 'lab/f1'
+  | 'lab/mastodon'
+  | 'lab/media-inspector'
+  | 'lab/frame-extractor'
+  | 'lab/audio-extractor'
+  | 'lab/clipper'
+  | 'lab/converter'
+  | 'lab/twitch-live';
 
 type OgEntry = {
   title: string;
@@ -207,7 +232,32 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/mp': { title: 'mp.', subtitle: 'postcode → your mp → their recent commons votes', glyph: '⚖', slug: '/labs/mp' },
   'lab/hygiene': { title: 'hygiene.', subtitle: 'food standards rating for any uk eatery', glyph: '✓', slug: '/labs/hygiene' },
   'lab/crypto': { title: 'crypto.', subtitle: 'live top-50 crypto prices + 7-day sparklines from coingecko', glyph: '¤', slug: '/labs/crypto' },
+  'lab/bsky-cards': { title: 'bsky cards.', subtitle: 'any bluesky account as a holographic trading card', glyph: '◈', slug: '/labs/bsky-cards' },
+  'lab/whtwnd': { title: 'whtwnd.', subtitle: 'write, edit, and publish blog posts to your own pds', glyph: '✎', slug: '/labs/whtwnd' },
+  'lab/backlinks': { title: 'backlinks.', subtitle: 'who liked, reposted, quoted, followed, or linked anything on atproto', glyph: '↺', slug: '/labs/backlinks' },
+  'lab/top-posts': { title: 'top posts.', subtitle: "an account's greatest hits, ranked by total engagement", glyph: '★', slug: '/labs/top-posts' },
+  'lab/list-memberships': { title: 'list memberships.', subtitle: 'every moderation list that includes an account', glyph: '≡', slug: '/labs/list-memberships' },
+  'lab/engagement-timeline': { title: 'engagement timeline.', subtitle: 'when a post got its likes, reposts, quotes, and replies', glyph: '▆', slug: '/labs/engagement-timeline' },
+  'lab/labels': { title: 'labels.', subtitle: 'every moderation label applied to a post or account', glyph: '⚐', slug: '/labs/labels' },
+  'lab/quote-tree': { title: 'quote tree.', subtitle: 'every quote-of-a-quote, recursively', glyph: '❝', slug: '/labs/quote-tree' },
+  'lab/reply-ratio': { title: 'reply ratio.', subtitle: 'how much of an account is replies vs original posts', glyph: '↳', slug: '/labs/reply-ratio' },
+  'lab/top-domains': { title: 'top domains.', subtitle: 'which sites an account links to most often', glyph: '⌂', slug: '/labs/top-domains' },
   'lab/year-in-review': { title: 'year in review.', subtitle: 'bluesky wrapped from any account\'s car file', glyph: '★', slug: '/labs/year-in-review' },
+  'lab/met-museum': { title: 'met museum.', subtitle: '470k objects from the metropolitan, images + full metadata', glyph: '◫', slug: '/labs/met-museum' },
+  'lab/poetry': { title: 'poetry.', subtitle: 'public-domain poems by author, title, or line content', glyph: '¶', slug: '/labs/poetry' },
+  'lab/scryfall': { title: 'scryfall.', subtitle: 'every magic: the gathering card ever printed, scryfall dsl', glyph: '✦', slug: '/labs/scryfall' },
+  'lab/xkcd': { title: 'xkcd.', subtitle: 'randall munroe\'s webcomic, every strip + transcript + alt-text', glyph: '◼', slug: '/labs/xkcd' },
+  'lab/aic': { title: 'art institute.', subtitle: 'art institute of chicago — 120k works, iiif images', glyph: '◫', slug: '/labs/aic' },
+  'lab/open-library': { title: 'open library.', subtitle: 'archive.org\'s book catalog — title / author / isbn search', glyph: '▥', slug: '/labs/open-library' },
+  'lab/tvmaze': { title: 'tvmaze.', subtitle: 'tv schedule by country + show metadata, no key', glyph: '▶', slug: '/labs/tvmaze' },
+  'lab/f1': { title: 'f1.', subtitle: 'every formula 1 race 1950 onward — standings + results', glyph: '◎', slug: '/labs/f1' },
+  'lab/mastodon': { title: 'mastodon.', subtitle: 'live public firehose of any mastodon instance, sse', glyph: '≡', slug: '/labs/mastodon' },
+  'lab/media-inspector': { title: 'media inspector.', subtitle: 'every track + metadata tag in any media file, in-browser', glyph: '▱', slug: '/labs/media-inspector' },
+  'lab/frame-extractor': { title: 'frame extractor.', subtitle: 'scrub any video + pull exact frames as png, in-browser', glyph: '⦿', slug: '/labs/frame-extractor' },
+  'lab/audio-extractor': { title: 'audio extractor.', subtitle: 'pull audio out of any video as mp3 or wav, in-browser', glyph: '♫', slug: '/labs/audio-extractor' },
+  'lab/clipper': { title: 'clipper.', subtitle: 'trim any video to a range + save the clip, in-browser', glyph: '✂', slug: '/labs/clipper' },
+  'lab/converter': { title: 'converter.', subtitle: 'mp4 / webm / mkv / mov / mp3 / wav / ogg / flac — in-browser', glyph: '↔', slug: '/labs/converter' },
+  'lab/twitch-live': { title: 'twitch live.', subtitle: 'top live streams right now, filter by game + language', glyph: '▶', slug: '/labs/twitch-live' },
 };
 
 const W = 1200;

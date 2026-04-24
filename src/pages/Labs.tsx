@@ -575,6 +575,206 @@ const LABS: Lab[] = [
     ready: true,
   },
   {
+    slug: 'bsky-cards',
+    title: 'bsky cards',
+    desc: 'any bluesky account as a holographic trading card. rarity tiers by follower bracket, archetype from post cadence, mouse-tilt shine. collections: moots (mutuals).',
+    tags: ['atproto', 'bluesky', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'whtwnd',
+    title: 'whtwnd',
+    desc: 'write, edit, and publish blog posts to your own atproto pds. oauth sign-in with a per-action scope, markdown content, visibility + theme, list + edit + delete your own records — no whitewind account needed, the record is yours.',
+    tags: ['atproto', 'bluesky', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'backlinks',
+    title: 'backlinks',
+    desc: 'paste any atproto at-uri, did, or url — see every record across the network that references it. likes, reposts, quotes, replies, follows, mentions, link-backs. queries constellation.microcosm.blue, hydrates post previews via the public appview.',
+    tags: ['atproto', 'bluesky', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'top-posts',
+    title: 'top posts',
+    desc: 'an account\'s greatest hits — last 100 posts ranked by weighted engagement (likes + reposts×2 + quotes×3 + replies×0.5). four constellation count queries per post, runs in seconds.',
+    tags: ['atproto', 'bluesky', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'list-memberships',
+    title: 'list memberships',
+    desc: 'paste a handle — see every public moderation or curation list that includes you. bluesky has no built-in way to see this. uses app.bsky.graph.listitem:subject backlinks.',
+    tags: ['atproto', 'bluesky', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'engagement-timeline',
+    title: 'engagement timeline',
+    desc: 'paste a post — histogram of when its likes, reposts, quotes, and replies landed. buckets derived from rkey tid timestamps so we never fetch the interaction records themselves.',
+    tags: ['atproto', 'bluesky', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'labels',
+    title: 'labels',
+    desc: 'every moderation label applied to an account or post, with the labeler that emitted it. surfaces the labels field the bluesky app hides behind warning chrome.',
+    tags: ['atproto', 'bluesky', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'quote-tree',
+    title: 'quote tree',
+    desc: 'paste a bluesky post — render the tree of quote-posts of quote-posts, recursively. social-drama topology viewer, capped at reasonable depth.',
+    tags: ['atproto', 'bluesky', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'reply-ratio',
+    title: 'reply ratio',
+    desc: 'paste a handle — % of their last 100 posts that were replies vs originals, who they reply to most, and whether replies or originals get more likes.',
+    tags: ['atproto', 'bluesky', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'top-domains',
+    title: 'top domains',
+    desc: 'paste a handle — what websites do they link to most? scans the last 100 posts for external link embeds + inline urls, groups by host.',
+    tags: ['atproto', 'bluesky', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'met-museum',
+    title: 'met museum',
+    desc: "470,000 objects from the metropolitan museum of art — search by artist, medium, culture, or period. public-domain images + full metadata.",
+    tags: ['art', 'culture', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'poetry',
+    title: 'poetry',
+    desc: '~3000 public-domain english-language poems, searchable by author / title / line. rendered in phosphor mono — the way nature intended.',
+    tags: ['literature', 'culture', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'scryfall',
+    title: 'scryfall',
+    desc: "every magic: the gathering card ever printed. scryfall's full query dsl works verbatim — type, colour, cmc, set, artist, rarity, legalities.",
+    tags: ['games', 'culture', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'xkcd',
+    title: 'xkcd',
+    desc: "randall munroe's webcomic — every strip since 2005, with transcript and mouseover alt-text. arrow keys navigate, r picks random.",
+    tags: ['culture', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'aic',
+    title: 'art institute',
+    desc: 'art institute of chicago — 120k works with iiif-backed images, cleaner provenance metadata than the met. complementary art lab.',
+    tags: ['art', 'culture', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'open-library',
+    title: 'open library',
+    desc: "internet archive's open book catalog — search by title, author, or isbn. covers + editions + subjects. ~30m works indexed.",
+    tags: ['literature', 'culture', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'tvmaze',
+    title: 'tvmaze',
+    desc: "what's airing tonight in any country, plus show search with full metadata — genres, networks, ratings, summaries.",
+    tags: ['tv', 'culture', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'f1',
+    title: 'f1',
+    desc: 'every formula 1 race from 1950 to the current season — driver + constructor standings, race schedule, per-race results tables.',
+    tags: ['sport', 'culture', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'mastodon',
+    title: 'mastodon',
+    desc: 'live public firehose of any mastodon instance via sse. activitypub sibling to the jetstream lab, with per-instance stats + top tags.',
+    tags: ['fediverse', 'live', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'media-inspector',
+    title: 'media inspector',
+    desc: 'drop any video / audio — see every track, codec, resolution, bitrate, sample rate, metadata tag and cover art. in-browser via mediabunny.',
+    tags: ['media', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'frame-extractor',
+    title: 'frame extractor',
+    desc: 'scrub any video to any timestamp, pull the exact decoded frame as a png. or build a contact-sheet strip. in-browser via mediabunny + webcodecs.',
+    tags: ['media', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'audio-extractor',
+    title: 'audio extractor',
+    desc: 'pull the audio track out of any video and save as mp3 or wav. re-encodes in-browser via mediabunny — no upload.',
+    tags: ['media', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'clipper',
+    title: 'clipper',
+    desc: 'trim any video to a range and save the clip as mp4. re-muxes (and re-encodes only when needed) in-browser via mediabunny + webcodecs.',
+    tags: ['media', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'converter',
+    title: 'converter',
+    desc: 'format converter — mp4 ↔ webm ↔ mkv ↔ mov, plus audio-only to mp3 / wav / ogg / flac. re-muxes when codecs are compatible, re-encodes when not.',
+    tags: ['media', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
+    slug: 'twitch-live',
+    title: 'twitch live',
+    desc: 'top live streams on twitch right now — thumbnails, viewer counts, uptime. filter by game or language. polls every minute.',
+    tags: ['live', 'tool'],
+    year: '2026',
+    ready: true,
+  },
+  {
     slug: 'snake',
     title: 'snake',
     desc: 'arrow keys (or wasd), a green dot on a 24×16 grid, one life. paused by default.',
@@ -676,16 +876,18 @@ export default function LabsPage() {
         <section className="lab-filters">
           <div className="lab-filter-row">
             <div className="lab-search">
-              <span className="lab-search-icon">/</span>
+              <span className="lab-search-icon" aria-hidden="true">/</span>
               <input
                 className="lab-search-input"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="filter by title, description, or tag…"
+                aria-label="filter labs"
+                type="search"
                 autoComplete="off"
                 spellCheck={false}
               />
-              {query ? <button className="lab-search-clear" onClick={() => setQuery('')}>×</button> : null}
+              {query ? <button className="lab-search-clear" onClick={() => setQuery('')} aria-label="clear filter">×</button> : null}
             </div>
             <label className="lab-check">
               <input
