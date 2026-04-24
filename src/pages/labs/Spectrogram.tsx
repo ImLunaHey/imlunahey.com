@@ -292,6 +292,8 @@ export default function SpectrogramPage() {
             </div>
 
             {audioUrl ? (
+              // user-uploaded audio — no caption track is available
+              // eslint-disable-next-line jsx-a11y/media-has-caption
               <audio ref={audioRef} className="player" src={audioUrl} controls preload="metadata" />
             ) : null}
 

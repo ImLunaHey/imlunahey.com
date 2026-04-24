@@ -287,8 +287,9 @@ export default function IdsPage() {
               ))}
             </div>
             <div className="ids-actions">
-              <label className="ids-count-lbl">count</label>
+              <label className="ids-count-lbl" htmlFor="ids-count">count</label>
               <input
+                id="ids-count"
                 type="number"
                 className="ids-count"
                 min={1}

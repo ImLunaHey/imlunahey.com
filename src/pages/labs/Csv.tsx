@@ -140,8 +140,8 @@ export default function CsvPage() {
               onClick={() => setDir('json2csv')}
             >json → csv</button>
           </div>
-          <div className="csv-opts">
-            <label className="csv-lbl">delim</label>
+          <div className="csv-opts" role="group" aria-label="delimiter">
+            <span className="csv-lbl" aria-hidden="true">delim</span>
             {[
               { d: ',', n: ',' },
               { d: '\t', n: '\\t' },

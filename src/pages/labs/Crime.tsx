@@ -123,8 +123,9 @@ export default function CrimePage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="postcode — e.g. SW1A 1AA"
+            aria-label="uk postcode"
             spellCheck={false}
-            autoComplete="off"
+            autoComplete="postal-code"
           />
           <button type="submit">lookup →</button>
         </form>

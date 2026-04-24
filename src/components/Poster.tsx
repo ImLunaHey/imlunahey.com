@@ -5,6 +5,7 @@ import { Skeleton } from './Skeleton';
 export const Poster = ({
   link,
   imageUrl,
+  title,
   rating,
   height,
   width,
@@ -12,6 +13,7 @@ export const Poster = ({
 }: {
   link: string;
   imageUrl: string;
+  title?: string;
   rating: number;
   height: number;
   width: number;
@@ -44,9 +46,10 @@ export const Poster = ({
     <div ref={ref} className="min-h-[200px] min-w-[150px] overflow-hidden">
       {hasBeenVisible && !loading ? (
         <div className="relative">
-          <a href={link} target="_blank">
+          <a href={link} target="_blank" aria-label={title ? `${title} — open` : 'open'}>
             <img
               src={imageUrl}
+              alt={title ? `${title} poster` : ''}
               height={height}
               width={width}
               loading="lazy"

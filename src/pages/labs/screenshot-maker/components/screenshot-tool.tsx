@@ -734,7 +734,7 @@ export const ScreenshotTool = () => {
           >
             <img
               src={image.src}
-              alt={`Background image #${index}`}
+              alt={`Background ${index + 1}`}
               className={cn('h-[48px] w-[48px] object-cover', {
                 'border border-black dark:border-white': backgroundImageSrc === image.src,
               })}

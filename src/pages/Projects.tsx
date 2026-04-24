@@ -350,6 +350,9 @@ function PinnedCard({ repo: r }: { repo: Repo }) {
       </Link>,
     );
 
+  // nested <Link>s (writeup, repo) prevent an outer <a> — keep role="link"
+  // with keyboard support so the whole card is still activatable. rule
+  // override lives in .oxlintrc.json.
   return (
     <div
       className="pin-card"

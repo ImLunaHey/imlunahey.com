@@ -188,6 +188,7 @@ export default function TypingPage() {
             type="text"
             value={typed}
             onChange={handleChange}
+            aria-label="typing input"
             autoFocus
             disabled={status === 'done'}
             autoComplete="off"

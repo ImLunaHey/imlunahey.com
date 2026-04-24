@@ -110,8 +110,9 @@ export default function MPPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="postcode — e.g. SW1A 1AA"
+            aria-label="uk postcode"
             spellCheck={false}
-            autoComplete="off"
+            autoComplete="postal-code"
           />
           <button type="submit">lookup →</button>
         </form>
@@ -143,7 +144,7 @@ export default function MPPage() {
               >
                 <img
                   src={`${PARLIAMENT}/api/Members/${member.id}/Portrait?cropType=OneOne`}
-                  alt=""
+                  alt={`official portrait of ${member.nameDisplayAs}`}
                   className="portrait"
                   loading="lazy"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}

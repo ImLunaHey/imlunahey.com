@@ -180,8 +180,8 @@ export default function SchemaPage() {
         </header>
 
         <div className="sch-bar">
-          <label className="sch-lbl">draft</label>
-          <div className="sch-pill">
+          <span className="sch-lbl" id="sch-draft-lbl">draft</span>
+          <div className="sch-pill" role="group" aria-labelledby="sch-draft-lbl">
             {['2020-12', '07'].map((d) => (
               <button
                 key={d}

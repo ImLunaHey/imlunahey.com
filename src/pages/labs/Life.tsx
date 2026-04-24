@@ -247,7 +247,7 @@ export default function LifePage() {
                 type="button"
                 onClick={() => {
                   // drop the pattern near top-left with some margin
-                  setGrid((g) => place(empty(), p, 2, 2));
+                  setGrid(place(empty(), p, 2, 2));
                   setGeneration(0);
                 }}
               >

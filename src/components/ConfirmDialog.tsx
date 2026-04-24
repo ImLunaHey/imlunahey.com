@@ -47,7 +47,10 @@ function Dialog({ pending, onClose }: { pending: PendingState; onClose: (r: bool
     const t = setTimeout(() => confirmBtnRef.current?.focus(), 0);
     return () => {
       clearTimeout(t);
-      previousFocus.current?.focus?.();
+      // guard — the opener may have unmounted while the dialog was up
+      // (e.g. a confirm fired from a row that disappears on resolve).
+      const prev = previousFocus.current;
+      if (prev && document.contains(prev)) prev.focus?.();
     };
   }, []);
 

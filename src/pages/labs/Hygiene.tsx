@@ -115,6 +115,8 @@ export default function HygienePage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="search a restaurant, café, takeaway, shop…"
+            aria-label="business name"
+            type="search"
             spellCheck={false}
             autoComplete="off"
           />

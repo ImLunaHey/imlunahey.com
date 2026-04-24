@@ -14,7 +14,7 @@ const BlueskyAvatar = () => {
 
   return (
     <div className="flex items-center gap-2">
-      <img src={profile.avatar} className="h-6 w-6 rounded-full" />
+      <img src={profile.avatar} alt="" className="h-6 w-6 rounded-full" />
       <a href={`https://bsky.app/profile/${profile.did}`} className="text-gray-500">
         <ProfileCard actor={profile.did} />
       </a>

@@ -50,7 +50,12 @@ export const NavBar = () => {
       {LINKS.map((link) => {
         const active = link.match ? link.match(pathname) : pathname === link.to;
         return (
-          <Link key={link.to} to={link.to as never} className={active ? 'active' : ''}>
+          <Link
+            key={link.to}
+            to={link.to as never}
+            className={active ? 'active' : ''}
+            aria-current={active ? 'page' : undefined}
+          >
             {link.label}
           </Link>
         );
@@ -59,7 +64,11 @@ export const NavBar = () => {
       <PresencePulse />
       <CommandPaletteHint />
       <Clock />
-      <Link to={'/design-system' as never} className={'chip accent' + (pathname.startsWith('/design-system') ? ' active' : '')}>
+      <Link
+        to={'/design-system' as never}
+        className={'chip accent' + (pathname.startsWith('/design-system') ? ' active' : '')}
+        aria-current={pathname.startsWith('/design-system') ? 'page' : undefined}
+      >
         design.sys ↗
       </Link>
     </nav>

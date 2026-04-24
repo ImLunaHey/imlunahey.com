@@ -98,8 +98,9 @@ export default function PasswordPage() {
 
         <section className="pw-opts">
           <div className="pw-row">
-            <label className="pw-lbl">length</label>
+            <label className="pw-lbl" htmlFor="pw-length">length</label>
             <input
+              id="pw-length"
               type="range" min={6} max={128} step={1}
               value={opts.length}
               onChange={(e) => set('length', Number(e.target.value))}
@@ -109,8 +110,9 @@ export default function PasswordPage() {
           </div>
 
           <div className="pw-row">
-            <label className="pw-lbl">count</label>
+            <label className="pw-lbl" htmlFor="pw-count">count</label>
             <input
+              id="pw-count"
               type="range" min={1} max={30} step={1}
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
