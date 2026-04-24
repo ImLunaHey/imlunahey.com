@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 .wrangler
+.tanstack
 
 # Editor directories and files
 .vscode/*
