@@ -275,6 +275,10 @@ type AvatarDraw = {
   bodyColor: string;
   headColor: string;
   seed: string;
+  /** Drives which head face the identicon is painted on — S/E are
+   *  visible in iso (face shows toward viewer), N/W are hidden (only
+   *  the hair shows = "facing away" cue). */
+  facing: Facing;
   /** When set, draw at this chair tile in a sitting pose (legs hidden,
    *  body shrunk to chair-seat height) instead of the standing pose. */
   sitting: Tile | null;
@@ -298,7 +302,7 @@ function drawAvatar(ctx: CanvasRenderingContext2D, view: View, av: AvatarDraw) {
     drawIsoBox(ctx, view, si, sj, 0.45, 0.45, bodyH, av.bodyColor, bodyBaseZ);
     drawIsoBox(ctx, view, si, sj, 0.5, 0.5, headH, av.headColor, headBaseZ);
     drawHair(ctx, view, si, sj, headBaseZ + headH, ic);
-    drawFace(ctx, view, si, sj, headBaseZ, headH, ic);
+    drawFace(ctx, view, si, sj, headBaseZ, headH, ic, av.facing);
     return;
   }
 
@@ -333,7 +337,7 @@ function drawAvatar(ctx: CanvasRenderingContext2D, view: View, av: AvatarDraw) {
   const headH = 0.4;
   drawIsoBox(ctx, view, av.i, av.j, 0.5, 0.5, headH, av.headColor, headBaseZ);
   drawHair(ctx, view, av.i, av.j, headBaseZ + headH, ic);
-  drawFace(ctx, view, av.i, av.j, headBaseZ, headH, ic);
+  drawFace(ctx, view, av.i, av.j, headBaseZ, headH, ic, av.facing);
 }
 
 /** Screen-space pixel offset for an active emote, used by the renderer
@@ -402,15 +406,36 @@ function drawFace(
   baseZ: number,
   h: number,
   ic: Identicon,
+  facing: Facing,
 ) {
-  // Face features live on the head's south face (j = +d/2 = +0.25),
-  // which is the side facing the viewer in our iso projection. Compute
-  // the 4 corners once, then bilinear-interpolate face-relative
-  // coordinates onto screen-space pixels.
-  const faceJ = j + 0.25;
-  const TL = project(view, i - 0.25, faceJ, baseZ + h);
-  const TR = project(view, i + 0.25, faceJ, baseZ + h);
-  const BL = project(view, i - 0.25, faceJ, baseZ);
+  // Face features live on whichever head face the avatar is currently
+  // looking through. Only S and E are visible in our iso projection —
+  // for N and W the face is on a hidden cube face, so we skip drawing
+  // and the viewer naturally sees the back of the head + hair (which
+  // reads correctly as "facing away").
+  if (facing === 'N' || facing === 'W') return;
+  // Compute the chosen face's 4 corners once, then bilinear-interpolate
+  // face-relative (u, v) coords onto screen-space pixels — same eye /
+  // mouth / brow positions work on either face since they're given as
+  // fractions of the face rather than world tile coords.
+  let TL: { x: number; y: number };
+  let TR: { x: number; y: number };
+  let BL: { x: number; y: number };
+  if (facing === 'S') {
+    // South face (j = +0.25). u increases as i increases (screen-right).
+    const faceJ = j + 0.25;
+    TL = project(view, i - 0.25, faceJ, baseZ + h);
+    TR = project(view, i + 0.25, faceJ, baseZ + h);
+    BL = project(view, i - 0.25, faceJ, baseZ);
+  } else {
+    // East face (i = +0.25). u increases as j DECREASES (the face
+    // points east, so 'face-right' from the viewer is toward the back
+    // of the room = lower j).
+    const faceI = i + 0.25;
+    TL = project(view, faceI, j + 0.25, baseZ + h);
+    TR = project(view, faceI, j - 0.25, baseZ + h);
+    BL = project(view, faceI, j + 0.25, baseZ);
+  }
   const ux = TR.x - TL.x;
   const uy = TR.y - TL.y;
   const vx = BL.x - TL.x;
@@ -778,6 +803,7 @@ function renderScene(
           bodyColor: peer.bodyColor,
           headColor: peer.headColor,
           seed: peer.nickname,
+          facing: peer.facing,
           sitting: peer.sitting,
         });
         if (off.dx || off.dy) ctx.restore();
@@ -801,6 +827,7 @@ function renderScene(
         bodyColor: state.selfBodyColor,
         headColor: state.selfHeadColor,
         seed: state.selfNickname,
+        facing: a.facing,
         sitting: a.sitting,
       });
       if (selfOff.dx || selfOff.dy) ctx.restore();

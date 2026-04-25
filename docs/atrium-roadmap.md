@@ -475,6 +475,22 @@ no real reason to exist. Two fixes:
       Prevents teleporting from feeling like falling out of the sky
       into the centre.
 
+### v8.1 — avatars face the way they walk (shipped)
+
+After v8 the legs animated but everyone still looked perpetually
+forward — felt like floating. The avatar's `facing` field was already
+populated by `advanceWalk` (set whenever a step crosses a tile
+boundary); just needed to actually use it in the renderer.
+
+- [x] `drawFace` now takes `facing: Facing`. Computes face corners
+      for either the **south** face (for `S`) or the **east** face
+      (for `E`) of the head box and bilinear-paints the eyes / mouth /
+      brows there. For `N` and `W` it returns early — those head
+      faces are hidden in the iso projection, so the viewer naturally
+      sees the back of the head + hair, which reads as "facing away".
+- [x] `AvatarDraw` carries `facing`; renderScene passes
+      `peer.facing` / `a.facing` from the existing avatar state.
+
 ## v8 — walk-leg animation (shipped)
 
 The body-stretch bob from v1 was the cheapest "you're walking" cue we
