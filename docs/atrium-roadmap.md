@@ -239,9 +239,43 @@ lobby. Per-room furniture layouts fix that.
       before respawning the avatar, so the next click against the new
       walkable grid uses the right blockers.
 
-## v6+ — depth
+## v6 — procedural identicon avatars (shipped)
 
-Once v5 is solid, the rest of the long tail.
+Goal: stop avatars looking like identical colored rectangles, without
+using any drawn or licensed asset packs. Pure deterministic rendering
+keyed off the user's nickname.
+
+- [x] **`identiconFor(seed)`** — djb2-ish hash on the user's nickname
+      (handle when signed in, guest nickname otherwise) sliced into
+      bit-fields: 8 eye styles, 8 mouth styles, 4 brow styles, 8 hair
+      styles, hair colour from an 8-entry palette, face-feature colour
+      from a 4-entry palette. Same nickname → same identicon, always.
+- [x] **2D face features** — eyes / mouth / brows painted as small
+      `ctx.fillRect` calls onto the head's south face (the face
+      pointing at the viewer). Screen-space positions computed via
+      bilinear interpolation of the four projected face corners, so
+      features stay stuck to the head as the avatar walks/bobs.
+- [x] **3D hair** — drawn as iso-box(es) on top of the head: flat top,
+      tall hat, cap, spike, bow (two side-by-side boxes), pageboy
+      (extends past head), antenna (thin tall + ball on top). Bald is
+      a valid style (1 in 8). Composes naturally with the existing
+      depth sort.
+- [x] **No wire change** — identicons are computed locally on every
+      client from the peer's nickname (which is already broadcast via
+      hello/init/join). No new state to sync, no protocol bump.
+- [x] **Self updates on rename** — `applyNickname` writes the new
+      value into `stateRef.current.selfNickname` so the next render
+      re-hashes; existing close+reconnect flow propagates the new name
+      to peers.
+
+Eye / mouth / brow / hair styles deliberately overlap visually in some
+cases — that's fine. The point isn't that every distinct identity gets
+a uniquely identifiable face, it's that two people are visually
+distinguishable at a glance most of the time.
+
+## v7+ — depth
+
+Once v6 is solid, the rest of the long tail.
 - [ ] **Room editor** — click-drag to place / remove furniture from
       your inventory in a room you own. Persisted as a per-room layout
       record.

@@ -246,9 +246,193 @@ function drawAvatar(
   bob: number,
   bodyColor: string,
   headColor: string,
+  seed: string,
 ) {
   drawIsoBox(ctx, view, i, j, 0.45, 0.45, 0.85 + bob, bodyColor);
-  drawIsoBox(ctx, view, i, j, 0.5, 0.5, 0.4, headColor, 0.85 + bob);
+  const headBaseZ = 0.85 + bob;
+  const headHeight = 0.4;
+  drawIsoBox(ctx, view, i, j, 0.5, 0.5, headHeight, headColor, headBaseZ);
+  const ic = identiconFor(seed);
+  drawHair(ctx, view, i, j, headBaseZ + headHeight, ic);
+  drawFace(ctx, view, i, j, headBaseZ, headHeight, ic);
+}
+
+function drawHair(ctx: CanvasRenderingContext2D, view: View, i: number, j: number, baseZ: number, ic: Identicon) {
+  switch (ic.hair) {
+    case 0:
+      return; // bald
+    case 1: // flat top — thin slab covering the head
+      drawIsoBox(ctx, view, i, j, 0.55, 0.55, 0.07, ic.hairColor, baseZ);
+      return;
+    case 2: // tall hat — narrower, taller
+      drawIsoBox(ctx, view, i, j, 0.4, 0.4, 0.45, ic.hairColor, baseZ);
+      return;
+    case 3: // cap — small dome-ish
+      drawIsoBox(ctx, view, i, j, 0.5, 0.5, 0.16, ic.hairColor, baseZ);
+      return;
+    case 4: // spike — narrow column
+      drawIsoBox(ctx, view, i, j, 0.18, 0.18, 0.45, ic.hairColor, baseZ);
+      return;
+    case 5: // bow — two small adjacent boxes on top
+      drawIsoBox(ctx, view, i - 0.14, j, 0.16, 0.16, 0.18, ic.hairColor, baseZ);
+      drawIsoBox(ctx, view, i + 0.14, j, 0.16, 0.16, 0.18, ic.hairColor, baseZ);
+      return;
+    case 6: // pageboy — wider and slightly taller
+      drawIsoBox(ctx, view, i, j, 0.6, 0.6, 0.18, ic.hairColor, baseZ - 0.05);
+      return;
+    case 7: // antenna
+      drawIsoBox(ctx, view, i, j, 0.06, 0.06, 0.55, ic.hairColor, baseZ);
+      drawIsoBox(ctx, view, i, j, 0.16, 0.16, 0.1, ic.hairColor, baseZ + 0.55);
+      return;
+  }
+}
+
+function drawFace(
+  ctx: CanvasRenderingContext2D,
+  view: View,
+  i: number,
+  j: number,
+  baseZ: number,
+  h: number,
+  ic: Identicon,
+) {
+  // Face features live on the head's south face (j = +d/2 = +0.25),
+  // which is the side facing the viewer in our iso projection. Compute
+  // the 4 corners once, then bilinear-interpolate face-relative
+  // coordinates onto screen-space pixels.
+  const faceJ = j + 0.25;
+  const TL = project(view, i - 0.25, faceJ, baseZ + h);
+  const TR = project(view, i + 0.25, faceJ, baseZ + h);
+  const BL = project(view, i - 0.25, faceJ, baseZ);
+  const ux = TR.x - TL.x;
+  const uy = TR.y - TL.y;
+  const vx = BL.x - TL.x;
+  const vy = BL.y - TL.y;
+  const at = (u: number, v: number) => ({
+    x: TL.x + u * ux + v * vx,
+    y: TL.y + u * uy + v * vy,
+  });
+
+  const eyeL = at(0.32, 0.46);
+  const eyeR = at(0.68, 0.46);
+  drawEye(ctx, eyeL.x, eyeL.y, ic.eyes, ic.faceColor);
+  drawEye(ctx, eyeR.x, eyeR.y, ic.eyes, ic.faceColor);
+
+  const mouth = at(0.5, 0.78);
+  drawMouth(ctx, mouth.x, mouth.y, ic.mouth, ic.faceColor);
+
+  if (ic.brows > 0) {
+    const browL = at(0.32, 0.28);
+    const browR = at(0.68, 0.28);
+    drawBrow(ctx, browL.x, browL.y, ic.brows, false, ic.faceColor);
+    drawBrow(ctx, browR.x, browR.y, ic.brows, true, ic.faceColor);
+  }
+}
+
+function drawEye(ctx: CanvasRenderingContext2D, x: number, y: number, style: number, color: string) {
+  ctx.fillStyle = color;
+  switch (style) {
+    case 0: // dot
+      ctx.fillRect(x - 1, y - 1, 2, 2);
+      return;
+    case 1: // dash
+      ctx.fillRect(x - 2, y, 4, 1);
+      return;
+    case 2: // square
+      ctx.fillRect(x - 2, y - 2, 3, 3);
+      return;
+    case 3: // closed (sleepy)
+      ctx.fillRect(x - 2, y, 4, 1);
+      return;
+    case 4: // wide circle-ish
+      ctx.fillRect(x - 2, y - 1, 4, 3);
+      return;
+    case 5: // dot with gleam (two-tone)
+      ctx.fillRect(x - 1, y - 1, 2, 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x, y - 1, 1, 1);
+      return;
+    case 6: // wink left
+      ctx.fillRect(x - 1, y - 1, 2, 2);
+      return;
+    case 7: // squint
+      ctx.fillRect(x - 2, y, 4, 1);
+      ctx.fillRect(x - 1, y - 1, 2, 1);
+      return;
+  }
+}
+
+function drawMouth(ctx: CanvasRenderingContext2D, x: number, y: number, style: number, color: string) {
+  ctx.fillStyle = color;
+  switch (style) {
+    case 0: // small dot
+      ctx.fillRect(x, y, 1, 1);
+      return;
+    case 1: // line
+      ctx.fillRect(x - 2, y, 4, 1);
+      return;
+    case 2: // wide line
+      ctx.fillRect(x - 3, y, 6, 1);
+      return;
+    case 3: // open square
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x - 1, y - 1, 3, 2);
+      return;
+    case 4: // smile (curve approximated by 3-pixel arc)
+      ctx.fillRect(x - 2, y, 1, 1);
+      ctx.fillRect(x - 1, y + 1, 3, 1);
+      ctx.fillRect(x + 2, y, 1, 1);
+      return;
+    case 5: // frown (inverse smile)
+      ctx.fillRect(x - 2, y + 1, 1, 1);
+      ctx.fillRect(x - 1, y, 3, 1);
+      ctx.fillRect(x + 2, y + 1, 1, 1);
+      return;
+    case 6: // tongue out
+      ctx.fillRect(x - 2, y, 4, 1);
+      ctx.fillStyle = '#d04060';
+      ctx.fillRect(x, y + 1, 2, 1);
+      return;
+    case 7: // gasp
+      ctx.fillStyle = '#1a0000';
+      ctx.fillRect(x - 1, y - 1, 3, 3);
+      return;
+  }
+}
+
+function drawBrow(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  style: number,
+  right: boolean,
+  color: string,
+) {
+  ctx.fillStyle = color;
+  switch (style) {
+    case 1: // flat
+      ctx.fillRect(x - 2, y, 4, 1);
+      return;
+    case 2: // raised — slanted up toward outside
+      if (right) {
+        ctx.fillRect(x - 2, y, 2, 1);
+        ctx.fillRect(x, y - 1, 2, 1);
+      } else {
+        ctx.fillRect(x, y, 2, 1);
+        ctx.fillRect(x - 2, y - 1, 2, 1);
+      }
+      return;
+    case 3: // furrowed — slanted down toward middle
+      if (right) {
+        ctx.fillRect(x, y, 2, 1);
+        ctx.fillRect(x - 2, y - 1, 2, 1);
+      } else {
+        ctx.fillRect(x - 2, y, 2, 1);
+        ctx.fillRect(x, y - 1, 2, 1);
+      }
+      return;
+  }
 }
 
 // --- A* pathfinding ----------------------------------------------------------
@@ -325,6 +509,7 @@ type SceneState = {
   selfId: string | null;
   selfBodyColor: string;
   selfHeadColor: string;
+  selfNickname: string;
   selfChat: { text: string; expires: number } | null;
 };
 
@@ -441,7 +626,16 @@ function renderScene(
     sprites.push({
       depth: peer.pos[0] + peer.pos[1] + 0.01,
       draw: () =>
-        drawAvatar(ctx, view, peer.pos[0], peer.pos[1], peer.walking ? state.bob : 0, peer.bodyColor, peer.headColor),
+        drawAvatar(
+          ctx,
+          view,
+          peer.pos[0],
+          peer.pos[1],
+          peer.walking ? state.bob : 0,
+          peer.bodyColor,
+          peer.headColor,
+          peer.nickname,
+        ),
     });
   }
   // self avatar — bias forward by epsilon so same-depth furniture renders behind it
@@ -456,6 +650,7 @@ function renderScene(
         a.walking ? state.bob : 0,
         state.selfBodyColor,
         state.selfHeadColor,
+        state.selfNickname,
       ),
   });
   sprites.sort((x, y) => x.depth - y.depth);
@@ -594,6 +789,46 @@ function colorFromNickname(s: string): string {
   return hslToHex(hue, 0.55, 0.62);
 }
 
+/** Deterministic per-identity face + hair, hashed from the same kind of
+ *  seed `colorFromNickname` uses. Pure local computation — never sent
+ *  over the wire; every client computes the same identicon for a given
+ *  peer from that peer's nickname (which IS sent). */
+type Identicon = {
+  eyes: number;
+  mouth: number;
+  brows: number;
+  hair: number;
+  hairColor: string;
+  faceColor: string;
+};
+
+const HAIR_PALETTE = [
+  '#1a1a1a', // black
+  '#5a3a1a', // dark brown
+  '#a07050', // medium brown
+  '#d4b08a', // blonde
+  '#ffcc55', // gold
+  '#ff8a8a', // pink
+  '#88aacc', // pale blue
+  '#aa66cc', // purple
+];
+
+const FACE_PALETTE = ['#1a1a1a', '#2a1408', '#0a141e', '#1e0a14'];
+
+function identiconFor(seed: string): Identicon {
+  let h = 5381;
+  for (let i = 0; i < seed.length; i++) h = (h * 33) ^ seed.charCodeAt(i);
+  const u = h >>> 0;
+  return {
+    eyes: u & 0x7,
+    mouth: (u >> 3) & 0x7,
+    brows: (u >> 6) & 0x3,
+    hair: (u >> 8) & 0x7,
+    hairColor: HAIR_PALETTE[(u >> 11) & 0x7],
+    faceColor: FACE_PALETTE[(u >> 14) & 0x3],
+  };
+}
+
 function hslToHex(h: number, s: number, l: number): string {
   // h, s, l in [0, 1]
   const k = (n: number) => (n + h * 12) % 12;
@@ -663,6 +898,7 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
     selfId: null,
     selfBodyColor: bodyColorRef.current,
     selfHeadColor: headColorRef.current,
+    selfNickname: nicknameRef.current,
     selfChat: null,
   });
 
@@ -1127,6 +1363,7 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
   const applyNickname = useCallback((nick: string) => {
     if (nicknameRef.current === nick) return;
     nicknameRef.current = nick;
+    stateRef.current.selfNickname = nick;
     setOverlayList((prev) => prev.map((o) => (o.id === 'self' ? { ...o, nickname: nick } : o)));
     const ws = wsRef.current;
     if (ws && ws.readyState === WebSocket.OPEN) {
