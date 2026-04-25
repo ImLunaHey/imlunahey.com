@@ -1,35 +1,53 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "imlunahey-com",
-  "compatibility_date": "2026-04-20",
-  "observability": {
-    "enabled": true
-  },
-  "main": "./src/worker.ts",
-  "compatibility_flags": ["nodejs_compat"],
-  "durable_objects": {
-    "bindings": [
-      { "name": "PRESENCE_DO", "class_name": "PresenceDO" },
-      { "name": "ATRIUM_DO", "class_name": "AtriumDO" }
-    ]
-  },
-  "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["PresenceDO"] },
-    { "tag": "v2", "new_sqlite_classes": ["AtriumDO"] }
-  ],
-  // D1 backs persistent atrium session state (current room, previous
-  // room, exact tile + sitting). Create the DB once with
-  //   wrangler d1 create atrium
-  // then paste the resulting database_id below. SQL migrations live in
-  // ./migrations/atrium/ and are applied with
-  //   wrangler d1 migrations apply atrium --local   (dev)
-  //   wrangler d1 migrations apply atrium --remote  (prod)
-  "d1_databases": [
-    {
-      "binding": "ATRIUM_DB",
-      "database_name": "atrium",
-      "database_id": "REPLACE_WITH_D1_ID",
-      "migrations_dir": "migrations/atrium"
-    }
-  ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "imlunahey-com",
+	"compatibility_date": "2026-04-20",
+	"observability": {
+		"enabled": true
+	},
+	"main": "./src/worker.ts",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "PRESENCE_DO",
+				"class_name": "PresenceDO"
+			},
+			{
+				"name": "ATRIUM_DO",
+				"class_name": "AtriumDO"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"PresenceDO"
+			]
+		},
+		{
+			"tag": "v2",
+			"new_sqlite_classes": [
+				"AtriumDO"
+			]
+		}
+	],
+	// D1 backs persistent atrium session state (current room, previous
+	// room, exact tile + sitting). Create the DB once with
+	//   wrangler d1 create atrium
+	// then paste the resulting database_id below. SQL migrations live in
+	// ./migrations/atrium/ and are applied with
+	//   wrangler d1 migrations apply atrium --local   (dev)
+	//   wrangler d1 migrations apply atrium --remote  (prod)
+	"d1_databases": [
+		{
+			"binding": "ATRIUM_DB",
+			"database_name": "atrium",
+			"database_id": "3f62a301-e8e6-4afb-87b3-69106c0e7b6f",
+			"migrations_dir": "migrations/atrium"
+		}
+	]
 }
