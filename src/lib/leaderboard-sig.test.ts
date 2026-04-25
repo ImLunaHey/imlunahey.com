@@ -99,11 +99,19 @@ describe('validateScore', () => {
       expect(validateScore(g, 7201)).toMatch(/plausible/);
     }
   });
+
+  it('klondike times must be 30s..7200s', () => {
+    expect(validateScore('klondike', 29)).toMatch(/too short/);
+    expect(validateScore('klondike', 30)).toBeNull();
+    expect(validateScore('klondike', 7200)).toBeNull();
+    expect(validateScore('klondike', 7201)).toMatch(/plausible/);
+  });
 });
 
 describe('lowerIsBetter', () => {
   it('returns true for time-based games', () => {
     expect(lowerIsBetter('wordle')).toBe(true);
+    expect(lowerIsBetter('klondike')).toBe(true);
     expect(lowerIsBetter('mahjong-pyramid')).toBe(true);
     expect(lowerIsBetter('mahjong-wide')).toBe(true);
     expect(lowerIsBetter('mahjong-tower')).toBe(true);

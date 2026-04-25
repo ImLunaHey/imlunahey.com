@@ -5,18 +5,17 @@ of the V1 games gets revisited.
 
 ## klondike (`/labs/klondike`)
 
+- [x] Undo stack
+- [x] Draw-3 mode toggle
+- [x] Hint system (highlights a legal move for ~1.8s)
+- [x] ATproto leaderboard (score = elapsed seconds, lower wins —
+      consistent with sudoku/mahjong; moves shown but not ranked)
+- [x] Fullscreen / focus mode (ported from `Mahjong.tsx`)
+- [x] Auto-foundation sweep when only foundations are reachable
 - [ ] Drag-drop card movement (current UX is click-to-select, click-to-place)
-- [ ] Undo (single step or stack)
-- [ ] Draw-3 mode toggle
-- [ ] Hint system (highlight a legal move)
 - [ ] Solvable-deal generator — currently uses random shuffles, ~80% are
       solvable with optimal play. A Yan-Lan-style solver could verify
       and retry until winnable.
-- [ ] ATproto leaderboard (score = `moves * 1000 + seconds`, lower wins —
-      mirrors how Microsoft Solitaire ranks)
-- [ ] Fullscreen / focus mode (port from `Mahjong.tsx`)
-- [ ] Auto-foundation sweep when only foundations are reachable (the
-      "tap to finish" people expect at the end of every winnable hand)
 
 ## mahjong (`/labs/mahjong`)
 
