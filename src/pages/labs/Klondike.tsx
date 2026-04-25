@@ -634,6 +634,7 @@ function freshSeed(): number {
 const STORAGE_KEY = 'lab:klondike:state';
 
 type DrawMode = 'draw1' | 'draw3';
+type GateState = 'locked' | 'guest' | 'signed';
 
 type Persisted = {
   seed: number;
@@ -641,6 +642,7 @@ type Persisted = {
   moves: number;
   baseElapsed: number;
   mode?: DrawMode; // optional for backwards-compat with v1 saves
+  gate?: GateState; // optional for backwards-compat with pre-gate saves
 };
 
 function loadPersisted(): Persisted | null {
@@ -718,6 +720,9 @@ export default function KlondikePage() {
   // v2: distraction-free / fullscreen mode (same shape as Mahjong).
   const [focusMode, setFocusMode] = useState(false);
   const shellRef = useRef<HTMLElement>(null);
+  // v2: sign-in / guest gate. shown before play begins (snake-style),
+  // not in the win overlay. unlocks once the player picks one.
+  const [gate, setGate] = useState<GateState>('locked');
   // v2: leaderboard publish flow (mirrors Sudoku/Mahjong).
   const [publishState, setPublishState] = useState<'idle' | 'signing' | 'publishing' | 'published' | 'error'>('idle');
   const [publishError, setPublishError] = useState<string | null>(null);
@@ -755,6 +760,8 @@ export default function KlondikePage() {
         setStartedAt(Date.now());
         setSelection(null);
         if (p.mode) setMode(p.mode);
+        if (p.gate) setGate(p.gate);
+        else if (p.moves > 0) setGate('guest'); // legacy save with progress
         return;
       }
     }
@@ -768,15 +775,25 @@ export default function KlondikePage() {
     setHint(null);
     setPublishState('idle');
     setPublishError(null);
+    // gate stays at whatever the player chose previously (sticky across deals).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seed]);
 
-  // tick clock while playing.
+  // if a session shows up with the leaderboard scope while we're still
+  // locked, skip the gate — they're already signed in, no need to ask.
   useEffect(() => {
-    if (won) return;
+    if (gate === 'locked' && session && canPublishScore) {
+      setGate('signed');
+      setStartedAt(Date.now());
+    }
+  }, [gate, session, canPublishScore]);
+
+  // tick clock while playing — paused while the gate is up.
+  useEffect(() => {
+    if (won || gate === 'locked') return;
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, [won]);
+  }, [won, gate]);
 
   // capture win time precisely.
   useEffect(() => {
@@ -785,12 +802,16 @@ export default function KlondikePage() {
     }
   }, [won, winElapsed, baseElapsed, startedAt]);
 
-  const elapsed = won && winElapsed !== null ? winElapsed : baseElapsed + (now - startedAt) / 1000;
+  const elapsed = won && winElapsed !== null
+    ? winElapsed
+    : gate === 'locked'
+      ? 0
+      : baseElapsed + (now - startedAt) / 1000;
 
   // persist on change.
   useEffect(() => {
-    savePersisted({ seed, state, moves, baseElapsed, mode });
-  }, [seed, state, moves, baseElapsed, mode]);
+    savePersisted({ seed, state, moves, baseElapsed, mode, gate });
+  }, [seed, state, moves, baseElapsed, mode, gate]);
 
   // every state-mutating action goes through this — pushes the prior state
   // onto the undo stack, applies the next, and bumps move count.
@@ -1628,7 +1649,46 @@ export default function KlondikePage() {
             })}
           </div>
 
-          {won ? (
+          {gate === 'locked' ? (
+            <div className="overlay lock">
+              <div className="ov-title">klondike.</div>
+              <div className="ov-sub">
+                scores go to a leaderboard backed by atproto. sign in to claim
+                them, or play as guest — guest scores stay on this device and
+                can&apos;t be published later.
+              </div>
+              <form
+                className="lock-form"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (handleInput.trim()) void startSignIn(handleInput);
+                }}
+              >
+                <input
+                  className="lock-input"
+                  placeholder="your.handle.bsky.social"
+                  value={handleInput}
+                  onChange={(e) => setHandleInput(e.target.value)}
+                  autoComplete="username"
+                  spellCheck={false}
+                />
+                <button className="ov-btn" type="submit" disabled={!handleInput.trim()}>
+                  sign in
+                </button>
+              </form>
+              <button
+                className="ov-btn-ghost"
+                type="button"
+                onClick={() => {
+                  setGate('guest');
+                  setStartedAt(Date.now());
+                }}
+              >
+                play as guest
+              </button>
+              {publishError ? <div className="ov-err">{publishError}</div> : null}
+            </div>
+          ) : won ? (
             <div className="overlay">
               <div className="ov-title">you win.</div>
               <div className="ov-score">
@@ -1636,7 +1696,7 @@ export default function KlondikePage() {
                 <span className="ov-score-lbl">{moves} moves</span>
               </div>
 
-              {session && canPublishScore ? (
+              {gate === 'signed' && session && canPublishScore ? (
                 publishState === 'published' ? (
                   <div className="ov-sub">
                     ✓ published as <b className="t-accent">@{profile?.handle ?? session.info.sub}</b>
@@ -1655,30 +1715,10 @@ export default function KlondikePage() {
                         : 'publish to leaderboard'}
                   </button>
                 )
-              ) : session ? (
-                <div className="ov-sub t-faint">
-                  signed in, but session is missing leaderboard scope. sign in again below to publish.
-                </div>
               ) : (
-                <form
-                  className="lock-form"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (handleInput.trim()) void startSignIn(handleInput);
-                  }}
-                >
-                  <input
-                    className="lock-input"
-                    placeholder="your.handle.bsky.social"
-                    value={handleInput}
-                    onChange={(e) => setHandleInput(e.target.value)}
-                    autoComplete="username"
-                    spellCheck={false}
-                  />
-                  <button className="ov-btn" type="submit" disabled={!handleInput.trim()}>
-                    sign in to publish
-                  </button>
-                </form>
+                <div className="ov-sub t-faint">
+                  playing as guest — <b>sign in next time</b> to claim scores like this.
+                </div>
               )}
               {publishError ? <div className="ov-err">{publishError}</div> : null}
 
@@ -1873,6 +1913,13 @@ const CSS = `
     font-family: var(--font-mono);
     z-index: 10;
   }
+  /* lock screen sits more opaquely over the board so the gated cards
+     read as a backdrop, not as the foreground action. */
+  .overlay.lock {
+    background: color-mix(in oklch, var(--color-bg) 92%, transparent);
+    backdrop-filter: blur(2px);
+  }
+  .overlay.lock .ov-title { font-size: clamp(48px, 8vw, 80px); }
   .ov-title {
     font-family: var(--font-display);
     font-size: clamp(40px, 7vw, 72px);
