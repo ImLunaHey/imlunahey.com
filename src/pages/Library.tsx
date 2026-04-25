@@ -217,7 +217,14 @@ export default function LibraryPage() {
 
         <section className="shelf">
           {groups.map((group) => (
-            <Volume key={group[0].imdbId} group={group} />
+            // key must match the dedup key (imdbId + title) — using
+            // imdbId alone collides for tv-series whose seasons share
+            // an imdb id, and React's reconciliation reuses stale DOM
+            // nodes instead of re-rendering on filter / sort changes.
+            <Volume
+              key={`${group[0].imdbId}${group[0].title}`}
+              group={group}
+            />
           ))}
           {groups.length === 0 ? (
             <div className="empty">no matches on the shelf.</div>
