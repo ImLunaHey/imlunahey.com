@@ -126,7 +126,7 @@ export default function GuestbookPage() {
       // give constellation a beat to index, then re-query
       setTimeout(() => queryClient.invalidateQueries({ queryKey: ['guestbook', 'entries'] }), 2000);
       // fire-and-forget: ping brrr so luna gets a push on her phone.
-      // failure here (webhook unset, brrr down) should never surface to
+      // failure here (secret unset, brrr down) should never surface to
       // the visitor — their entry is already safely on their own pds.
       void notifyGuestbookEntry({
         data: { did: session.info.sub, handle: profile?.handle, text },

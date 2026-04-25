@@ -47,11 +47,11 @@ type BskyProfile = {
 /**
  * Fire a brrr.now push notification when a new guestbook entry is
  * published. Called from the client immediately after createRecord
- * succeeds. Runs server-side so the BRRR_WEBHOOK stays out of the
+ * succeeds. Runs server-side so the BRRR_SECRET stays out of the
  * client bundle.
  *
- * Silent no-op when BRRR_WEBHOOK is unset — lets the guestbook still
- * work in dev/CI without a webhook configured. Failures are swallowed
+ * Silent no-op when BRRR_SECRET is unset — lets the guestbook still
+ * work in dev/CI without a secret configured. Failures are swallowed
  * because notification delivery shouldn't block or error the publish
  * flow (the entry is already on the user's pds).
  *
@@ -60,13 +60,13 @@ type BskyProfile = {
  * the worst case is someone forging a notification to imlunahey's
  * phone with fake contents, which is the kind of mild-annoyance
  * attack that's mitigated by the fact that the secret isn't public
- * and brrr itself can rate-limit / revoke the webhook.
+ * and brrr itself can rate-limit / revoke the token.
  */
 export const notifyGuestbookEntry = createServerFn({ method: 'POST' })
   .inputValidator((input: { did: string; handle?: string; text: string }) => input)
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
-    const webhook = process.env.BRRR_WEBHOOK;
-    if (!webhook) return { ok: false };
+    const secret = process.env.BRRR_SECRET;
+    if (!secret) return { ok: false };
 
     // trim text to fit a push-notification body without exploding the
     // lock-screen preview. 180 chars is roughly the ios truncation point.
@@ -78,7 +78,7 @@ export const notifyGuestbookEntry = createServerFn({ method: 'POST' })
         method: 'POST',
         headers: {
           'content-type': 'application/json',
-          authorization: `Bearer ${webhook}`,
+          authorization: `Bearer ${secret}`,
         },
         body: JSON.stringify({
           title: 'new guestbook entry',

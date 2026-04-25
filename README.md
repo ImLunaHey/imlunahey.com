@@ -73,7 +73,7 @@ LASTFM_API_KEY=<last.fm api key>
 R2_PUBLIC_URL=<https://your-r2-bucket.domain>
 TWITCH_CLIENT_ID=<dev.twitch.tv app id, for /labs/twitch-live>
 TWITCH_CLIENT_SECRET=<dev.twitch.tv app secret — stays server-side>
-BRRR_WEBHOOK=<api.brrr.now webhook for push-notifying new guestbook entries>
+BRRR_SECRET=<api.brrr.now bearer token for push-notifying new guestbook entries>
 LEADERBOARD_HMAC_SECRET=<hmac key for signing leaderboard score submissions>
 ```
 
@@ -104,7 +104,7 @@ Set secrets in the CF dashboard (or `wrangler secret put`):
 - `R2_PUBLIC_URL` (optional)
 - `TWITCH_CLIENT_ID`
 - `TWITCH_CLIENT_SECRET`
-- `BRRR_WEBHOOK` (optional)
+- `BRRR_SECRET` (optional)
 - `LEADERBOARD_HMAC_SECRET`
 
 ## Public files & endpoints
