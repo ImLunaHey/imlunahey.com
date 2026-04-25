@@ -62,14 +62,15 @@ export default function LibraryPage() {
       // friendlier labels for the chip — 'tv' / 'movie' from tmdb
       // become 'shows' / 'films' so the chip row reads as english.
       kinds: [...kinds.entries()].map(
-        ([k, n]) => [k === 'movie' ? 'films' : 'shows', n, k] as const,
+        ([k, n]) => [k === 'movie' ? 'movies' : 'shows', n, k] as const,
       ),
       formats: [...formats.entries()].sort((a, b) => b[1] - a[1]),
       decades: [...decades.entries()].sort((a, b) => a[0].localeCompare(b[0])),
-      // top-N to keep the chip row readable; the rest live behind the
-      // search box ("italian", "spain", etc. as plain text terms)
-      countries: [...countries.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8),
-      genres: [...genres.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10),
+      // top-N to keep each chip row to a single line; the rest are
+      // still searchable via the search box ("italian", "horror" etc.
+      // as plain text terms).
+      countries: [...countries.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
+      genres: [...genres.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
     };
   }, []);
 
@@ -93,7 +94,18 @@ export default function LibraryPage() {
       if (country !== 'all' && !it.countries.includes(country)) return false;
       if (genre !== 'all' && !it.genres.includes(genre)) return false;
       if (q) {
-        const hay = `${it.title} ${it.director ?? ''} ${it.distributor ?? ''}`.toLowerCase();
+        // Hay deliberately includes genres + countries so terms like
+        // "horror" or "japan" work even when the corresponding chip
+        // is hidden behind the top-N slice.
+        const hay = [
+          it.title,
+          it.director ?? '',
+          it.distributor ?? '',
+          it.genres.join(' '),
+          it.countries.join(' '),
+        ]
+          .join(' ')
+          .toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -178,7 +190,7 @@ export default function LibraryPage() {
             <input
               type="search"
               className="search"
-              placeholder="search title, director, distributor…"
+              placeholder="search title, director, genre, country…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               aria-label="search library"
