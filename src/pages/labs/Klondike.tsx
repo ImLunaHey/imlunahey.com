@@ -389,8 +389,11 @@ function canStackTableau(card: Card, target: Card | null): boolean {
 }
 
 // foundation placement: same suit, ascending rank, starting with ace.
-function canStackFoundation(card: Card, target: Card | null): boolean {
-  if (target === null) return card.rank === 1;
+// each foundation is keyed by suit, so an empty pile only accepts the
+// ace of THAT suit — pre-drag-drop the click UX always picked the right
+// pile for you, but a drag could otherwise land an off-suit ace.
+function canStackFoundation(card: Card, target: Card | null, foundationSuit: Suit): boolean {
+  if (target === null) return card.rank === 1 && card.suit === foundationSuit;
   return target.suit === card.suit && card.rank === target.rank + 1;
 }
 
@@ -627,7 +630,7 @@ export default function KlondikePage() {
       // eligible for auto-foundation.
       if (moving.length === 1) {
         const c = moving[0];
-        if (canStackFoundation(c, topOf(state.foundations[c.suit]))) {
+        if (canStackFoundation(c, topOf(state.foundations[c.suit]), c.suit)) {
           const next = removeMoving(state, sel);
           const nextF = { ...next.foundations };
           nextF[c.suit] = [...nextF[c.suit], c];
@@ -681,7 +684,7 @@ export default function KlondikePage() {
       if (moving.length === 0) return false;
       if (dest.kind === 'foundation') {
         if (moving.length !== 1) return false;
-        if (!canStackFoundation(moving[0], topOf(state.foundations[dest.suit]))) return false;
+        if (!canStackFoundation(moving[0], topOf(state.foundations[dest.suit]), dest.suit)) return false;
         const next = removeMoving(state, sel);
         const nf = { ...next.foundations };
         nf[dest.suit] = [...nf[dest.suit], moving[0]];
@@ -782,7 +785,7 @@ export default function KlondikePage() {
     const tryFoundation = (sel: Selection, c: Card | undefined): Hint | null => {
       if (!c) return null;
       const target = topOf(state.foundations[c.suit]);
-      if (canStackFoundation(c, target)) return { from: sel, toFoundation: c.suit };
+      if (canStackFoundation(c, target, c.suit)) return { from: sel, toFoundation: c.suit };
       return null;
     };
     // 1. waste / tableau-tops → foundation
@@ -866,7 +869,7 @@ export default function KlondikePage() {
       for (let col = 0; col < 7; col++) {
         const top = topOf(cur.tableau[col]);
         if (!top) continue;
-        if (canStackFoundation(top, topOf(cur.foundations[top.suit]))) {
+        if (canStackFoundation(top, topOf(cur.foundations[top.suit]), top.suit)) {
           const t = cur.tableau.slice();
           t[col] = t[col].slice(0, -1);
           const f = { ...cur.foundations };
@@ -977,6 +980,121 @@ export default function KlondikePage() {
     }
   }
 
+  // ─── drag and drop ────────────────────────────────────────────────────────
+  //
+  // pointer-event based: works for mouse + touch + pen, with a 5-pixel
+  // threshold separating "click" from "drag". sequences from the tableau
+  // drag as a unit; waste / foundation tops drag as a single card. drop
+  // targets are identified by data-drop-target attributes on pile DOM
+  // nodes; we walk up from elementFromPoint at pointerup to find one.
+
+  type DragState = {
+    sel: Selection;
+    cards: Card[];
+    pointerId: number;
+    startX: number;
+    startY: number;
+    curX: number;
+    curY: number;
+    offsetX: number;
+    offsetY: number;
+    cardWidth: number;
+    active: boolean;
+  };
+  const [drag, setDrag] = useState<DragState | null>(null);
+
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>, sel: Selection) => {
+      if (won) return;
+      // ignore non-primary buttons (right-click, middle-click)
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      const moving = getMovingCards(state, sel);
+      if (moving.length === 0) return;
+      if (sel.kind === 'tableau') {
+        const c = state.tableau[sel.col][sel.index];
+        if (!c || !c.faceUp) return;
+      }
+      const rect = e.currentTarget.getBoundingClientRect();
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setDrag({
+        sel,
+        cards: moving,
+        pointerId: e.pointerId,
+        startX: e.clientX,
+        startY: e.clientY,
+        curX: e.clientX,
+        curY: e.clientY,
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top,
+        cardWidth: rect.width,
+        active: false,
+      });
+    },
+    [won, state],
+  );
+
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    setDrag((d) => {
+      if (!d || e.pointerId !== d.pointerId) return d;
+      const dx = e.clientX - d.startX;
+      const dy = e.clientY - d.startY;
+      const active = d.active || Math.hypot(dx, dy) >= 5;
+      return { ...d, curX: e.clientX, curY: e.clientY, active };
+    });
+  }, []);
+
+  const onPointerUp = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const d = drag;
+      if (!d || e.pointerId !== d.pointerId) return;
+      if (!d.active) {
+        // pointerup without crossing the drag threshold = click intent.
+        setDrag(null);
+        onClickCard(d.sel);
+        return;
+      }
+      // walk up from element under pointer until we find a drop target.
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      let cur = el as HTMLElement | null;
+      let target: { kind: 'foundation'; suit: Suit } | { kind: 'tableau'; col: number } | null = null;
+      while (cur) {
+        const t = cur.dataset?.dropTarget;
+        if (t) {
+          if (t.startsWith('foundation:')) {
+            target = { kind: 'foundation', suit: t.slice('foundation:'.length) as Suit };
+          } else if (t.startsWith('tableau:')) {
+            target = { kind: 'tableau', col: parseInt(t.slice('tableau:'.length), 10) };
+          }
+          break;
+        }
+        cur = cur.parentElement;
+      }
+      setDrag(null);
+      if (target) {
+        applyMoveTo(d.sel, target);
+        setSelection(null);
+      }
+    },
+    [drag, onClickCard, applyMoveTo],
+  );
+
+  const onPointerCancel = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    setDrag((d) => (d && e.pointerId === d.pointerId ? null : d));
+  }, []);
+
+  // is the slot at `sel` currently being dragged from? for tableau, we
+  // hide the whole moving sequence; for waste/foundation, just the top.
+  const isBeingDragged = useCallback(
+    (sel: Selection): boolean => {
+      if (!drag || !drag.active) return false;
+      if (drag.sel.kind === 'tableau' && sel.kind === 'tableau') {
+        return drag.sel.col === sel.col && sel.index >= drag.sel.index;
+      }
+      return sameSelection(drag.sel, sel);
+    },
+    [drag],
+  );
+
   // ─── controls ─────────────────────────────────────────────────────────────
 
   const newGame = useCallback(() => {
@@ -1054,7 +1172,7 @@ export default function KlondikePage() {
     if (moving.length === 1) {
       for (const s of SUITS) {
         if (selection.kind === 'foundation' && selection.suit === s) continue;
-        if (canStackFoundation(moving[0], topOf(state.foundations[s]))) out.foundation.add(s);
+        if (canStackFoundation(moving[0], topOf(state.foundations[s]), s)) out.foundation.add(s);
       }
     }
     for (let col = 0; col < 7; col++) {
@@ -1200,14 +1318,19 @@ export default function KlondikePage() {
                     const isTop = i === arr.length - 1;
                     const left = mode === 'draw3' ? `${i * 30}%` : '0';
                     const hintFrom = hint?.from.kind === 'waste' && isTop;
+                    const dragSel: Selection = { kind: 'waste' };
+                    const hidden = isTop && isBeingDragged(dragSel);
                     return (
                       <div
                         key={card.id}
                         className={`waste-card${
-                          isTop && isSelected({ kind: 'waste' }) ? ' selected' : ''
-                        }${hintFrom ? ' is-hint-from' : ''}`}
+                          isTop && isSelected(dragSel) ? ' selected' : ''
+                        }${hintFrom ? ' is-hint-from' : ''}${hidden ? ' dragging-source' : ''}${isTop ? ' draggable' : ''}`}
                         style={{ left }}
-                        onClick={isTop ? () => onClickCard({ kind: 'waste' }) : undefined}
+                        onPointerDown={isTop ? (e) => onPointerDown(e, dragSel) : undefined}
+                        onPointerMove={isTop ? onPointerMove : undefined}
+                        onPointerUp={isTop ? onPointerUp : undefined}
+                        onPointerCancel={isTop ? onPointerCancel : undefined}
                       >
                         <CardSVG card={card} />
                       </div>
@@ -1218,27 +1341,35 @@ export default function KlondikePage() {
             </div>
             {/* spacer */}
             <div className="pile pile-spacer" />
-            {/* foundations */}
+            {/* foundations — each is a drop target via data-drop-target,
+                so dragging a card here triggers applyMoveTo on release. */}
             {SUITS.map((suit) => {
               const f = state.foundations[suit];
               const sel: Selection = { kind: 'foundation', suit };
               const isDrop = validDrops.foundation.has(suit);
               const isHintTo = hint?.toFoundation === suit;
               const isHintFrom = hint?.from.kind === 'foundation' && hint.from.suit === suit;
-              const onClick = () => {
-                if (f.length > 0) onClickCard(sel);
-                else onClickEmptyFoundation(suit);
-              };
+              const hidden = isBeingDragged(sel);
               return (
                 <div
                   key={suit}
                   className={`pile pile-foundation${isDrop ? ' is-drop' : ''}${isHintTo ? ' is-hint-to' : ''}`}
-                  onClick={onClick}
+                  data-drop-target={`foundation:${suit}`}
+                  onClick={() => {
+                    if (f.length === 0) onClickEmptyFoundation(suit);
+                    // (non-empty foundation click is handled via pointer events on the card)
+                  }}
                 >
                   {f.length === 0 ? (
                     <EmptyPlaceholder glyph={SUIT_CHAR[suit]} />
                   ) : (
-                    <div className={`card-wrap${isSelected(sel) ? ' selected' : ''}${isHintFrom ? ' is-hint-from' : ''}`}>
+                    <div
+                      className={`card-wrap draggable${isSelected(sel) ? ' selected' : ''}${isHintFrom ? ' is-hint-from' : ''}${hidden ? ' dragging-source' : ''}`}
+                      onPointerDown={(e) => onPointerDown(e, sel)}
+                      onPointerMove={onPointerMove}
+                      onPointerUp={onPointerUp}
+                      onPointerCancel={onPointerCancel}
+                    >
                       <CardSVG card={f[f.length - 1]} />
                     </div>
                   )}
@@ -1255,6 +1386,7 @@ export default function KlondikePage() {
                 <div
                   key={ci}
                   className={`tableau-col${isDrop ? ' is-drop' : ''}${isHintTo ? ' is-hint-to' : ''}`}
+                  data-drop-target={`tableau:${ci}`}
                   onClick={() => {
                     if (col.length === 0) onClickEmptyTableau(ci);
                   }}
@@ -1267,6 +1399,8 @@ export default function KlondikePage() {
                       hint?.from.kind === 'tableau' &&
                       hint.from.col === ci &&
                       ri >= hint.from.index;
+                    const hidden = isBeingDragged(sel);
+                    const draggable = card.faceUp;
                     // negative-margin overlap so the column grows naturally
                     // with content. percent is of column width — face-up
                     // cards under a face-up card show ~28% of their height,
@@ -1276,12 +1410,15 @@ export default function KlondikePage() {
                     return (
                       <div
                         key={card.id}
-                        className={`tableau-card${selected ? ' selected' : ''}${card.faceUp ? '' : ' down'}${isHintFrom ? ' is-hint-from' : ''}`}
+                        className={`tableau-card${selected ? ' selected' : ''}${card.faceUp ? '' : ' down'}${isHintFrom ? ' is-hint-from' : ''}${hidden ? ' dragging-source' : ''}${draggable ? ' draggable' : ''}`}
                         style={{ marginTop: `${margin}%` }}
-                        onClick={(e) => {
+                        onPointerDown={draggable ? (e) => {
                           e.stopPropagation();
-                          onClickCard(sel);
-                        }}
+                          onPointerDown(e, sel);
+                        } : undefined}
+                        onPointerMove={draggable ? onPointerMove : undefined}
+                        onPointerUp={draggable ? onPointerUp : undefined}
+                        onPointerCancel={draggable ? onPointerCancel : undefined}
                       >
                         <CardSVG card={card} />
                       </div>
@@ -1361,6 +1498,30 @@ export default function KlondikePage() {
           </span>
         </footer>
       </main>
+
+      {/* floating drag preview — sits above everything via fixed
+          position; pointer-events: none so it doesn't intercept the
+          underlying drop-target detection. */}
+      {drag && drag.active ? (
+        <div
+          className="drag-preview"
+          style={{
+            left: drag.curX - drag.offsetX,
+            top: drag.curY - drag.offsetY,
+            width: drag.cardWidth,
+          }}
+        >
+          {drag.cards.map((card, i) => (
+            <div
+              key={card.id}
+              className="drag-preview-card"
+              style={{ marginTop: i === 0 ? 0 : '-100%' }}
+            >
+              <CardSVG card={card} />
+            </div>
+          ))}
+        </div>
+      ) : null}
     </>
   );
 }
@@ -1554,6 +1715,36 @@ const CSS = `
   @media (max-width: 640px) {
     .top-row, .tableau-row { gap: 4px; }
     .board { padding: var(--sp-3); }
+  }
+
+  /* v2: drag-and-drop ------------------------------------------------------ */
+
+  /* draggable cards: show grab cursor; lock touch-action so a touch
+     drag doesn't trigger the page's natural scroll. */
+  .draggable {
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .draggable:active { cursor: grabbing; }
+  /* keep the source slot's space reserved while it's flying around at
+     the pointer, so columns don't snap shorter mid-drag. */
+  .dragging-source {
+    visibility: hidden;
+  }
+
+  .drag-preview {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1000;
+    /* mild tilt + glow so it visibly "floats" above the board */
+    transform: rotate(2deg);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4))
+            drop-shadow(0 0 8px color-mix(in oklch, var(--color-accent) 30%, transparent));
+  }
+  .drag-preview-card {
+    width: 100%;
   }
 
   /* v2: mode toggle, action row */
