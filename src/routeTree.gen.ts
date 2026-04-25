@@ -19,6 +19,7 @@ import { Route as OauthClientMetadataDotjsonRouteImport } from './routes/oauth/c
 import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
 import { Route as ApiMastodonStreamRouteImport } from './routes/api/mastodon-stream'
 import { Route as MainUsesRouteImport } from './routes/_main/uses'
+import { Route as MainTimelineRouteImport } from './routes/_main/timeline'
 import { Route as MainMusicRouteImport } from './routes/_main/music'
 import { Route as MainLibraryRouteImport } from './routes/_main/library'
 import { Route as MainHomelabRouteImport } from './routes/_main/homelab'
@@ -205,6 +206,11 @@ const ApiMastodonStreamRoute = ApiMastodonStreamRouteImport.update({
 const MainUsesRoute = MainUsesRouteImport.update({
   id: '/uses',
   path: '/uses',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainTimelineRoute = MainTimelineRouteImport.update({
+  id: '/timeline',
+  path: '/timeline',
   getParentRoute: () => MainRoute,
 } as any)
 const MainMusicRoute = MainMusicRouteImport.update({
@@ -914,6 +920,7 @@ export interface FileRoutesByFullPath {
   '/homelab': typeof MainHomelabRoute
   '/library': typeof MainLibraryRoute
   '/music': typeof MainMusicRoute
+  '/timeline': typeof MainTimelineRoute
   '/uses': typeof MainUsesRoute
   '/api/mastodon-stream': typeof ApiMastodonStreamRoute
   '/oauth/callback': typeof OauthCallbackRoute
@@ -1061,6 +1068,7 @@ export interface FileRoutesByTo {
   '/homelab': typeof MainHomelabRoute
   '/library': typeof MainLibraryRoute
   '/music': typeof MainMusicRoute
+  '/timeline': typeof MainTimelineRoute
   '/uses': typeof MainUsesRoute
   '/api/mastodon-stream': typeof ApiMastodonStreamRoute
   '/oauth/callback': typeof OauthCallbackRoute
@@ -1211,6 +1219,7 @@ export interface FileRoutesById {
   '/_main/homelab': typeof MainHomelabRoute
   '/_main/library': typeof MainLibraryRoute
   '/_main/music': typeof MainMusicRoute
+  '/_main/timeline': typeof MainTimelineRoute
   '/_main/uses': typeof MainUsesRoute
   '/api/mastodon-stream': typeof ApiMastodonStreamRoute
   '/oauth/callback': typeof OauthCallbackRoute
@@ -1362,6 +1371,7 @@ export interface FileRouteTypes {
     | '/homelab'
     | '/library'
     | '/music'
+    | '/timeline'
     | '/uses'
     | '/api/mastodon-stream'
     | '/oauth/callback'
@@ -1509,6 +1519,7 @@ export interface FileRouteTypes {
     | '/homelab'
     | '/library'
     | '/music'
+    | '/timeline'
     | '/uses'
     | '/api/mastodon-stream'
     | '/oauth/callback'
@@ -1658,6 +1669,7 @@ export interface FileRouteTypes {
     | '/_main/homelab'
     | '/_main/library'
     | '/_main/music'
+    | '/_main/timeline'
     | '/_main/uses'
     | '/api/mastodon-stream'
     | '/oauth/callback'
@@ -1875,6 +1887,13 @@ declare module '@tanstack/react-router' {
       path: '/uses'
       fullPath: '/uses'
       preLoaderRoute: typeof MainUsesRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/timeline': {
+      id: '/_main/timeline'
+      path: '/timeline'
+      fullPath: '/timeline'
+      preLoaderRoute: typeof MainTimelineRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/music': {
@@ -2850,6 +2869,7 @@ interface MainRouteChildren {
   MainHomelabRoute: typeof MainHomelabRoute
   MainLibraryRoute: typeof MainLibraryRoute
   MainMusicRoute: typeof MainMusicRoute
+  MainTimelineRoute: typeof MainTimelineRoute
   MainUsesRoute: typeof MainUsesRoute
   MainIndexRoute: typeof MainIndexRoute
   MainBlogRkeyRoute: typeof MainBlogRkeyRoute
@@ -2991,6 +3011,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainHomelabRoute: MainHomelabRoute,
   MainLibraryRoute: MainLibraryRoute,
   MainMusicRoute: MainMusicRoute,
+  MainTimelineRoute: MainTimelineRoute,
   MainUsesRoute: MainUsesRoute,
   MainIndexRoute: MainIndexRoute,
   MainBlogRkeyRoute: MainBlogRkeyRoute,

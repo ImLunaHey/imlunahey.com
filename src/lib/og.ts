@@ -30,6 +30,7 @@ export type OgSlug =
   | 'homelab'
   | 'globe'
   | 'guestbook'
+  | 'timeline'
   | 'ai'
   // per-lab cards share a common glyph family:
   | 'lab/css-battles'
@@ -172,6 +173,7 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   homelab: { title: 'homelab.', subtitle: 'rack, services, uptime', description: 'homelab rack contents, running services, and live uptime stats. covers the mini-pc cluster, nas, self-hosted apps, and networking setup.', glyph: '⌸', slug: '/homelab' },
   globe: { title: 'globe.', subtitle: 'places lived, visited, passed through', description: 'places i have lived, visited, or passed through, rendered on an interactive 3d globe. pan, zoom, and click any city for a short note.', glyph: '◯', slug: '/globe' },
   guestbook: { title: 'guestbook.', subtitle: 'signed entries via atproto', description: 'the guestbook — sign in with your atproto / bluesky identity and leave a message on your own pds. entries are cryptographically signed and portable.', glyph: '✒', slug: '/guestbook' },
+  timeline: { title: 'timeline.', subtitle: 'one chronology, four streams', description: 'every published thing on this site in one chronology — blog posts, guestbook entries, github commits, and lastfm scrobbles. firehose-noisy streams cluster per day so the slow streams stay readable.', glyph: '⌖', slug: '/timeline' },
   ai: { title: 'ai.usage.', subtitle: 'every token, every client, every dollar', description: 'every ai token i used — across claude, chatgpt, gemini, and local models — with per-client, per-day cost breakdowns and a rolling spend total.', glyph: '⌬', slug: '/ai' },
   'lab/css-battles': { title: 'css battles.', subtitle: 'daily prompts from cssbattle.dev', description: 'my solutions to cssbattle.dev daily prompts — every entry is pure css + divs, no assets. hand-crafted shapes, gradients, and tricky selectors.', glyph: '□', slug: '/labs/css-battles' },
   'lab/verse-reveal': { title: 'verse reveal.', subtitle: 'staggered ascii text effect', description: 'ascii-scrub reveal animation — each letter cycles through random characters before landing on its final glyph. pure react, staggered by index.', glyph: 'A', slug: '/labs/verse-reveal' },
