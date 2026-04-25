@@ -14,9 +14,9 @@ of the V1 games gets revisited.
 - [x] Auto-foundation sweep when only foundations are reachable
 - [x] Drag-drop card movement (pointer events, mouse + touch, custom
       drag preview, 5px threshold separates click from drag)
-- [ ] Solvable-deal generator — currently uses random shuffles, ~80% are
-      solvable with optimal play. A Yan-Lan-style solver could verify
-      and retry until winnable.
+- [x] Solvable-deal generator — thoughtful-klondike solver (DFS +
+      transposition table) wraps deal() and retries with deterministic
+      salts until a winnable deal is found.
 
 ## mahjong (`/labs/mahjong`)
 
