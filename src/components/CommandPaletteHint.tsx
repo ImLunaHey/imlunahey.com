@@ -12,7 +12,11 @@ export function CommandPaletteHint() {
       <button
         className="cp-hint-btn"
         onClick={() => {
-          window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, ctrlKey: true }));
+          // Custom event rather than a synthetic KeyboardEvent: both
+          // CommandPaletteHost (lazy-arms the chunk) and CommandPalette
+          // itself (toggles open) listen for 'cmdk:open' on window, so
+          // one dispatch reliably hits whichever is currently mounted.
+          window.dispatchEvent(new CustomEvent('cmdk:open'));
         }}
         title="open command palette (⌘K)"
         aria-label="open command palette"

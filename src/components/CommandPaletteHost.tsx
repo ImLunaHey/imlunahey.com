@@ -28,8 +28,18 @@ export default function CommandPaletteHost() {
         setArmed(true);
       }
     }
+    // Custom-event channel for the nav hint button — synthetic
+    // KeyboardEvents don't bridge document/window listeners reliably,
+    // so the hint dispatches a plain CustomEvent we both listen for.
+    function onCustom() {
+      setArmed(true);
+    }
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    window.addEventListener('cmdk:open', onCustom);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('cmdk:open', onCustom);
+    };
   }, [armed]);
 
   if (!armed) return null;

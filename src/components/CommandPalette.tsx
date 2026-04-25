@@ -259,8 +259,18 @@ export default function CommandPalette({ initiallyOpen = false }: { initiallyOpe
         setOpen(false);
       }
     }
+    // Mirrors the keydown handler above: lets the nav hint button (and
+    // anything else that wants to open the palette without faking a
+    // keyboard event) toggle via window.dispatchEvent('cmdk:open').
+    function onCustom() {
+      setOpen((v) => !v);
+    }
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('cmdk:open', onCustom);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('cmdk:open', onCustom);
+    };
   }, [open]);
 
   useEffect(() => {
@@ -280,7 +290,16 @@ export default function CommandPalette({ initiallyOpen = false }: { initiallyOpe
     if (prev && document.contains(prev)) prev.focus?.();
   }, [open]);
 
-  useEffect(() => { setOpen(false); }, [location.pathname]);
+  // Close on route change — but skip the very first run, since the
+  // hint button (and ⌘K shortcut) lazy-mount the palette with
+  // initiallyOpen=true and we don't want this effect to slam it shut
+  // on its mount tick. Real navigations (pathname actually changing
+  // between renders) still close it.
+  const initialPathnameRef = useRef(location.pathname);
+  useEffect(() => {
+    if (location.pathname === initialPathnameRef.current) return;
+    setOpen(false);
+  }, [location.pathname]);
 
   const items = useMemo<Item[]>(() => {
     const nav: Item[] = NAV_ITEMS.map((n) => ({
@@ -667,6 +686,11 @@ const CSS = `
   .cp-list {
     overflow-y: auto;
     overflow-x: hidden;
+    /* contain stops scroll wheel events from chaining to the page
+       once the list is at its top or bottom — without this, hitting
+       the bottom of the result list keeps scrolling the body behind
+       the palette overlay. */
+    overscroll-behavior: contain;
     flex: 1;
     min-height: 0;
     padding: var(--sp-2) 0;
