@@ -268,6 +268,9 @@ export class AtriumDO extends DurableObject {
         if (!att.helloed) return;
         const tile: Tile | null = isTile(parsed.tile) ? (parsed.tile as Tile) : null;
         att.sitting = tile;
+        // Server doesn't track chair facing — clients compute the right
+        // facing from their (shared) ROOM_LAYOUTS, so peer renderers
+        // reorient sitters correctly without a wire-protocol bump.
         ws.serializeAttachment(att);
         this.broadcastExcept(ws, { t: 'sit', id: att.id, tile });
         void this.saveCurrentState(att).catch(() => {});

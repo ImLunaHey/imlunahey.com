@@ -475,6 +475,32 @@ no real reason to exist. Two fixes:
       Prevents teleporting from feeling like falling out of the sky
       into the centre.
 
+### v8.2 — per-chair facing direction (shipped)
+
+Initial sit-then-face just hardcoded `S` everywhere — fine when every
+chair was south-facing, wrong as soon as we wanted bistro pairs that
+flank a table.
+
+- [x] `Furniture` gets an optional `facing: Facing` field (defaults
+      to S = back on north).
+- [x] Chair drawing positions the back panel on the OPPOSITE side of
+      `facing` (panel is thin along i for N/S facings, thin along j
+      for E/W). Draw order picks back-then-seat or seat-then-back
+      based on which has lower iso depth, so the back never gets
+      hidden behind the seat from the wrong side.
+- [x] Layouts updated: cafe's bistro triplets now have chairs facing
+      each other across the table (E + W); same in the garden's
+      seating cluster. Lobby chairs keep their default S.
+- [x] **Every** sit-firing site looks up the chair's facing via the
+      new `chairFacingAt(furniture, tile)` helper:
+      immediate-sit on click, sit-on-arrival in tick, peer's `sit`
+      message, init handler for self when restored sitting from D1,
+      init + join handlers for peers reported as sitting. The shared
+      `ROOM_LAYOUTS` table means all clients agree on facings without
+      a wire-protocol bump.
+- [x] Server's `sit` handler stops touching `att.facing` since
+      everything's client-derived now.
+
 ### v8.1 — avatars face the way they walk (shipped)
 
 After v8 the legs animated but everyone still looked perpetually

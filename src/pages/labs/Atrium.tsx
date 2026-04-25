@@ -21,7 +21,10 @@ type Tile = readonly [number, number];
 type Facing = 'N' | 'S' | 'E' | 'W';
 type View = { cx: number; cy: number };
 type FurnKind = 'chair' | 'table' | 'plant' | 'lamp' | 'crate' | 'rug';
-type Furniture = { tile: Tile; kind: FurnKind; color: string };
+/** Direction the chair (or other oriented furniture) is "looking" —
+ *  the seat faces that way and the back is on the opposite side. Only
+ *  meaningful for `kind: 'chair'` today; defaults to S when missing. */
+type Furniture = { tile: Tile; kind: FurnKind; color: string; facing?: Facing };
 
 const FURN_DEFS: Record<FurnKind, { walkable: boolean }> = {
   chair: { walkable: false },
@@ -93,6 +96,17 @@ type AtriumSavedState = {
   currentRoom: string;
   position: { tile: [number, number]; sitting: [number, number] | null } | null;
 };
+
+/** Look up a chair at this tile in the current room's furniture and
+ *  return its facing (defaults to S when the tile isn't a chair or
+ *  the chair has no explicit facing). Used everywhere we set an
+ *  avatar to a sitting state. */
+function chairFacingAt(furniture: Furniture[], tile: Tile): Facing {
+  const chair = furniture.find(
+    (f) => f.kind === 'chair' && f.tile[0] === tile[0] && f.tile[1] === tile[1],
+  );
+  return chair?.facing ?? 'S';
+}
 
 function findSpawnAdjacent(walkable: boolean[][], portal: Tile, fallback: Tile): Tile {
   const [pi, pj] = portal;
@@ -239,11 +253,32 @@ function drawWall(
 function drawFurniture(ctx: CanvasRenderingContext2D, view: View, f: Furniture) {
   const [i, j] = f.tile;
   switch (f.kind) {
-    case 'chair':
-      // back (north side, drawn first since it's farther in screen space)
-      drawIsoBox(ctx, view, i, j - 0.3, 0.7, 0.12, 0.95, f.color);
-      drawIsoBox(ctx, view, i, j, 0.7, 0.7, 0.4, f.color);
+    case 'chair': {
+      // The back panel sits on the opposite side of the chair's
+      // `facing` (default S = back on north). For E/W facings the
+      // panel is rotated 90° (thin along j instead of along i). Draw
+      // order matters: if the back's iso depth is *less* than the
+      // seat's, it's behind in screen space and must be drawn first.
+      const facing: Facing = f.facing ?? 'S';
+      const backDi = facing === 'E' ? -0.3 : facing === 'W' ? 0.3 : 0;
+      const backDj = facing === 'S' ? -0.3 : facing === 'N' ? 0.3 : 0;
+      const backW = facing === 'E' || facing === 'W' ? 0.12 : 0.7;
+      const backD = facing === 'E' || facing === 'W' ? 0.7 : 0.12;
+      const backDepth = i + backDi + j + backDj;
+      const seatDepth = i + j;
+      const drawBackFirst = backDepth < seatDepth;
+      const drawBack = () =>
+        drawIsoBox(ctx, view, i + backDi, j + backDj, backW, backD, 0.95, f.color);
+      const drawSeat = () => drawIsoBox(ctx, view, i, j, 0.7, 0.7, 0.4, f.color);
+      if (drawBackFirst) {
+        drawBack();
+        drawSeat();
+      } else {
+        drawSeat();
+        drawBack();
+      }
       break;
+    }
     case 'table':
       drawIsoBox(ctx, view, i, j, 0.85, 0.85, 0.5, f.color);
       break;
@@ -886,15 +921,16 @@ const ROOM_LAYOUTS: Record<string, Furniture[]> = {
   cafe: [
     // four bistro triplets (chair + table + chair) scattered around the
     // room with warm-wood tones; central single rug.
-    { tile: [2, 2], kind: 'chair', color: '#c98a6e' },
+    // bistro pairs: chairs flank a central table and face it (E/W)
+    { tile: [2, 2], kind: 'chair', color: '#c98a6e', facing: 'E' },
     { tile: [3, 2], kind: 'table', color: '#7d4a30' },
-    { tile: [4, 2], kind: 'chair', color: '#c98a6e' },
-    { tile: [6, 2], kind: 'chair', color: '#c98a6e' },
+    { tile: [4, 2], kind: 'chair', color: '#c98a6e', facing: 'W' },
+    { tile: [6, 2], kind: 'chair', color: '#c98a6e', facing: 'E' },
     { tile: [7, 2], kind: 'table', color: '#7d4a30' },
-    { tile: [8, 2], kind: 'chair', color: '#c98a6e' },
-    { tile: [2, 7], kind: 'chair', color: '#c98a6e' },
+    { tile: [8, 2], kind: 'chair', color: '#c98a6e', facing: 'W' },
+    { tile: [2, 7], kind: 'chair', color: '#c98a6e', facing: 'E' },
     { tile: [3, 7], kind: 'table', color: '#7d4a30' },
-    { tile: [4, 7], kind: 'chair', color: '#c98a6e' },
+    { tile: [4, 7], kind: 'chair', color: '#c98a6e', facing: 'W' },
     { tile: [1, 4], kind: 'lamp', color: '#ffaa55' },
     { tile: [8, 4], kind: 'lamp', color: '#ffaa55' },
     { tile: [5, 5], kind: 'rug', color: '#5a3a18' },
@@ -912,9 +948,9 @@ const ROOM_LAYOUTS: Record<string, Furniture[]> = {
     { tile: [1, 7], kind: 'plant', color: '#5d8a3a' },
     { tile: [9, 3], kind: 'plant', color: '#88aa55' },
     { tile: [9, 7], kind: 'plant', color: '#5d8a3a' },
-    { tile: [3, 6], kind: 'chair', color: '#d4b08a' },
+    { tile: [3, 6], kind: 'chair', color: '#d4b08a', facing: 'E' },
     { tile: [4, 6], kind: 'table', color: '#8c5e30' },
-    { tile: [5, 6], kind: 'chair', color: '#d4b08a' },
+    { tile: [5, 6], kind: 'chair', color: '#d4b08a', facing: 'W' },
     { tile: [7, 7], kind: 'lamp', color: '#aaee88' },
   ],
 };
@@ -1193,6 +1229,9 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
     a.sitting = spawnSitting;
     a.sitOnArrival = null;
     a.emote = null;
+    if (spawnSitting) {
+      a.facing = chairFacingAt(furnitureRef.current, spawnSitting);
+    }
     setHint('walk onto a glowing tile to teleport. click a chair to sit; type /wave or /dance to emote.');
   }, [roomId]);
 
@@ -1218,6 +1257,12 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
           stateRef.current.selfId = msg.selfId;
           stateRef.current.peers.clear();
           for (const p of msg.peers) {
+            // For sitting peers, override the server-reported facing
+            // with the chair's facing (server doesn't track this; the
+            // shared layouts do).
+            const facing: Facing = p.sitting
+              ? chairFacingAt(furnitureRef.current, p.sitting)
+              : p.facing;
             stateRef.current.peers.set(p.id, {
               id: p.id,
               nickname: p.nickname,
@@ -1228,7 +1273,7 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
               path: [],
               walking: false,
               lastStep: performance.now(),
-              facing: p.facing,
+              facing,
               sitting: p.sitting,
               sitOnArrival: null,
               emote: null,
@@ -1252,12 +1297,18 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
               a.tile = msg.you.position.tile;
               a.pos = [msg.you.position.tile[0], msg.you.position.tile[1]];
               a.sitting = msg.you.position.sitting;
+              if (a.sitting) {
+                a.facing = chairFacingAt(furnitureRef.current, a.sitting);
+              }
             }
           }
           break;
         }
         case 'join': {
           const p = msg.peer;
+          const facing: Facing = p.sitting
+            ? chairFacingAt(furnitureRef.current, p.sitting)
+            : p.facing;
           stateRef.current.peers.set(p.id, {
             id: p.id,
             nickname: p.nickname,
@@ -1268,7 +1319,7 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
             path: [],
             walking: false,
             lastStep: performance.now(),
-            facing: p.facing,
+            facing,
             sitting: p.sitting,
             sitOnArrival: null,
             emote: null,
@@ -1320,6 +1371,10 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
           const peer = stateRef.current.peers.get(msg.id);
           if (!peer) break;
           peer.sitting = msg.tile;
+          // Snap facing to the chair's facing (looked up in our own
+          // ROOM_LAYOUTS — every client has the same layouts so we
+          // don't need to wire facing through the protocol).
+          if (msg.tile) peer.facing = chairFacingAt(furnitureRef.current, msg.tile);
           break;
         }
         case 'emote': {
@@ -1530,6 +1585,7 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
           // already adjacent — sit immediately
           a.sitting = [ti, tj];
           a.sitOnArrival = null;
+          a.facing = chairFacingAt(furnitureRef.current, [ti, tj]);
           setHint('sat down.');
           if (wsOpen) ws!.send(JSON.stringify({ t: 'sit', tile: [ti, tj] } satisfies ClientMsg));
         } else {
@@ -1628,6 +1684,7 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
           // Walk done — if we were heading toward a chair, sit on it.
           if (a.sitOnArrival) {
             a.sitting = a.sitOnArrival;
+            a.facing = chairFacingAt(furnitureRef.current, a.sitOnArrival);
             a.sitOnArrival = null;
             setHint('sat down.');
             const ws = wsRef.current;
