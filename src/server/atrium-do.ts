@@ -46,10 +46,17 @@ type PeerState = {
   facing: Facing;
 };
 
-type Attachment = PeerState & { helloed: boolean };
+type Attachment = PeerState & {
+  helloed: boolean;
+  /** Stable per-identity id used to dedupe sessions: the user's did when
+   *  signed in, otherwise a per-browser id from localStorage. Defaults to
+   *  the per-ws random id, which makes every connection its own identity
+   *  (i.e. dedup is a no-op for clients that don't send a clientId). */
+  clientId: string;
+};
 
 type ClientMsg =
-  | { t: 'hello'; nickname?: unknown; bodyColor?: unknown; headColor?: unknown }
+  | { t: 'hello'; nickname?: unknown; bodyColor?: unknown; headColor?: unknown; clientId?: unknown }
   | { t: 'walk'; from?: unknown; path?: unknown }
   | { t: 'chat'; text?: unknown }
   | { t: 'style'; bodyColor?: unknown; headColor?: unknown };
@@ -113,14 +120,16 @@ export class AtriumDO extends DurableObject {
     const client = pair[0];
     const server = pair[1];
     this.ctx.acceptWebSocket(server);
+    const id = crypto.randomUUID();
     const att: Attachment = {
-      id: crypto.randomUUID(),
+      id,
       nickname: 'anon',
       bodyColor: DEFAULT_BODY_COLOR,
       headColor: DEFAULT_HEAD_COLOR,
       tile: DEFAULT_TILE,
       facing: 'S',
       helloed: false,
+      clientId: id, // safe default: each connection is its own identity until hello says otherwise
     };
     server.serializeAttachment(att);
     return new Response(null, { status: 101, webSocket: client });
@@ -144,8 +153,35 @@ export class AtriumDO extends DurableObject {
         att.bodyColor = safeColor(parsed.bodyColor, DEFAULT_BODY_COLOR);
         att.headColor = safeColor(parsed.headColor, DEFAULT_HEAD_COLOR);
         att.helloed = true;
+        if (typeof parsed.clientId === 'string' && parsed.clientId.length > 0 && parsed.clientId.length <= 200) {
+          att.clientId = parsed.clientId;
+        }
         ws.serializeAttachment(att);
-        const peers = this.peerList(ws);
+        // Habbo-style dedup: a fresh hello with a clientId we already
+        // recognise displaces the older session. Close with a 4xxx code
+        // the client recognises so it stops reconnecting.
+        for (const other of this.ctx.getWebSockets()) {
+          if (other === ws) continue;
+          const oa = other.deserializeAttachment() as Attachment | null;
+          if (!oa?.helloed) continue;
+          if (oa.clientId !== att.clientId) continue;
+          try {
+            other.close(4001, 'displaced by newer session');
+          } catch {
+            /* ignore — the close handler will cleanup either way */
+          }
+        }
+        // build init excluding any sibling tab from the same identity
+        // (close() is async-ish, so the displaced socket might still be
+        // in getWebSockets() for a moment).
+        const peers: PeerState[] = [];
+        for (const other of this.ctx.getWebSockets()) {
+          if (other === ws) continue;
+          const oa = other.deserializeAttachment() as Attachment | null;
+          if (!oa?.helloed) continue;
+          if (oa.clientId === att.clientId) continue;
+          peers.push(this.peerStateOf(oa));
+        }
         this.sendTo(ws, { t: 'init', selfId: att.id, peers });
         this.broadcastExcept(ws, { t: 'join', peer: this.peerStateOf(att) });
         break;
@@ -209,16 +245,6 @@ export class AtriumDO extends DurableObject {
       tile: att.tile,
       facing: att.facing,
     };
-  }
-
-  private peerList(except: WebSocket): PeerState[] {
-    const out: PeerState[] = [];
-    for (const ws of this.ctx.getWebSockets()) {
-      if (ws === except) continue;
-      const a = ws.deserializeAttachment() as Attachment | null;
-      if (a?.helloed) out.push(this.peerStateOf(a));
-    }
-    return out;
   }
 
   private sendTo(ws: WebSocket, msg: ServerMsg): void {

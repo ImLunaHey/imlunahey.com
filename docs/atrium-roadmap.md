@@ -119,6 +119,29 @@ your atproto did.
 Ship criteria: customize your avatar, sign out, sign in on another
 device, your avatar matches. ✓
 
+### v3.1 — single-session enforcement (shipped)
+
+Two tabs of the same browser used to render two avatars with the same
+nickname (each tab is a separate ws session). Habbo did the same thing
+that fixes this: a fresh hello with a known identity displaces the older
+session.
+
+- [x] Hello carries a `clientId` — the user's did when signed in,
+      otherwise a stable per-browser uuid stashed in localStorage. Two
+      tabs of the same browser as a guest share the localStorage id;
+      two tabs of any browser signed into the same account share the did.
+- [x] Server scans `getWebSockets()` on every hello; any other helloed
+      socket with a matching `clientId` gets `close(4001, 'displaced…')`.
+      The kick happens before the new init/join, and `init` filters out
+      same-`clientId` siblings explicitly so the new client never
+      transiently sees a ghost of itself.
+- [x] Client recognises close code `4001`, switches the status badge to
+      `another tab took over` (orange dot), and suppresses the
+      auto-reconnect. A "take over" button reopens the ws, which kicks
+      whichever tab last claimed the identity. This naturally walks the
+      session between tabs without infinite displacement loops because
+      only the tab the user is actively clicking in re-hellos.
+
 ## v4+ — depth
 
 Once v2 + v3 are solid, the door opens to a long tail of features.

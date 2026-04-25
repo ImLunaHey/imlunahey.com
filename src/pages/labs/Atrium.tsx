@@ -305,10 +305,12 @@ type ServerMsg =
   | { t: 'leave'; id: string };
 
 type ClientMsg =
-  | { t: 'hello'; nickname: string; bodyColor: string; headColor: string }
+  | { t: 'hello'; nickname: string; bodyColor: string; headColor: string; clientId: string }
   | { t: 'walk'; from: Tile; path: Tile[] }
   | { t: 'chat'; text: string }
   | { t: 'style'; bodyColor: string; headColor: string };
+
+const DISPLACED_CODE = 4001;
 
 const CHAT_TTL_MS = 5_000;
 
@@ -428,6 +430,23 @@ function loadOrMintNickname(): string {
   return fresh;
 }
 
+/** Stable per-browser id used for session dedup. Different browsers (and
+ *  incognito windows) get different ids; tabs of the same browser share
+ *  it. The signed-in flow overrides this with the did at hello time, so
+ *  signing in on two tabs of the same browser still dedupes correctly. */
+function loadOrMintClientId(): string {
+  if (typeof localStorage === 'undefined') return crypto.randomUUID();
+  const stored = localStorage.getItem('atrium-client-id');
+  if (stored && stored.trim()) return stored.trim();
+  const fresh = crypto.randomUUID();
+  try {
+    localStorage.setItem('atrium-client-id', fresh);
+  } catch {
+    /* ignore */
+  }
+  return fresh;
+}
+
 function randomNickname(): string {
   const adjectives = ['cosy', 'vivid', 'tidy', 'soft', 'lush', 'plush', 'wry', 'mint', 'rosy', 'amber'];
   const nouns = ['lemur', 'finch', 'otter', 'fox', 'crow', 'badger', 'orca', 'newt', 'koi', 'moth'];
@@ -464,18 +483,25 @@ const DEFAULT_HEAD_COLOR = '#f3d7b0';
 export default function AtriumPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const reconnectRef = useRef<(() => void) | null>(null);
   const overlayRefsMap = useRef<Map<string, OverlayRefs>>(new Map());
 
   const nicknameRef = useRef<string>('');
   const bodyColorRef = useRef<string>('#6aeaa0');
   const headColorRef = useRef<string>(DEFAULT_HEAD_COLOR);
+  // `clientId` is the per-identity dedup key the server uses to kick
+  // older sessions when a new tab from the same identity connects.
+  // Defaults to a stable per-browser uuid; gets swapped to the did once
+  // a sign-in completes (see effect below).
+  const clientIdRef = useRef<string>('');
   if (!nicknameRef.current) {
     nicknameRef.current = loadOrMintNickname();
     bodyColorRef.current = colorFromNickname(nicknameRef.current);
+    clientIdRef.current = loadOrMintClientId();
   }
 
   const [hint, setHint] = useState('click any tile to walk.');
-  const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
+  const [status, setStatus] = useState<'connecting' | 'connected' | 'displaced' | 'disconnected'>('connecting');
   const [overlayList, setOverlayList] = useState<OverlayEntry[]>([
     { id: 'self', nickname: nicknameRef.current, color: bodyColorRef.current, isSelf: true },
   ]);
@@ -632,16 +658,23 @@ export default function AtriumPage() {
             nickname: nicknameRef.current,
             bodyColor: bodyColorRef.current,
             headColor: headColorRef.current,
+            clientId: clientIdRef.current,
           } satisfies ClientMsg),
         );
       });
       ws.addEventListener('message', onMessage);
-      ws.addEventListener('close', () => {
+      ws.addEventListener('close', (ev) => {
         if (wsRef.current === ws) wsRef.current = null;
         if (cancelled) return;
         // drop everyone — they'll reappear on the next init
         stateRef.current.peers.clear();
         setOverlayList([{ id: 'self', nickname: nicknameRef.current, color: bodyColorRef.current, isSelf: true }]);
+        if (ev.code === DISPLACED_CODE) {
+          // Another tab from the same identity took over. Don't reconnect
+          // automatically — the user can click "take over" to reclaim.
+          setStatus('displaced');
+          return;
+        }
         scheduleReconnect();
       });
       ws.addEventListener('error', () => {
@@ -657,9 +690,17 @@ export default function AtriumPage() {
     };
 
     connect();
+    // Expose the connect function so the "take over" button can re-open
+    // the ws after a displacement (where automatic reconnect is suppressed).
+    reconnectRef.current = () => {
+      if (cancelled) return;
+      backoffMs = 1000;
+      connect();
+    };
 
     return () => {
       cancelled = true;
+      reconnectRef.current = null;
       if (reconnectTimer) clearTimeout(reconnectTimer);
       const ws = wsRef.current;
       wsRef.current = null;
@@ -897,6 +938,8 @@ export default function AtriumPage() {
         if (cancelled) return;
         if (!s) return;
         setSession(s);
+        // signed-in users dedupe on did so multi-device same-account also kicks
+        clientIdRef.current = s.info.sub;
         try {
           const agent = new OAuthUserAgent(s as unknown as ConstructorParameters<typeof OAuthUserAgent>[0]);
           const rpc = new XRPC({ handler: agent });
@@ -978,6 +1021,7 @@ export default function AtriumPage() {
     } catch {
       /* ignore */
     }
+    clientIdRef.current = loadOrMintClientId();
     applyNickname(fresh);
     applyColors(colorFromNickname(fresh), DEFAULT_HEAD_COLOR);
   }, [session, applyNickname, applyColors]);
@@ -1047,12 +1091,19 @@ export default function AtriumPage() {
     [chatDraft],
   );
 
+  const onTakeOver = useCallback(() => {
+    setStatus('connecting');
+    reconnectRef.current?.();
+  }, []);
+
   const peerCount = overlayList.length - 1;
   const statusLabel =
     status === 'connected'
       ? `connected · ${peerCount} ${peerCount === 1 ? 'peer' : 'peers'}`
       : status === 'connecting'
       ? 'connecting…'
+      : status === 'displaced'
+      ? 'another tab took over'
       : 'reconnecting…';
 
   return (
@@ -1095,6 +1146,11 @@ export default function AtriumPage() {
           <div className={`at-status status-${status}`}>
             <span className="at-status-dot" />
             {statusLabel}
+            {status === 'displaced' ? (
+              <button type="button" className="at-status-btn" onClick={onTakeOver}>
+                take over
+              </button>
+            ) : null}
           </div>
 
           <div className="at-identity">
@@ -1359,6 +1415,22 @@ const CSS = `
   .at-status.status-disconnected .at-status-dot {
     background: #ff5577;
   }
+  .at-status.status-displaced .at-status-dot {
+    background: #ffaa55;
+  }
+  .at-status-btn {
+    margin-left: 4px;
+    background: transparent;
+    border: 1px solid currentColor;
+    color: var(--color-accent);
+    font-family: inherit;
+    font-size: 9px;
+    padding: 2px 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .at-status-btn:hover { background: color-mix(in oklch, var(--color-accent) 14%, transparent); }
   @keyframes at-pulse {
     0%, 100% { opacity: 0.4; }
     50% { opacity: 1; }
