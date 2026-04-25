@@ -85,6 +85,17 @@ function portalsFor(roomId: string): Portal[] {
  *  neighbour. West first since portals are mostly on east/south edges
  *  and "into the room" is west/north for those. Falls back to the
  *  caller's default if every neighbour is blocked or out of bounds. */
+/** The room we came from on the previous in-tab navigation. Hoisted to
+ *  module scope (rather than `useRef`) because the AtriumPage component
+ *  REMOUNTS when crossing the `/labs/atrium` ↔ `/labs/atrium/$roomId`
+ *  route boundary — `useRef` would reset to null on every remount and
+ *  the entrance-spawn lookup would always fall through to the room
+ *  centre. A per-tab module singleton survives the remount.
+ *
+ *  Tab refresh / cold load still legitimately gets `null` here; that's
+ *  the right semantics — there's no doorway to spawn at on a deep link. */
+let lastVisitedRoom: string | null = null;
+
 function findSpawnAdjacent(walkable: boolean[][], portal: Tile, fallback: Tile): Tile {
   const [pi, pj] = portal;
   const candidates: Tile[] = [
@@ -683,18 +694,9 @@ function renderScene(
       ctx.lineTo(cx - TILE_W / 2, cy);
       ctx.closePath();
       ctx.stroke();
-      // destination label + occupancy floating above the portal
-      const count = occupancy[p.dest];
-      const label = count != null ? `${p.destLabel} · ${count}` : p.destLabel;
-      ctx.font = "bold 11px 'JetBrains Mono Variable', ui-monospace, monospace";
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'alphabetic';
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)';
-      ctx.strokeText(label, cx, cy - TILE_H / 2 - 4);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
-      ctx.fillText(label, cx, cy - TILE_H / 2 - 4);
     }
+    // labels are drawn AFTER the sprite loop below so furniture never
+    // covers them.
   }
 
   // path preview
@@ -776,6 +778,27 @@ function renderScene(
   });
   sprites.sort((x, y) => x.depth - y.depth);
   for (const s of sprites) s.draw();
+
+  // portal labels render LAST so they sit on top of every sprite — even
+  // tall furniture whose iso-box screen extent overlaps the label region
+  // (e.g. a crate on the same screen-x as a portal would otherwise cover
+  // the text).
+  if (portals.length > 0) {
+    ctx.font = "bold 11px 'JetBrains Mono Variable', ui-monospace, monospace";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    for (const p of portals) {
+      const cx = view.cx + (p.tile[0] - p.tile[1]) * (TILE_W / 2);
+      const cy = view.cy + (p.tile[0] + p.tile[1]) * (TILE_H / 2);
+      const count = occupancy[p.dest];
+      const label = count != null ? `${p.destLabel} · ${count}` : p.destLabel;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)';
+      ctx.strokeText(label, cx, cy - TILE_H / 2 - 4);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+      ctx.fillText(label, cx, cy - TILE_H / 2 - 4);
+    }
+  }
 }
 
 // --- room layouts (per-room hand-placed) ------------------------------------
@@ -1010,10 +1033,6 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
   // Live per-room occupancy used to label portals — kept in a ref because
   // the canvas effect is mount-once and reads it each frame.
   const occupancyRef = useRef<Record<string, number>>({});
-  // Tracks the room we came from so we can spawn the avatar next to the
-  // entrance portal on arrival (otherwise teleporting feels like falling
-  // out of the sky into the room centre).
-  const previousRoomRef = useRef<string | null>(null);
 
   const stateRef = useRef<SceneState>({
     avatar: {
@@ -1053,17 +1072,17 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
 
     // Spawn next to the entrance portal — i.e. the portal in the new
     // room whose destination is the room we just came from. If we don't
-    // know where we came from (URL deep link / first mount), fall back
-    // to the room centre.
+    // know where we came from (URL deep link / first mount of the tab),
+    // fall back to the room centre.
     let spawn: Tile = [5, 5];
-    const prev = previousRoomRef.current;
-    if (prev) {
+    const prev = lastVisitedRoom;
+    if (prev && prev !== roomId) {
       const entrance = portalsRef.current.find((p) => p.dest === prev);
       if (entrance) {
         spawn = findSpawnAdjacent(walkableRef.current, entrance.tile, [5, 5]);
       }
     }
-    previousRoomRef.current = roomId;
+    lastVisitedRoom = roomId;
 
     const a = stateRef.current.avatar;
     a.tile = spawn;

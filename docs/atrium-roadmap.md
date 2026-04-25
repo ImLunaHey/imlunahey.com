@@ -329,6 +329,28 @@ Verified end-to-end via two-client wire test: `sit` broadcasts the
 tile to peers, `emote` broadcasts kind + at, init payloads carry
 the `sitting` field. ✓
 
+### v7.2 — portal label z-order + remount-safe previous room (shipped)
+
+Two follow-ups to v7.1:
+
+- [x] **Portal labels were rendering UNDER furniture.** They were drawn
+      inside the portal block (between rugs and sprites), so any tall
+      furniture whose iso-box screen extent overlapped the label area
+      would cover them once the sprite loop drew it. Specifically the
+      lobby's crate at `[4,8]` sits at the same screen-x as the lobby's
+      `[5,9]` portal and its base extends into the label's y-range.
+      Moved label drawing to AFTER the sprite loop so labels always
+      sit on top.
+- [x] **Spawn-near-entrance was firing but `previousRoomRef` was
+      always `null`** because `/labs/atrium` (index.tsx) and
+      `/labs/atrium/$roomId` (separate route file) are *different*
+      routes — TanStack remounts the AtriumPage component when crossing
+      that boundary, wiping every `useRef` back to its initial value.
+      Hoisted `previousRoom` to a module-level `let lastVisitedRoom`
+      so it survives the remount. Also added a `prev !== roomId` guard
+      so re-entering the same room doesn't try to find an entrance to
+      itself.
+
 ### v7.1 — portal-only teleport + entrance spawn (shipped)
 
 The bottom-bar navigator dropdown made it possible to skip the portal
