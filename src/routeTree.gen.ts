@@ -89,6 +89,7 @@ import { Route as MainLabsLightningRouteImport } from './routes/_main/labs/light
 import { Route as MainLabsLifeRouteImport } from './routes/_main/labs/life'
 import { Route as MainLabsLexiconValidatorRouteImport } from './routes/_main/labs/lexicon-validator'
 import { Route as MainLabsLabelsRouteImport } from './routes/_main/labs/labels'
+import { Route as MainLabsKlondikeRouteImport } from './routes/_main/labs/klondike'
 import { Route as MainLabsJwtRouteImport } from './routes/_main/labs/jwt'
 import { Route as MainLabsJsonRouteImport } from './routes/_main/labs/json'
 import { Route as MainLabsJetstreamRouteImport } from './routes/_main/labs/jetstream'
@@ -551,6 +552,11 @@ const MainLabsLabelsRoute = MainLabsLabelsRouteImport.update({
   path: '/labs/labels',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsKlondikeRoute = MainLabsKlondikeRouteImport.update({
+  id: '/labs/klondike',
+  path: '/labs/klondike',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsJwtRoute = MainLabsJwtRouteImport.update({
   id: '/labs/jwt',
   path: '/labs/jwt',
@@ -918,6 +924,7 @@ export interface FileRoutesByFullPath {
   '/labs/jetstream': typeof MainLabsJetstreamRoute
   '/labs/json': typeof MainLabsJsonRoute
   '/labs/jwt': typeof MainLabsJwtRoute
+  '/labs/klondike': typeof MainLabsKlondikeRoute
   '/labs/labels': typeof MainLabsLabelsRoute
   '/labs/lexicon-validator': typeof MainLabsLexiconValidatorRoute
   '/labs/life': typeof MainLabsLifeRoute
@@ -1059,6 +1066,7 @@ export interface FileRoutesByTo {
   '/labs/jetstream': typeof MainLabsJetstreamRoute
   '/labs/json': typeof MainLabsJsonRoute
   '/labs/jwt': typeof MainLabsJwtRoute
+  '/labs/klondike': typeof MainLabsKlondikeRoute
   '/labs/labels': typeof MainLabsLabelsRoute
   '/labs/lexicon-validator': typeof MainLabsLexiconValidatorRoute
   '/labs/life': typeof MainLabsLifeRoute
@@ -1202,6 +1210,7 @@ export interface FileRoutesById {
   '/_main/labs/jetstream': typeof MainLabsJetstreamRoute
   '/_main/labs/json': typeof MainLabsJsonRoute
   '/_main/labs/jwt': typeof MainLabsJwtRoute
+  '/_main/labs/klondike': typeof MainLabsKlondikeRoute
   '/_main/labs/labels': typeof MainLabsLabelsRoute
   '/_main/labs/lexicon-validator': typeof MainLabsLexiconValidatorRoute
   '/_main/labs/life': typeof MainLabsLifeRoute
@@ -1345,6 +1354,7 @@ export interface FileRouteTypes {
     | '/labs/jetstream'
     | '/labs/json'
     | '/labs/jwt'
+    | '/labs/klondike'
     | '/labs/labels'
     | '/labs/lexicon-validator'
     | '/labs/life'
@@ -1486,6 +1496,7 @@ export interface FileRouteTypes {
     | '/labs/jetstream'
     | '/labs/json'
     | '/labs/jwt'
+    | '/labs/klondike'
     | '/labs/labels'
     | '/labs/lexicon-validator'
     | '/labs/life'
@@ -1628,6 +1639,7 @@ export interface FileRouteTypes {
     | '/_main/labs/jetstream'
     | '/_main/labs/json'
     | '/_main/labs/jwt'
+    | '/_main/labs/klondike'
     | '/_main/labs/labels'
     | '/_main/labs/lexicon-validator'
     | '/_main/labs/life'
@@ -2282,6 +2294,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsLabelsRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/klondike': {
+      id: '/_main/labs/klondike'
+      path: '/labs/klondike'
+      fullPath: '/labs/klondike'
+      preLoaderRoute: typeof MainLabsKlondikeRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/jwt': {
       id: '/_main/labs/jwt'
       path: '/labs/jwt'
@@ -2759,6 +2778,7 @@ interface MainRouteChildren {
   MainLabsJetstreamRoute: typeof MainLabsJetstreamRoute
   MainLabsJsonRoute: typeof MainLabsJsonRoute
   MainLabsJwtRoute: typeof MainLabsJwtRoute
+  MainLabsKlondikeRoute: typeof MainLabsKlondikeRoute
   MainLabsLabelsRoute: typeof MainLabsLabelsRoute
   MainLabsLexiconValidatorRoute: typeof MainLabsLexiconValidatorRoute
   MainLabsLifeRoute: typeof MainLabsLifeRoute
@@ -2894,6 +2914,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsJetstreamRoute: MainLabsJetstreamRoute,
   MainLabsJsonRoute: MainLabsJsonRoute,
   MainLabsJwtRoute: MainLabsJwtRoute,
+  MainLabsKlondikeRoute: MainLabsKlondikeRoute,
   MainLabsLabelsRoute: MainLabsLabelsRoute,
   MainLabsLexiconValidatorRoute: MainLabsLexiconValidatorRoute,
   MainLabsLifeRoute: MainLabsLifeRoute,

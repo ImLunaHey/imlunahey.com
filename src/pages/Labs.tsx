@@ -822,6 +822,14 @@ const LABS: Lab[] = [
     year: '2026',
     ready: true,
   },
+  {
+    slug: 'klondike',
+    title: 'klondike',
+    desc: 'classic solitaire — 52 hand-drawn svg cards with traditional pip arrangements, 4 foundations + 7 tableau + draw-1 stock. seed-shareable.',
+    tags: ['game'],
+    year: '2026',
+    ready: true,
+  },
 ];
 
 export default function LabsPage() {

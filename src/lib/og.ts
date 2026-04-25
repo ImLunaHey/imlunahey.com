@@ -55,6 +55,7 @@ export type OgSlug =
   | 'lab/typing'
   | 'lab/sudoku'
   | 'lab/mahjong'
+  | 'lab/klondike'
   // 2026 additions
   | 'lab/bsky-composer'
   | 'lab/fingerprint'
@@ -192,6 +193,7 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/typing': { title: 'typing.', subtitle: 'wpm + accuracy, bring-your-own-keyboard', description: 'short timed typing test — 15, 30, or 60 seconds. wpm, accuracy, and error rate tracked live. best scores persisted locally per device.', glyph: '⎇', slug: '/labs/typing' },
   'lab/sudoku': { title: 'sudoku.', subtitle: 'classic 9×9, four difficulties, generated client-side', description: 'classic 9×9 sudoku — easy, medium, hard, expert — generated client-side with a unique-solution check. notes mode, hints, autosaved progress per device.', glyph: '⊞', slug: '/labs/sudoku' },
   'lab/mahjong': { title: 'mahjong.', subtitle: '144 hand-drawn svg tiles, three custom shapes', description: 'mahjong solitaire — 144 hand-rendered svg tiles, three layouts (pyramid, wide, tower). every deal is solvable, layouts are baked into a single shareable seed so you can race a friend on the exact same deal.', glyph: '⌖', slug: '/labs/mahjong' },
+  'lab/klondike': { title: 'klondike.', subtitle: 'classic solitaire — 52 hand-drawn svg cards, draw-1', description: 'classic klondike solitaire — 52 hand-rendered svg cards with traditional pip arrangements, 4 foundations + 7 tableau columns + draw-1 stock. seeds are shareable so you can race a friend on the same deal.', glyph: '♠', slug: '/labs/klondike' },
   'lab/bsky-composer': { title: 'bsky composer.', subtitle: 'draft a post with a live link-card preview', description: 'draft a bluesky post with a live link-card preview — paste any url, see the exact og card that will be embedded before you publish.', glyph: '✎', slug: '/labs/bsky-composer' },
   'lab/fingerprint': { title: 'fingerprint.', subtitle: 'everything your browser silently tells every site', description: 'everything your browser silently tells every site you visit — user agent, screen, canvas, webgl, audio, font, timezone, and network fingerprints.', glyph: '✾', slug: '/labs/fingerprint' },
   'lab/whois': { title: 'whois.', subtitle: 'rdap domain lookup — registrar, expiry, nameservers', description: 'rdap domain lookup — paste any domain, see registrar, registration + expiry dates, nameservers, dnssec, and contact records from the registry.', glyph: '?', slug: '/labs/whois' },
