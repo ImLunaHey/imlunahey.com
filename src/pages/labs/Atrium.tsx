@@ -238,23 +238,69 @@ function drawFurniture(ctx: CanvasRenderingContext2D, view: View, f: Furniture) 
 
 // --- avatar ------------------------------------------------------------------
 
-function drawAvatar(
-  ctx: CanvasRenderingContext2D,
-  view: View,
-  i: number,
-  j: number,
-  bob: number,
-  bodyColor: string,
-  headColor: string,
-  seed: string,
-) {
-  drawIsoBox(ctx, view, i, j, 0.45, 0.45, 0.85 + bob, bodyColor);
-  const headBaseZ = 0.85 + bob;
+type AvatarDraw = {
+  i: number;
+  j: number;
+  bob: number;
+  bodyColor: string;
+  headColor: string;
+  seed: string;
+  /** When set, draw at this chair tile in a sitting pose (smaller body
+   *  at chair-seat height) instead of the standing pose at i/j. */
+  sitting: Tile | null;
+};
+
+function drawAvatar(ctx: CanvasRenderingContext2D, view: View, av: AvatarDraw) {
+  const ic = identiconFor(av.seed);
+  if (av.sitting) {
+    // Sitting pose: render at the chair tile, body shrunk to chair-seat
+    // height, head atop. No bob — they're sitting still.
+    const [si, sj] = av.sitting;
+    const bodyBaseZ = 0.5; // top of chair seat (chair body height = 0.4 + small lift)
+    const bodyH = 0.4;
+    const headBaseZ = bodyBaseZ + bodyH;
+    const headH = 0.4;
+    drawIsoBox(ctx, view, si, sj, 0.45, 0.45, bodyH, av.bodyColor, bodyBaseZ);
+    drawIsoBox(ctx, view, si, sj, 0.5, 0.5, headH, av.headColor, headBaseZ);
+    drawHair(ctx, view, si, sj, headBaseZ + headH, ic);
+    drawFace(ctx, view, si, sj, headBaseZ, headH, ic);
+    return;
+  }
+  // Standing
+  drawIsoBox(ctx, view, av.i, av.j, 0.45, 0.45, 0.85 + av.bob, av.bodyColor);
+  const headBaseZ = 0.85 + av.bob;
   const headHeight = 0.4;
-  drawIsoBox(ctx, view, i, j, 0.5, 0.5, headHeight, headColor, headBaseZ);
-  const ic = identiconFor(seed);
-  drawHair(ctx, view, i, j, headBaseZ + headHeight, ic);
-  drawFace(ctx, view, i, j, headBaseZ, headHeight, ic);
+  drawIsoBox(ctx, view, av.i, av.j, 0.5, 0.5, headHeight, av.headColor, headBaseZ);
+  drawHair(ctx, view, av.i, av.j, headBaseZ + headHeight, ic);
+  drawFace(ctx, view, av.i, av.j, headBaseZ, headHeight, ic);
+}
+
+/** Screen-space pixel offset for an active emote, used by the renderer
+ *  via `ctx.translate()` around the avatar draw. Returns {0,0} when the
+ *  emote is missing/expired. */
+function emoteOffset(emote: { kind: EmoteKind; expires: number } | null, now: number): { dx: number; dy: number } {
+  if (!emote || now >= emote.expires) return { dx: 0, dy: 0 };
+  const total = EMOTE_DURATIONS[emote.kind];
+  const elapsed = total - (emote.expires - now);
+  switch (emote.kind) {
+    case 'wave': {
+      // sway side-to-side, decaying amplitude as it ends
+      const amp = 5 * (1 - elapsed / total);
+      return { dx: Math.sin(elapsed * 0.025) * (5 - amp + 5), dy: 0 };
+    }
+    case 'dance': {
+      return {
+        dx: Math.sin(elapsed * 0.018) * 4,
+        dy: -Math.abs(Math.sin(elapsed * 0.03)) * 6,
+      };
+    }
+    case 'jump': {
+      // single arc: 0 → -peak → 0 over the duration
+      const t = elapsed / total; // 0..1
+      const peak = 4 * t * (1 - t); // 0 at t=0/1, 1 at t=0.5
+      return { dx: 0, dy: -peak * 14 };
+    }
+  }
 }
 
 function drawHair(ctx: CanvasRenderingContext2D, view: View, i: number, j: number, baseZ: number, ic: Identicon) {
@@ -490,6 +536,15 @@ type Avatar = {
   walking: boolean;
   lastStep: number;
   facing: Facing;
+  /** Chair tile this avatar is currently sitting on (rendered there at
+   *  chair-seat height instead of at tile/pos). null when standing. */
+  sitting: Tile | null;
+  /** Set on the local avatar when the user clicked a chair: marks the
+   *  chair to snap to once the walk completes. Server peers don't have
+   *  this — they just receive a `sit` message at the right moment. */
+  sitOnArrival: Tile | null;
+  /** Active emote (one of EMOTE_KINDS) and when its animation ends. */
+  emote: { kind: EmoteKind; expires: number } | null;
 };
 
 type Peer = Avatar & {
@@ -499,6 +554,14 @@ type Peer = Avatar & {
   headColor: string;
   lastChat: { text: string; expires: number } | null;
 };
+
+type EmoteKind = 'wave' | 'dance' | 'jump';
+const EMOTE_DURATIONS: Record<EmoteKind, number> = {
+  wave: 1500,
+  dance: 3000,
+  jump: 600,
+};
+const EMOTE_KINDS = new Set<string>(['wave', 'dance', 'jump']);
 
 type SceneState = {
   avatar: Avatar;
@@ -515,7 +578,15 @@ type SceneState = {
 
 // --- wire protocol ---------------------------------------------------------
 
-type WirePeer = { id: string; nickname: string; bodyColor: string; headColor: string; tile: Tile; facing: Facing };
+type WirePeer = {
+  id: string;
+  nickname: string;
+  bodyColor: string;
+  headColor: string;
+  tile: Tile;
+  facing: Facing;
+  sitting: Tile | null;
+};
 
 type ServerMsg =
   | { t: 'init'; selfId: string; peers: WirePeer[] }
@@ -523,13 +594,17 @@ type ServerMsg =
   | { t: 'walk'; id: string; from: Tile; path: Tile[]; at: number }
   | { t: 'chat'; id: string; text: string; at: number }
   | { t: 'style'; id: string; bodyColor: string; headColor: string }
+  | { t: 'sit'; id: string; tile: Tile | null }
+  | { t: 'emote'; id: string; kind: EmoteKind; at: number }
   | { t: 'leave'; id: string };
 
 type ClientMsg =
   | { t: 'hello'; nickname: string; bodyColor: string; headColor: string; clientId: string }
   | { t: 'walk'; from: Tile; path: Tile[] }
   | { t: 'chat'; text: string }
-  | { t: 'style'; bodyColor: string; headColor: string };
+  | { t: 'style'; bodyColor: string; headColor: string }
+  | { t: 'sit'; tile: Tile | null }
+  | { t: 'emote'; kind: EmoteKind };
 
 const DISPLACED_CODE = 4001;
 
@@ -621,37 +696,52 @@ function renderScene(
     if (FURN_DEFS[f.kind].walkable) continue;
     sprites.push({ depth: f.tile[0] + f.tile[1], draw: () => drawFurniture(ctx, view, f) });
   }
+  const renderNow = performance.now();
   // remote peers
   for (const peer of state.peers.values()) {
+    const drawTile = peer.sitting ?? [Math.round(peer.pos[0]), Math.round(peer.pos[1])];
+    const off = emoteOffset(peer.emote, renderNow);
     sprites.push({
-      depth: peer.pos[0] + peer.pos[1] + 0.01,
-      draw: () =>
-        drawAvatar(
-          ctx,
-          view,
-          peer.pos[0],
-          peer.pos[1],
-          peer.walking ? state.bob : 0,
-          peer.bodyColor,
-          peer.headColor,
-          peer.nickname,
-        ),
+      depth: drawTile[0] + drawTile[1] + 0.01,
+      draw: () => {
+        if (off.dx || off.dy) {
+          ctx.save();
+          ctx.translate(off.dx, off.dy);
+        }
+        drawAvatar(ctx, view, {
+          i: peer.pos[0],
+          j: peer.pos[1],
+          bob: peer.walking ? state.bob : 0,
+          bodyColor: peer.bodyColor,
+          headColor: peer.headColor,
+          seed: peer.nickname,
+          sitting: peer.sitting,
+        });
+        if (off.dx || off.dy) ctx.restore();
+      },
     });
   }
   // self avatar — bias forward by epsilon so same-depth furniture renders behind it
+  const selfDrawTile = a.sitting ?? [Math.round(a.pos[0]), Math.round(a.pos[1])];
+  const selfOff = emoteOffset(a.emote, renderNow);
   sprites.push({
-    depth: a.pos[0] + a.pos[1] + 0.02,
-    draw: () =>
-      drawAvatar(
-        ctx,
-        view,
-        a.pos[0],
-        a.pos[1],
-        a.walking ? state.bob : 0,
-        state.selfBodyColor,
-        state.selfHeadColor,
-        state.selfNickname,
-      ),
+    depth: selfDrawTile[0] + selfDrawTile[1] + 0.02,
+    draw: () => {
+      if (selfOff.dx || selfOff.dy) {
+        ctx.save();
+        ctx.translate(selfOff.dx, selfOff.dy);
+      }
+      drawAvatar(ctx, view, {
+        i: a.pos[0],
+        j: a.pos[1],
+        bob: a.walking ? state.bob : 0,
+        bodyColor: state.selfBodyColor,
+        headColor: state.selfHeadColor,
+        seed: state.selfNickname,
+        sitting: a.sitting,
+      });
+      if (selfOff.dx || selfOff.dy) ctx.restore();
+    },
   });
   sprites.sort((x, y) => x.depth - y.depth);
   for (const s of sprites) s.draw();
@@ -890,7 +980,17 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
   const [occupancy, setOccupancy] = useState<Record<string, number>>({});
 
   const stateRef = useRef<SceneState>({
-    avatar: { tile: [5, 5], pos: [5, 5], path: [], walking: false, lastStep: 0, facing: 'S' },
+    avatar: {
+      tile: [5, 5],
+      pos: [5, 5],
+      path: [],
+      walking: false,
+      lastStep: 0,
+      facing: 'S',
+      sitting: null,
+      sitOnArrival: null,
+      emote: null,
+    },
     hover: null,
     hoverBlocked: false,
     bob: 0,
@@ -920,7 +1020,10 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
     a.path = [];
     a.walking = false;
     a.lastStep = performance.now();
-    setHint('click any tile to walk.');
+    a.sitting = null;
+    a.sitOnArrival = null;
+    a.emote = null;
+    setHint('click any tile to walk. (click a chair to sit; type /wave or /dance to emote.)');
   }, [roomId]);
 
   // websocket lifecycle ------------------------------------------------------
@@ -956,6 +1059,9 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
               walking: false,
               lastStep: performance.now(),
               facing: p.facing,
+              sitting: p.sitting,
+              sitOnArrival: null,
+              emote: null,
               lastChat: null,
             });
           }
@@ -978,6 +1084,9 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
             walking: false,
             lastStep: performance.now(),
             facing: p.facing,
+            sitting: p.sitting,
+            sitOnArrival: null,
+            emote: null,
             lastChat: null,
           });
           setOverlayList((prev) =>
@@ -1005,6 +1114,8 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
           peer.pos = [msg.from[0], msg.from[1]];
           peer.path = msg.path.slice();
           peer.walking = peer.path.length > 0;
+          // walking implies standing — server clears sitting on the same trigger
+          peer.sitting = null;
           // start the walk slightly in the past so we visually "catch up" the latency
           peer.lastStep = performance.now() - latency;
           break;
@@ -1018,6 +1129,22 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
             refs.bubble.textContent = msg.text;
             refs.bubble.style.display = '';
           }
+          break;
+        }
+        case 'sit': {
+          const peer = stateRef.current.peers.get(msg.id);
+          if (!peer) break;
+          peer.sitting = msg.tile;
+          break;
+        }
+        case 'emote': {
+          const peer = stateRef.current.peers.get(msg.id);
+          if (!peer) break;
+          const latency = Math.max(0, Math.min(1000, Date.now() - msg.at));
+          peer.emote = {
+            kind: msg.kind,
+            expires: performance.now() - latency + EMOTE_DURATIONS[msg.kind],
+          };
           break;
         }
         case 'leave': {
@@ -1174,12 +1301,60 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
       const tj = Math.round(t.j);
       if (ti < 0 || ti >= ROOM_SIZE || tj < 0 || tj >= ROOM_SIZE) return;
       const w = walkableRef.current;
+      const a = stateRef.current.avatar;
+      const start: Tile = [Math.round(a.pos[0]), Math.round(a.pos[1])];
+      const ws = wsRef.current;
+      const wsOpen = ws && ws.readyState === WebSocket.OPEN;
+
+      // Did the user click on a chair? Chairs are non-walkable, so the
+      // normal walkable check would just say "blocked" — here we route to
+      // the closest walkable neighbour and remember to sit on arrival.
+      const targetChair = furnitureRef.current.find(
+        (f) => f.kind === 'chair' && f.tile[0] === ti && f.tile[1] === tj,
+      );
+      if (targetChair) {
+        const neighbours: Tile[] = [
+          [ti + 1, tj],
+          [ti - 1, tj],
+          [ti, tj + 1],
+          [ti, tj - 1],
+        ];
+        let bestPath: Tile[] | null = null;
+        for (const n of neighbours) {
+          if (n[0] < 0 || n[0] >= ROOM_SIZE || n[1] < 0 || n[1] >= ROOM_SIZE) continue;
+          if (!w[n[0]][n[1]]) continue;
+          const p = findPath(w, start, n);
+          if (p && (bestPath == null || p.length < bestPath.length)) bestPath = p;
+        }
+        if (!bestPath) {
+          setHint("can't reach that chair.");
+          return;
+        }
+        a.tile = start;
+        a.pos = [start[0], start[1]];
+        a.path = bestPath.slice(1);
+        a.walking = a.path.length > 0;
+        a.lastStep = performance.now();
+        a.sitOnArrival = [ti, tj];
+        // walking implicitly stands you up (server enforces same)
+        if (a.sitting) a.sitting = null;
+        if (a.path.length === 0) {
+          // already adjacent — sit immediately
+          a.sitting = [ti, tj];
+          a.sitOnArrival = null;
+          setHint('sat down.');
+          if (wsOpen) ws!.send(JSON.stringify({ t: 'sit', tile: [ti, tj] } satisfies ClientMsg));
+        } else {
+          setHint(`walking to sit (${a.path.length} tile${a.path.length === 1 ? '' : 's'})…`);
+          if (wsOpen) ws!.send(JSON.stringify({ t: 'walk', from: start, path: a.path } satisfies ClientMsg));
+        }
+        return;
+      }
+
       if (!w[ti][tj]) {
         setHint('that tile is blocked.');
         return;
       }
-      const a = stateRef.current.avatar;
-      const start: Tile = [Math.round(a.pos[0]), Math.round(a.pos[1])];
       if (start[0] === ti && start[1] === tj) {
         setHint("you're already there.");
         return;
@@ -1189,11 +1364,14 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
         setHint("can't reach that tile.");
         return;
       }
+      const wasSitting = a.sitting != null;
       a.tile = start;
       a.pos = [start[0], start[1]];
       a.path = path.slice(1);
       a.walking = a.path.length > 0;
       a.lastStep = performance.now();
+      a.sitOnArrival = null;
+      a.sitting = null; // walking always stands you up
       const target = portalsRef.current.find((p) => p.tile[0] === ti && p.tile[1] === tj);
       if (target) {
         setHint(`walking to → ${target.destLabel} (${a.path.length} tile${a.path.length === 1 ? '' : 's'})…`);
@@ -1201,9 +1379,9 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
         setHint(`walking ${a.path.length} tile${a.path.length === 1 ? '' : 's'}…`);
       }
       // tell the server (and through it, every other client)
-      const ws = wsRef.current;
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ t: 'walk', from: start, path: a.path } satisfies ClientMsg));
+      if (wsOpen) {
+        if (wasSitting) ws!.send(JSON.stringify({ t: 'sit', tile: null } satisfies ClientMsg));
+        ws!.send(JSON.stringify({ t: 'walk', from: start, path: a.path } satisfies ClientMsg));
       }
     };
 
@@ -1260,10 +1438,27 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
             navigateRef.current({ to: '/labs/atrium/$roomId', params: { roomId: here.dest } });
           }
         } else if (!a.walking) {
-          setHint(`here. tile (${a.tile[0]}, ${a.tile[1]}).`);
+          // Walk done — if we were heading toward a chair, sit on it.
+          if (a.sitOnArrival) {
+            a.sitting = a.sitOnArrival;
+            a.sitOnArrival = null;
+            setHint('sat down.');
+            const ws = wsRef.current;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ t: 'sit', tile: a.sitting } satisfies ClientMsg));
+            }
+          } else {
+            setHint(`here. tile (${a.tile[0]}, ${a.tile[1]}).`);
+          }
         }
       }
       for (const peer of s.peers.values()) advanceWalk(peer, now);
+
+      // Expire stale emotes — both self and peers — once their timer's up.
+      if (a.emote && now >= a.emote.expires) a.emote = null;
+      for (const peer of s.peers.values()) {
+        if (peer.emote && now >= peer.emote.expires) peer.emote = null;
+      }
 
       s.bob = a.walking ? Math.sin(now * 0.012) * 0.04 : 0;
 
@@ -1542,6 +1737,26 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
       e.preventDefault();
       const text = chatDraft.trim().slice(0, 200);
       if (!text) return;
+      const ws = wsRef.current;
+      const wsOpen = ws && ws.readyState === WebSocket.OPEN;
+
+      // /wave, /dance, /jump → trigger an emote instead of sending chat
+      if (text.startsWith('/')) {
+        const cmd = text.slice(1).toLowerCase();
+        if (EMOTE_KINDS.has(cmd)) {
+          const kind = cmd as EmoteKind;
+          stateRef.current.avatar.emote = {
+            kind,
+            expires: performance.now() + EMOTE_DURATIONS[kind],
+          };
+          if (wsOpen) ws!.send(JSON.stringify({ t: 'emote', kind } satisfies ClientMsg));
+          setChatDraft('');
+          setHint(`emote: ${kind}`);
+          return;
+        }
+        // unknown / — fall through and send as plain chat
+      }
+
       // optimistic local bubble — server doesn't echo to sender
       stateRef.current.selfChat = { text, expires: performance.now() + CHAT_TTL_MS };
       const refs = overlayRefsMap.current.get('self');
@@ -1549,10 +1764,7 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
         refs.bubble.textContent = text;
         refs.bubble.style.display = '';
       }
-      const ws = wsRef.current;
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ t: 'chat', text } satisfies ClientMsg));
-      }
+      if (wsOpen) ws!.send(JSON.stringify({ t: 'chat', text } satisfies ClientMsg));
       setChatDraft('');
     },
     [chatDraft],

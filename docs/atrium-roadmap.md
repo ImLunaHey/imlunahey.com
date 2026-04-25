@@ -286,9 +286,52 @@ Label transform also changed from `translate(-50%, 0)` to
 `translate(-50%, -100%)` so when it does appear, it sits *above*
 the anchor point — never overlapping the head.
 
-## v7+ — depth
+## v7 — walk-to-sit + emotes (shipped)
 
-Once v6 is solid, the rest of the long tail.
+Goal: stop atrium from being just a click-around chat box. Add verbs —
+sit on chairs, wave/dance/jump.
+
+- [x] **Walk-to-sit** — clicking a chair tile (which is non-walkable
+      transit) routes A* to the closest walkable neighbour and remembers
+      `sitOnArrival`. On step-completion the avatar snaps to a sitting
+      pose: rendered AT the chair tile, body shrunk to 0.4 high sitting
+      on the chair seat (z=0.5), head atop. Identicon stays — face +
+      hair render the same in either pose.
+- [x] **Stand-up implicit** — clicking any walkable tile while sitting
+      first sends `{t:'sit', tile:null}` and clears local sitting state,
+      then proceeds with the normal walk. The server also clears
+      sitting on every walk message (so we never end up in a "walking
+      while sitting" state even if a client misses the explicit sit
+      clear).
+- [x] **Wire bumps** — new `sit` (both directions): client sends
+      `{t:'sit', tile|null}`, server broadcasts `{t:'sit', id, tile}`
+      to others. New `emote` (both directions): client sends
+      `{t:'emote', kind}`, server validates against the `wave/dance/jump`
+      whitelist and broadcasts `{t:'emote', id, kind, at}` ephemerally.
+      Init/join now carry `sitting` so a fresh client sees existing
+      sitters in the right pose immediately.
+- [x] **Three emotes triggered from chat** — typing `/wave`, `/dance`,
+      or `/jump` in the chat input fires the emote locally + broadcasts;
+      the chat is consumed (no bubble shown). Pure procedural canvas
+      animations applied via `ctx.translate` around the avatar draw:
+      `wave` sways side-to-side ~1.5s; `dance` bobs vertically + sways
+      ~3s; `jump` is a single arc ~0.6s. Emote durations live in
+      `EMOTE_DURATIONS` server-side validator + client renderer.
+- [x] **Latency-compensated emote start** — server stamps `at` on the
+      broadcast; receiver subtracts the latency from the local clock
+      so two clients see the emote start at roughly the same wall time.
+- [x] **AvatarDraw refactor** — `drawAvatar` now takes a config object
+      (`{i, j, bob, bodyColor, headColor, seed, sitting}`) since the
+      param list crossed the threshold of "more args than fingers".
+      Cleaner for v8+ additions.
+
+Verified end-to-end via two-client wire test: `sit` broadcasts the
+tile to peers, `emote` broadcasts kind + at, init payloads carry
+the `sitting` field. ✓
+
+## v8+ — depth
+
+Once v7 is solid, the rest of the long tail.
 - [ ] **Room editor** — click-drag to place / remove furniture from
       your inventory in a room you own. Persisted as a per-room layout
       record.

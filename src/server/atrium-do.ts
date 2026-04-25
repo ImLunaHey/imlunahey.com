@@ -44,6 +44,10 @@ type PeerState = {
   headColor: string;
   tile: Tile;
   facing: Facing;
+  /** When set, this peer is sitting on the chair at this tile and should
+   *  be rendered there (slightly smaller, on the chair seat) instead of
+   *  at `tile` (which is the adjacent walkable tile they walked to). */
+  sitting: Tile | null;
 };
 
 type Attachment = PeerState & {
@@ -59,7 +63,9 @@ type ClientMsg =
   | { t: 'hello'; nickname?: unknown; bodyColor?: unknown; headColor?: unknown; clientId?: unknown }
   | { t: 'walk'; from?: unknown; path?: unknown }
   | { t: 'chat'; text?: unknown }
-  | { t: 'style'; bodyColor?: unknown; headColor?: unknown };
+  | { t: 'style'; bodyColor?: unknown; headColor?: unknown }
+  | { t: 'sit'; tile?: unknown }
+  | { t: 'emote'; kind?: unknown };
 
 type ServerMsg =
   | { t: 'init'; selfId: string; peers: PeerState[] }
@@ -67,7 +73,11 @@ type ServerMsg =
   | { t: 'walk'; id: string; from: Tile; path: Tile[]; at: number }
   | { t: 'chat'; id: string; text: string; at: number }
   | { t: 'style'; id: string; bodyColor: string; headColor: string }
+  | { t: 'sit'; id: string; tile: Tile | null }
+  | { t: 'emote'; id: string; kind: string; at: number }
   | { t: 'leave'; id: string };
+
+const EMOTE_KINDS = ['wave', 'dance', 'jump'] as const;
 
 function isTile(x: unknown): x is Tile {
   return (
@@ -128,6 +138,7 @@ export class AtriumDO extends DurableObject {
       headColor: DEFAULT_HEAD_COLOR,
       tile: DEFAULT_TILE,
       facing: 'S',
+      sitting: null,
       helloed: false,
       clientId: id, // safe default: each connection is its own identity until hello says otherwise
     };
@@ -208,6 +219,8 @@ export class AtriumDO extends DurableObject {
         const path = parsed.path as Tile[];
         att.tile = path[path.length - 1];
         att.facing = inferFacing(path[path.length - 1], path.length >= 2 ? path[path.length - 2] : from) ?? att.facing;
+        // walking implicitly stands the avatar up — keep server state honest
+        att.sitting = null;
         ws.serializeAttachment(att);
         this.broadcastExcept(ws, { t: 'walk', id: att.id, from, path, at: Date.now() });
         break;
@@ -217,6 +230,22 @@ export class AtriumDO extends DurableObject {
         const text = safeChat(parsed.text);
         if (!text) return;
         this.broadcastExcept(ws, { t: 'chat', id: att.id, text, at: Date.now() });
+        break;
+      }
+      case 'sit': {
+        if (!att.helloed) return;
+        const tile: Tile | null = isTile(parsed.tile) ? (parsed.tile as Tile) : null;
+        att.sitting = tile;
+        ws.serializeAttachment(att);
+        this.broadcastExcept(ws, { t: 'sit', id: att.id, tile });
+        break;
+      }
+      case 'emote': {
+        if (!att.helloed) return;
+        if (typeof parsed.kind !== 'string') return;
+        if (!(EMOTE_KINDS as readonly string[]).includes(parsed.kind)) return;
+        // ephemeral — no state stored, just broadcast
+        this.broadcastExcept(ws, { t: 'emote', id: att.id, kind: parsed.kind, at: Date.now() });
         break;
       }
     }
@@ -256,6 +285,7 @@ export class AtriumDO extends DurableObject {
       headColor: att.headColor,
       tile: att.tile,
       facing: att.facing,
+      sitting: att.sitting,
     };
   }
 
