@@ -142,13 +142,57 @@ session.
       session between tabs without infinite displacement loops because
       only the tab the user is actively clicking in re-hellos.
 
-## v4+ — depth
+## v4 — multiple rooms (shipped)
 
-Once v2 + v3 are solid, the door opens to a long tail of features.
+Goal: stop being a single global room. Each room is its own DO instance,
+URL routes match, navigator UI lets you hop between them.
 
-- [ ] **Multiple rooms** — portal tiles that warp you to a different
-      room id. URL becomes `/labs/atrium/<roomId>`. A "lobby" room
-      lists active public rooms.
+- [x] **AtriumDO is now per-room** — the worker reads `?room=<id>` from
+      the ws upgrade URL and uses it as the `idFromName` key, so each
+      room is a fully isolated DO with its own peers + state. Bumped the
+      worker.ts handler to validate the id (lowercase alnum + dash +
+      underscore + dot, capped at 64 chars; falls back to `lobby`).
+- [x] **Occupancy RPC + bulk endpoint** — added `getOccupancy()` to
+      `AtriumDO` that walks `getWebSockets()` for helloed peers, and
+      `/api/atrium-rooms?ids=lobby,cafe,garden` that fetches counts
+      across N rooms in one request. Cheap navigator polling without
+      opening a probe websocket per room.
+- [x] **Routing** — converted `routes/_main/labs/atrium.tsx` to a
+      folder with `index.tsx` (lobby, no roomId) + `$roomId.tsx`
+      (everything else). Both render the same `AtriumPage` with
+      `roomId` as a prop. The page reads the prop and passes it into
+      the ws URL + theme lookup.
+- [x] **Three pre-built public rooms** — `lobby` (phosphor green,
+      default), `cafe` (amber-lit), `garden` (verdant). Each has its
+      own floor + wall colour palette via the `THEMES` table. Theme is
+      applied per-frame via a ref the render loop reads, so a room
+      switch doesn't tear down the canvas effect.
+- [x] **Custom rooms** — any URL like `/labs/atrium/<anything>` is a
+      valid room. Defaults to the phosphor theme. The navigator shows a
+      "currently · custom" row when the user is in a non-public room
+      so they know it's not advertised.
+- [x] **Navigator UI** — bottom-bar button shows `~/atrium/<room>`,
+      click opens a small dropdown listing public rooms with live
+      occupancy counts (polled every 5s). Each row is a TanStack Link;
+      clicking it navigates without a full page reload — the ws
+      effect's `[roomId]` deps fire, the old ws closes, the new ws
+      opens to the new room's DO.
+- [x] **Disabled `'displaced'` retry loop** — the dedup logic from
+      v3.1 still applies cleanly because clientId is per-identity, not
+      per-room. Walking between rooms doesn't displace yourself.
+
+Ship criteria: open the page in two tabs, navigate one to `/cafe` and
+one to `/garden`, see live occupancy counts on both, see only your
+roommates in the canvas. ✓
+
+## v5+ — depth
+
+Once v4 is solid, the door opens to the long tail of features.
+
+- [ ] **Portal tiles** — visual portals on the floor that warp you to
+      a different room when you walk onto them, instead of relying on
+      the navigator dropdown. (URL routing already exists; just needs
+      the on-canvas affordance.)
 - [ ] **Room editor** — click-drag to place / remove furniture from
       your inventory in a room you own. Persisted as a per-room layout
       record.

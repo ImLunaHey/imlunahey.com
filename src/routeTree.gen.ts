@@ -128,7 +128,6 @@ import { Route as MainLabsBskyCardsRouteImport } from './routes/_main/labs/bsky-
 import { Route as MainLabsBrowserRouteImport } from './routes/_main/labs/browser'
 import { Route as MainLabsBacklinksRouteImport } from './routes/_main/labs/backlinks'
 import { Route as MainLabsAudioExtractorRouteImport } from './routes/_main/labs/audio-extractor'
-import { Route as MainLabsAtriumRouteImport } from './routes/_main/labs/atrium'
 import { Route as MainLabsAsciiRouteImport } from './routes/_main/labs/ascii'
 import { Route as MainLabsAicRouteImport } from './routes/_main/labs/aic'
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
@@ -141,6 +140,7 @@ import { Route as MainLabsFeedIndexRouteImport } from './routes/_main/labs/feed/
 import { Route as MainLabsCssBattlesIndexRouteImport } from './routes/_main/labs/css-battles/index'
 import { Route as MainLabsCryptoIndexRouteImport } from './routes/_main/labs/crypto/index'
 import { Route as MainLabsCarExplorerIndexRouteImport } from './routes/_main/labs/car-explorer/index'
+import { Route as MainLabsAtriumIndexRouteImport } from './routes/_main/labs/atrium/index'
 import { Route as MainLabsAtUriIndexRouteImport } from './routes/_main/labs/at-uri/index'
 import { Route as MainPokedexRkeyPokeIdRouteImport } from './routes/_main/pokedex/$rkey/$pokeId'
 import { Route as MainLabsTwitchLiveLoginRouteImport } from './routes/_main/labs/twitch-live/$login'
@@ -150,6 +150,7 @@ import { Route as MainLabsFeedSplatRouteImport } from './routes/_main/labs/feed/
 import { Route as MainLabsCssBattlesDateRouteImport } from './routes/_main/labs/css-battles/$date'
 import { Route as MainLabsCryptoIdRouteImport } from './routes/_main/labs/crypto/$id'
 import { Route as MainLabsCarExplorerSplatRouteImport } from './routes/_main/labs/car-explorer/$'
+import { Route as MainLabsAtriumRoomIdRouteImport } from './routes/_main/labs/atrium/$roomId'
 import { Route as MainLabsAtUriSplatRouteImport } from './routes/_main/labs/at-uri/$'
 import { Route as MainLabsYearInReviewHandleYearRouteImport } from './routes/_main/labs/year-in-review/$handle/$year'
 
@@ -750,11 +751,6 @@ const MainLabsAudioExtractorRoute = MainLabsAudioExtractorRouteImport.update({
   path: '/labs/audio-extractor',
   getParentRoute: () => MainRoute,
 } as any)
-const MainLabsAtriumRoute = MainLabsAtriumRouteImport.update({
-  id: '/labs/atrium',
-  path: '/labs/atrium',
-  getParentRoute: () => MainRoute,
-} as any)
 const MainLabsAsciiRoute = MainLabsAsciiRouteImport.update({
   id: '/labs/ascii',
   path: '/labs/ascii',
@@ -817,6 +813,11 @@ const MainLabsCarExplorerIndexRoute =
     path: '/labs/car-explorer/',
     getParentRoute: () => MainRoute,
   } as any)
+const MainLabsAtriumIndexRoute = MainLabsAtriumIndexRouteImport.update({
+  id: '/labs/atrium/',
+  path: '/labs/atrium/',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsAtUriIndexRoute = MainLabsAtUriIndexRouteImport.update({
   id: '/labs/at-uri/',
   path: '/labs/at-uri/',
@@ -863,6 +864,11 @@ const MainLabsCarExplorerSplatRoute =
     path: '/labs/car-explorer/$',
     getParentRoute: () => MainRoute,
   } as any)
+const MainLabsAtriumRoomIdRoute = MainLabsAtriumRoomIdRouteImport.update({
+  id: '/labs/atrium/$roomId',
+  path: '/labs/atrium/$roomId',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsAtUriSplatRoute = MainLabsAtUriSplatRouteImport.update({
   id: '/labs/at-uri/$',
   path: '/labs/at-uri/$',
@@ -899,7 +905,6 @@ export interface FileRoutesByFullPath {
   '/games/$rkey': typeof MainGamesRkeyRoute
   '/labs/aic': typeof MainLabsAicRoute
   '/labs/ascii': typeof MainLabsAsciiRoute
-  '/labs/atrium': typeof MainLabsAtriumRoute
   '/labs/audio-extractor': typeof MainLabsAudioExtractorRoute
   '/labs/backlinks': typeof MainLabsBacklinksRoute
   '/labs/browser': typeof MainLabsBrowserRoute
@@ -1000,6 +1005,7 @@ export interface FileRoutesByFullPath {
   '/projects/': typeof MainProjectsIndexRoute
   '/watching/': typeof MainWatchingIndexRoute
   '/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
+  '/labs/atrium/$roomId': typeof MainLabsAtriumRoomIdRoute
   '/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/labs/crypto/$id': typeof MainLabsCryptoIdRoute
   '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
@@ -1009,6 +1015,7 @@ export interface FileRoutesByFullPath {
   '/labs/twitch-live/$login': typeof MainLabsTwitchLiveLoginRoute
   '/pokedex/$rkey/$pokeId': typeof MainPokedexRkeyPokeIdRoute
   '/labs/at-uri/': typeof MainLabsAtUriIndexRoute
+  '/labs/atrium/': typeof MainLabsAtriumIndexRoute
   '/labs/car-explorer/': typeof MainLabsCarExplorerIndexRoute
   '/labs/crypto/': typeof MainLabsCryptoIndexRoute
   '/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
@@ -1043,7 +1050,6 @@ export interface FileRoutesByTo {
   '/games/$rkey': typeof MainGamesRkeyRoute
   '/labs/aic': typeof MainLabsAicRoute
   '/labs/ascii': typeof MainLabsAsciiRoute
-  '/labs/atrium': typeof MainLabsAtriumRoute
   '/labs/audio-extractor': typeof MainLabsAudioExtractorRoute
   '/labs/backlinks': typeof MainLabsBacklinksRoute
   '/labs/browser': typeof MainLabsBrowserRoute
@@ -1144,6 +1150,7 @@ export interface FileRoutesByTo {
   '/projects': typeof MainProjectsIndexRoute
   '/watching': typeof MainWatchingIndexRoute
   '/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
+  '/labs/atrium/$roomId': typeof MainLabsAtriumRoomIdRoute
   '/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/labs/crypto/$id': typeof MainLabsCryptoIdRoute
   '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
@@ -1153,6 +1160,7 @@ export interface FileRoutesByTo {
   '/labs/twitch-live/$login': typeof MainLabsTwitchLiveLoginRoute
   '/pokedex/$rkey/$pokeId': typeof MainPokedexRkeyPokeIdRoute
   '/labs/at-uri': typeof MainLabsAtUriIndexRoute
+  '/labs/atrium': typeof MainLabsAtriumIndexRoute
   '/labs/car-explorer': typeof MainLabsCarExplorerIndexRoute
   '/labs/crypto': typeof MainLabsCryptoIndexRoute
   '/labs/css-battles': typeof MainLabsCssBattlesIndexRoute
@@ -1189,7 +1197,6 @@ export interface FileRoutesById {
   '/_main/games/$rkey': typeof MainGamesRkeyRoute
   '/_main/labs/aic': typeof MainLabsAicRoute
   '/_main/labs/ascii': typeof MainLabsAsciiRoute
-  '/_main/labs/atrium': typeof MainLabsAtriumRoute
   '/_main/labs/audio-extractor': typeof MainLabsAudioExtractorRoute
   '/_main/labs/backlinks': typeof MainLabsBacklinksRoute
   '/_main/labs/browser': typeof MainLabsBrowserRoute
@@ -1290,6 +1297,7 @@ export interface FileRoutesById {
   '/_main/projects/': typeof MainProjectsIndexRoute
   '/_main/watching/': typeof MainWatchingIndexRoute
   '/_main/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
+  '/_main/labs/atrium/$roomId': typeof MainLabsAtriumRoomIdRoute
   '/_main/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
   '/_main/labs/crypto/$id': typeof MainLabsCryptoIdRoute
   '/_main/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
@@ -1299,6 +1307,7 @@ export interface FileRoutesById {
   '/_main/labs/twitch-live/$login': typeof MainLabsTwitchLiveLoginRoute
   '/_main/pokedex/$rkey/$pokeId': typeof MainPokedexRkeyPokeIdRoute
   '/_main/labs/at-uri/': typeof MainLabsAtUriIndexRoute
+  '/_main/labs/atrium/': typeof MainLabsAtriumIndexRoute
   '/_main/labs/car-explorer/': typeof MainLabsCarExplorerIndexRoute
   '/_main/labs/crypto/': typeof MainLabsCryptoIndexRoute
   '/_main/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
@@ -1335,7 +1344,6 @@ export interface FileRouteTypes {
     | '/games/$rkey'
     | '/labs/aic'
     | '/labs/ascii'
-    | '/labs/atrium'
     | '/labs/audio-extractor'
     | '/labs/backlinks'
     | '/labs/browser'
@@ -1436,6 +1444,7 @@ export interface FileRouteTypes {
     | '/projects/'
     | '/watching/'
     | '/labs/at-uri/$'
+    | '/labs/atrium/$roomId'
     | '/labs/car-explorer/$'
     | '/labs/crypto/$id'
     | '/labs/css-battles/$date'
@@ -1445,6 +1454,7 @@ export interface FileRouteTypes {
     | '/labs/twitch-live/$login'
     | '/pokedex/$rkey/$pokeId'
     | '/labs/at-uri/'
+    | '/labs/atrium/'
     | '/labs/car-explorer/'
     | '/labs/crypto/'
     | '/labs/css-battles/'
@@ -1479,7 +1489,6 @@ export interface FileRouteTypes {
     | '/games/$rkey'
     | '/labs/aic'
     | '/labs/ascii'
-    | '/labs/atrium'
     | '/labs/audio-extractor'
     | '/labs/backlinks'
     | '/labs/browser'
@@ -1580,6 +1589,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/watching'
     | '/labs/at-uri/$'
+    | '/labs/atrium/$roomId'
     | '/labs/car-explorer/$'
     | '/labs/crypto/$id'
     | '/labs/css-battles/$date'
@@ -1589,6 +1599,7 @@ export interface FileRouteTypes {
     | '/labs/twitch-live/$login'
     | '/pokedex/$rkey/$pokeId'
     | '/labs/at-uri'
+    | '/labs/atrium'
     | '/labs/car-explorer'
     | '/labs/crypto'
     | '/labs/css-battles'
@@ -1624,7 +1635,6 @@ export interface FileRouteTypes {
     | '/_main/games/$rkey'
     | '/_main/labs/aic'
     | '/_main/labs/ascii'
-    | '/_main/labs/atrium'
     | '/_main/labs/audio-extractor'
     | '/_main/labs/backlinks'
     | '/_main/labs/browser'
@@ -1725,6 +1735,7 @@ export interface FileRouteTypes {
     | '/_main/projects/'
     | '/_main/watching/'
     | '/_main/labs/at-uri/$'
+    | '/_main/labs/atrium/$roomId'
     | '/_main/labs/car-explorer/$'
     | '/_main/labs/crypto/$id'
     | '/_main/labs/css-battles/$date'
@@ -1734,6 +1745,7 @@ export interface FileRouteTypes {
     | '/_main/labs/twitch-live/$login'
     | '/_main/pokedex/$rkey/$pokeId'
     | '/_main/labs/at-uri/'
+    | '/_main/labs/atrium/'
     | '/_main/labs/car-explorer/'
     | '/_main/labs/crypto/'
     | '/_main/labs/css-battles/'
@@ -2591,13 +2603,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsAudioExtractorRouteImport
       parentRoute: typeof MainRoute
     }
-    '/_main/labs/atrium': {
-      id: '/_main/labs/atrium'
-      path: '/labs/atrium'
-      fullPath: '/labs/atrium'
-      preLoaderRoute: typeof MainLabsAtriumRouteImport
-      parentRoute: typeof MainRoute
-    }
     '/_main/labs/ascii': {
       id: '/_main/labs/ascii'
       path: '/labs/ascii'
@@ -2682,6 +2687,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsCarExplorerIndexRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/atrium/': {
+      id: '/_main/labs/atrium/'
+      path: '/labs/atrium'
+      fullPath: '/labs/atrium/'
+      preLoaderRoute: typeof MainLabsAtriumIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/at-uri/': {
       id: '/_main/labs/at-uri/'
       path: '/labs/at-uri'
@@ -2745,6 +2757,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsCarExplorerSplatRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/atrium/$roomId': {
+      id: '/_main/labs/atrium/$roomId'
+      path: '/labs/atrium/$roomId'
+      fullPath: '/labs/atrium/$roomId'
+      preLoaderRoute: typeof MainLabsAtriumRoomIdRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/at-uri/$': {
       id: '/_main/labs/at-uri/$'
       path: '/labs/at-uri/$'
@@ -2779,7 +2798,6 @@ interface MainRouteChildren {
   MainGamesRkeyRoute: typeof MainGamesRkeyRoute
   MainLabsAicRoute: typeof MainLabsAicRoute
   MainLabsAsciiRoute: typeof MainLabsAsciiRoute
-  MainLabsAtriumRoute: typeof MainLabsAtriumRoute
   MainLabsAudioExtractorRoute: typeof MainLabsAudioExtractorRoute
   MainLabsBacklinksRoute: typeof MainLabsBacklinksRoute
   MainLabsBrowserRoute: typeof MainLabsBrowserRoute
@@ -2880,6 +2898,7 @@ interface MainRouteChildren {
   MainProjectsIndexRoute: typeof MainProjectsIndexRoute
   MainWatchingIndexRoute: typeof MainWatchingIndexRoute
   MainLabsAtUriSplatRoute: typeof MainLabsAtUriSplatRoute
+  MainLabsAtriumRoomIdRoute: typeof MainLabsAtriumRoomIdRoute
   MainLabsCarExplorerSplatRoute: typeof MainLabsCarExplorerSplatRoute
   MainLabsCryptoIdRoute: typeof MainLabsCryptoIdRoute
   MainLabsCssBattlesDateRoute: typeof MainLabsCssBattlesDateRoute
@@ -2889,6 +2908,7 @@ interface MainRouteChildren {
   MainLabsTwitchLiveLoginRoute: typeof MainLabsTwitchLiveLoginRoute
   MainPokedexRkeyPokeIdRoute: typeof MainPokedexRkeyPokeIdRoute
   MainLabsAtUriIndexRoute: typeof MainLabsAtUriIndexRoute
+  MainLabsAtriumIndexRoute: typeof MainLabsAtriumIndexRoute
   MainLabsCarExplorerIndexRoute: typeof MainLabsCarExplorerIndexRoute
   MainLabsCryptoIndexRoute: typeof MainLabsCryptoIndexRoute
   MainLabsCssBattlesIndexRoute: typeof MainLabsCssBattlesIndexRoute
@@ -2917,7 +2937,6 @@ const MainRouteChildren: MainRouteChildren = {
   MainGamesRkeyRoute: MainGamesRkeyRoute,
   MainLabsAicRoute: MainLabsAicRoute,
   MainLabsAsciiRoute: MainLabsAsciiRoute,
-  MainLabsAtriumRoute: MainLabsAtriumRoute,
   MainLabsAudioExtractorRoute: MainLabsAudioExtractorRoute,
   MainLabsBacklinksRoute: MainLabsBacklinksRoute,
   MainLabsBrowserRoute: MainLabsBrowserRoute,
@@ -3018,6 +3037,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainProjectsIndexRoute: MainProjectsIndexRoute,
   MainWatchingIndexRoute: MainWatchingIndexRoute,
   MainLabsAtUriSplatRoute: MainLabsAtUriSplatRoute,
+  MainLabsAtriumRoomIdRoute: MainLabsAtriumRoomIdRoute,
   MainLabsCarExplorerSplatRoute: MainLabsCarExplorerSplatRoute,
   MainLabsCryptoIdRoute: MainLabsCryptoIdRoute,
   MainLabsCssBattlesDateRoute: MainLabsCssBattlesDateRoute,
@@ -3027,6 +3047,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsTwitchLiveLoginRoute: MainLabsTwitchLiveLoginRoute,
   MainPokedexRkeyPokeIdRoute: MainPokedexRkeyPokeIdRoute,
   MainLabsAtUriIndexRoute: MainLabsAtUriIndexRoute,
+  MainLabsAtriumIndexRoute: MainLabsAtriumIndexRoute,
   MainLabsCarExplorerIndexRoute: MainLabsCarExplorerIndexRoute,
   MainLabsCryptoIndexRoute: MainLabsCryptoIndexRoute,
   MainLabsCssBattlesIndexRoute: MainLabsCssBattlesIndexRoute,

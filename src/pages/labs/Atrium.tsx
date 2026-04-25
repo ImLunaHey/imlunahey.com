@@ -34,16 +34,33 @@ const FURN_DEFS: Record<FurnKind, { walkable: boolean }> = {
 
 const COLORS = {
   bg: '#0a0a0a',
-  floorA: '#222a30',
-  floorB: '#1c2228',
-  wallNorth: '#3a3a45',
-  wallWest: '#2c2c34',
   hover: 'rgba(106, 234, 160, 0.28)',
   hoverBlocked: 'rgba(255, 90, 90, 0.30)',
   pathDot: 'rgba(106, 234, 160, 0.55)',
   body: '#6aeaa0',
   head: '#f3d7b0',
 };
+
+type RoomTheme = { floorA: string; floorB: string; wallNorth: string; wallWest: string };
+
+const THEMES: Record<string, RoomTheme> = {
+  phosphor: { floorA: '#222a30', floorB: '#1c2228', wallNorth: '#3a3a45', wallWest: '#2c2c34' },
+  amber: { floorA: '#3a2818', floorB: '#2e2010', wallNorth: '#4a3520', wallWest: '#3a2818' },
+  verdant: { floorA: '#1c2e1c', floorB: '#172517', wallNorth: '#2a3a2a', wallWest: '#1f2f1f' },
+};
+
+type PublicRoom = { id: string; label: string; theme: keyof typeof THEMES; blurb: string };
+
+const PUBLIC_ROOMS: PublicRoom[] = [
+  { id: 'lobby', label: 'lobby', theme: 'phosphor', blurb: 'the front room. phosphor green, default hangout.' },
+  { id: 'cafe', label: 'café', theme: 'amber', blurb: 'amber-lit. for slower conversations.' },
+  { id: 'garden', label: 'garden', theme: 'verdant', blurb: 'green floor. plants. quieter.' },
+];
+
+function themeForRoom(roomId: string): RoomTheme {
+  const found = PUBLIC_ROOMS.find((r) => r.id === roomId);
+  return THEMES[found?.theme ?? 'phosphor'];
+}
 
 // --- iso projection ----------------------------------------------------------
 
@@ -319,6 +336,7 @@ function renderScene(
   view: View,
   state: SceneState,
   furniture: Furniture[],
+  theme: RoomTheme,
 ) {
   const w = ctx.canvas.width / (window.devicePixelRatio || 1);
   const h = ctx.canvas.height / (window.devicePixelRatio || 1);
@@ -326,13 +344,13 @@ function renderScene(
   ctx.fillRect(0, 0, w, h);
 
   // back walls (drawn first, behind everything)
-  drawWall(ctx, view, 'i', COLORS.wallNorth);
-  drawWall(ctx, view, 'j', COLORS.wallWest);
+  drawWall(ctx, view, 'i', theme.wallNorth);
+  drawWall(ctx, view, 'j', theme.wallWest);
 
   // floor tiles
   for (let i = 0; i < ROOM_SIZE; i++) {
     for (let j = 0; j < ROOM_SIZE; j++) {
-      drawTile(ctx, view, i, j, (i + j) % 2 === 0 ? COLORS.floorA : COLORS.floorB);
+      drawTile(ctx, view, i, j, (i + j) % 2 === 0 ? theme.floorA : theme.floorB);
     }
   }
 
@@ -480,11 +498,17 @@ type OverlayRefs = { wrap: HTMLDivElement; label: HTMLDivElement; bubble: HTMLDi
 
 const DEFAULT_HEAD_COLOR = '#f3d7b0';
 
-export default function AtriumPage() {
+export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectRef = useRef<(() => void) | null>(null);
   const overlayRefsMap = useRef<Map<string, OverlayRefs>>(new Map());
+  // Theme is per-room. Render loop reads from this ref each frame so a
+  // room change doesn't have to tear down the canvas effect.
+  const themeRef = useRef<RoomTheme>(themeForRoom(roomId));
+  useEffect(() => {
+    themeRef.current = themeForRoom(roomId);
+  }, [roomId]);
 
   const nicknameRef = useRef<string>('');
   const bodyColorRef = useRef<string>('#6aeaa0');
@@ -506,6 +530,8 @@ export default function AtriumPage() {
     { id: 'self', nickname: nicknameRef.current, color: bodyColorRef.current, isSelf: true },
   ]);
   const [chatDraft, setChatDraft] = useState('');
+  const [navOpen, setNavOpen] = useState(false);
+  const [occupancy, setOccupancy] = useState<Record<string, number>>({});
 
   const stateRef = useRef<SceneState>({
     avatar: { tile: [5, 5], pos: [5, 5], path: [], walking: false, lastStep: 0, facing: 'S' },
@@ -536,7 +562,7 @@ export default function AtriumPage() {
     let cancelled = false;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let backoffMs = 1000;
-    const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/atrium-ws`;
+    const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/atrium-ws?room=${encodeURIComponent(roomId)}`;
 
     const onMessage = (ev: MessageEvent) => {
       if (cancelled) return;
@@ -712,6 +738,31 @@ export default function AtriumPage() {
         }
       }
     };
+    // roomId in deps so navigating between rooms tears down the old ws and
+    // opens a new one to the new room's DO.
+  }, [roomId]);
+
+  // navigator: poll the worker for live occupancy of each public room ------
+
+  useEffect(() => {
+    let cancelled = false;
+    const ids = PUBLIC_ROOMS.map((r) => r.id).join(',');
+    const poll = async () => {
+      try {
+        const r = await fetch(`/api/atrium-rooms?ids=${encodeURIComponent(ids)}`, { cache: 'no-store' });
+        if (!r.ok) return;
+        const data = (await r.json()) as Record<string, number>;
+        if (!cancelled) setOccupancy(data);
+      } catch {
+        /* ignore — keep the last known counts */
+      }
+    };
+    void poll();
+    const handle = window.setInterval(() => void poll(), 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(handle);
+    };
   }, []);
 
   // canvas + render loop -----------------------------------------------------
@@ -839,7 +890,7 @@ export default function AtriumPage() {
         s.hover = null;
       }
 
-      renderScene(ctx, view, s, FURNITURE);
+      renderScene(ctx, view, s, FURNITURE, themeRef.current);
 
       // position DOM overlays + expire stale chat bubbles
       const positionOverlay = (id: string, i: number, j: number) => {
@@ -1097,6 +1148,7 @@ export default function AtriumPage() {
   }, []);
 
   const peerCount = overlayList.length - 1;
+  const roomLabel = PUBLIC_ROOMS.find((r) => r.id === roomId)?.label ?? roomId;
   const statusLabel =
     status === 'connected'
       ? `connected · ${peerCount} ${peerCount === 1 ? 'peer' : 'peers'}`
@@ -1249,7 +1301,66 @@ export default function AtriumPage() {
           </form>
 
           <div className="at-bar">
-            <span className="at-room">~/atrium · 10×10 · v3</span>
+            <div className="at-nav">
+              <button
+                className="at-nav-trigger"
+                type="button"
+                onClick={() => setNavOpen((o) => !o)}
+                aria-expanded={navOpen}
+              >
+                ~/atrium/<span className="at-nav-room">{roomLabel}</span> ▾
+              </button>
+              {navOpen ? (
+                <div className="at-nav-pop">
+                  <div className="at-nav-section">public rooms</div>
+                  {PUBLIC_ROOMS.map((r) => {
+                    const isHere = r.id === roomId;
+                    const count = occupancy[r.id] ?? 0;
+                    const inner = (
+                      <>
+                        <span className="at-nav-row-label">
+                          {isHere ? '· ' : '  '}
+                          {r.label}
+                        </span>
+                        <span className="at-nav-row-count">{count}</span>
+                      </>
+                    );
+                    return r.id === 'lobby' ? (
+                      <Link
+                        key={r.id}
+                        to="/labs/atrium"
+                        className={`at-nav-row ${isHere ? 'on' : ''}`}
+                        onClick={() => setNavOpen(false)}
+                        title={r.blurb}
+                      >
+                        {inner}
+                      </Link>
+                    ) : (
+                      <Link
+                        key={r.id}
+                        to="/labs/atrium/$roomId"
+                        params={{ roomId: r.id }}
+                        className={`at-nav-row ${isHere ? 'on' : ''}`}
+                        onClick={() => setNavOpen(false)}
+                        title={r.blurb}
+                      >
+                        {inner}
+                      </Link>
+                    );
+                  })}
+                  {!PUBLIC_ROOMS.some((r) => r.id === roomId) ? (
+                    <>
+                      <div className="at-nav-section">currently</div>
+                      <div className="at-nav-row on">
+                        <span className="at-nav-row-label">· {roomId}</span>
+                        <span className="at-nav-row-hint">custom</span>
+                      </div>
+                    </>
+                  ) : null}
+                  <div className="at-nav-foot">click any room to switch</div>
+                </div>
+              ) : null}
+            </div>
             <span className="at-hint">{hint}</span>
           </div>
         </div>
@@ -1323,6 +1434,71 @@ const CSS = `
     font-size: 10px;
   }
   .at-hint { color: var(--color-accent); }
+
+  .at-nav { position: relative; }
+  .at-nav-trigger {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+  .at-nav-trigger:hover { color: var(--color-accent); }
+  .at-nav-room {
+    color: var(--color-accent);
+    text-transform: lowercase;
+    letter-spacing: 0;
+  }
+  .at-nav-pop {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    min-width: 220px;
+    background: rgba(0, 0, 0, 0.92);
+    border: 1px solid var(--color-accent-dim);
+    box-shadow: 0 0 24px color-mix(in oklch, var(--color-accent) 22%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 4px 0;
+    z-index: 10;
+  }
+  .at-nav-section {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-fg-faint);
+    padding: 6px 12px 2px;
+  }
+  .at-nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 4px 12px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--color-fg-dim);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .at-nav-row:hover { background: color-mix(in oklch, var(--color-accent) 10%, transparent); color: var(--color-fg); }
+  .at-nav-row.on { color: var(--color-accent); }
+  .at-nav-row-label { white-space: pre; }
+  .at-nav-row-count { color: var(--color-fg-faint); font-variant-numeric: tabular-nums; }
+  .at-nav-row-hint { color: var(--color-fg-faint); font-size: 10px; font-style: italic; }
+  .at-nav-foot {
+    border-top: 1px dashed var(--color-border);
+    margin-top: 4px;
+    padding: 4px 12px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--color-fg-faint);
+    text-align: center;
+  }
 
   .at-overlay {
     position: absolute;

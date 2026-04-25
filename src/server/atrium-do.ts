@@ -222,6 +222,18 @@ export class AtriumDO extends DurableObject {
     }
   }
 
+  /** RPC: how many helloed peers are currently in this room. The
+   *  navigator UI calls this for every public room every few seconds.
+   *  Cheaper than opening a probe websocket. */
+  async getOccupancy(): Promise<number> {
+    let n = 0;
+    for (const ws of this.ctx.getWebSockets()) {
+      const a = ws.deserializeAttachment() as Attachment | null;
+      if (a?.helloed) n += 1;
+    }
+    return n;
+  }
+
   async webSocketClose(ws: WebSocket): Promise<void> {
     this.handleDisconnect(ws);
   }

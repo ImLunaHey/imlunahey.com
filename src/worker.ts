@@ -1,7 +1,17 @@
 import serverEntry from '@tanstack/react-start/server-entry';
+import type { AtriumDO } from './server/atrium-do';
 
 export { PresenceDO } from './server/presence-do';
 export { AtriumDO } from './server/atrium-do';
+
+/** Atrium room ids: lowercase, alphanumeric + dashes + underscores + dots,
+ *  capped at 64 chars. Anything else falls back to "lobby". Keeps the
+ *  attack surface small since the id becomes a DurableObjectNamespace key. */
+const ROOM_ID_RE = /^[a-z0-9_.-]{1,64}$/;
+function safeRoomId(s: string | null | undefined): string {
+  const v = (s ?? '').toLowerCase();
+  return ROOM_ID_RE.test(v) ? v : 'lobby';
+}
 
 /**
  * Paths that must always hit the worker fresh — OAuth callbacks, server-fn
@@ -49,10 +59,38 @@ export default {
       if (request.headers.get('Upgrade') !== 'websocket') {
         return new Response('expected websocket', { status: 426 });
       }
-      const e = env as { ATRIUM_DO: DurableObjectNamespace };
-      const id = e.ATRIUM_DO.idFromName('global-v1');
+      const e = env as { ATRIUM_DO: DurableObjectNamespace<AtriumDO> };
+      const roomId = safeRoomId(url.searchParams.get('room'));
+      const id = e.ATRIUM_DO.idFromName(roomId);
       const stub = e.ATRIUM_DO.get(id) as unknown as { fetch(req: Request): Promise<Response> };
       return stub.fetch(request);
+    }
+
+    // Bulk occupancy lookup — `?ids=lobby,cafe,garden`. Returns a
+    // { [roomId]: occupancy } map. Used by the navigator panel to show
+    // live "who's where" counts without opening a websocket per room.
+    if (url.pathname === '/api/atrium-rooms') {
+      const raw = url.searchParams.get('ids') ?? '';
+      const ids = raw
+        .split(',')
+        .map((s) => safeRoomId(s.trim()))
+        .filter((s, i, all) => all.indexOf(s) === i)
+        .slice(0, 32);
+      const e = env as { ATRIUM_DO: DurableObjectNamespace<AtriumDO> };
+      const entries = await Promise.all(
+        ids.map(async (id): Promise<[string, number]> => {
+          try {
+            const stub = e.ATRIUM_DO.get(e.ATRIUM_DO.idFromName(id));
+            const count = await stub.getOccupancy();
+            return [id, count];
+          } catch {
+            return [id, 0];
+          }
+        }),
+      );
+      return new Response(JSON.stringify(Object.fromEntries(entries)), {
+        headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
+      });
     }
 
     // @tanstack/react-start's fetch signature accepts the CF invocation
