@@ -172,15 +172,31 @@ const KIND_GLYPH: Record<Service['kind'], string> = {
   security: '◈',
 };
 
+/** uptime-kuma names monitors by hostname (e.g. "jellyfin.flaked.org")
+ *  while editorial uses short labels (e.g. "jellyfin"). Match the two by
+ *  reducing both to a hostname: prefer the URL when set, otherwise treat
+ *  the name itself as a hostname. Live entries without a URL still come
+ *  through their name field, which IS a hostname for uptime-kuma. */
+function hostKeyOf(s: { name: string; url?: string | null }): string {
+  if (s.url) {
+    try {
+      return new URL(s.url).hostname.toLowerCase();
+    } catch {
+      /* fall through to name */
+    }
+  }
+  return s.name.toLowerCase();
+}
+
 export default function HomelabPage() {
   const live = route.useLoaderData() as HomelabState;
 
-  // Merge live service status (keyed by name) onto the editorial list.
-  // Services not present in the live blob keep their editorial 'up'
-  // default but render without the status pill (gated below by `live`).
+  // Merge live service status onto the editorial list. Editorial entries
+  // without a URL (caddy, tailscale, nfs, etc.) won't have a matching
+  // monitor in uptime-kuma and will keep their placeholder cell.
   const liveServiceMap = new Map<string, ServiceRow>();
   if (live.services) {
-    for (const s of live.services.data) liveServiceMap.set(s.name, s);
+    for (const s of live.services.data) liveServiceMap.set(hostKeyOf(s), s);
   }
   const servicesDataReady = live.services !== null;
 
@@ -329,7 +345,7 @@ export default function HomelabPage() {
         </div>
         <section className="svc-list">
           {SERVICES.map((s) => {
-            const liveSvc = liveServiceMap.get(s.name);
+            const liveSvc = liveServiceMap.get(hostKeyOf(s));
             const status = liveSvc?.status ?? s.status;
             const iconPath = ICON_BY_NAME[s.name];
             return (
