@@ -1,0 +1,39 @@
+{
+  "lexicon": 1,
+  "id": "com.imlunahey.atrium.figure",
+  "description": "An atrium avatar appearance — body + head colors. One record per user (rkey=self). Read on join, written when the user customizes their figure. Future revisions will add hair / shirt / pants / hat layers; clients should ignore unknown properties.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["bodyColor", "headColor", "createdAt"],
+        "properties": {
+          "bodyColor": {
+            "type": "string",
+            "minLength": 7,
+            "maxLength": 7,
+            "description": "Lowercase #rrggbb hex. Drives the avatar's torso shading."
+          },
+          "headColor": {
+            "type": "string",
+            "minLength": 7,
+            "maxLength": 7,
+            "description": "Lowercase #rrggbb hex. Drives the avatar's head shading."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Client-supplied creation timestamp. UTC."
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Client-supplied last-edited timestamp. UTC."
+          }
+        }
+      }
+    }
+  }
+}

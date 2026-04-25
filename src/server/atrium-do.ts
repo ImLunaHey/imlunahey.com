@@ -31,7 +31,8 @@ const MAX_NICK = 24;
 const MAX_CHAT = 200;
 const MAX_PATH = 64;
 const DEFAULT_TILE: Tile = [5, 5];
-const DEFAULT_COLOR = '#6aeaa0';
+const DEFAULT_BODY_COLOR = '#6aeaa0';
+const DEFAULT_HEAD_COLOR = '#f3d7b0';
 
 type Tile = readonly [number, number];
 type Facing = 'N' | 'S' | 'E' | 'W';
@@ -39,7 +40,8 @@ type Facing = 'N' | 'S' | 'E' | 'W';
 type PeerState = {
   id: string;
   nickname: string;
-  color: string;
+  bodyColor: string;
+  headColor: string;
   tile: Tile;
   facing: Facing;
 };
@@ -47,15 +49,17 @@ type PeerState = {
 type Attachment = PeerState & { helloed: boolean };
 
 type ClientMsg =
-  | { t: 'hello'; nickname?: unknown; color?: unknown }
+  | { t: 'hello'; nickname?: unknown; bodyColor?: unknown; headColor?: unknown }
   | { t: 'walk'; from?: unknown; path?: unknown }
-  | { t: 'chat'; text?: unknown };
+  | { t: 'chat'; text?: unknown }
+  | { t: 'style'; bodyColor?: unknown; headColor?: unknown };
 
 type ServerMsg =
   | { t: 'init'; selfId: string; peers: PeerState[] }
   | { t: 'join'; peer: PeerState }
   | { t: 'walk'; id: string; from: Tile; path: Tile[]; at: number }
   | { t: 'chat'; id: string; text: string; at: number }
+  | { t: 'style'; id: string; bodyColor: string; headColor: string }
   | { t: 'leave'; id: string };
 
 function isTile(x: unknown): x is Tile {
@@ -90,9 +94,9 @@ function safeNick(s: unknown): string {
   return cleaned.slice(0, MAX_NICK) || 'anon';
 }
 
-function safeColor(s: unknown): string {
-  if (typeof s !== 'string') return DEFAULT_COLOR;
-  return /^#[0-9a-fA-F]{6}$/.test(s) ? s.toLowerCase() : DEFAULT_COLOR;
+function safeColor(s: unknown, fallback: string): string {
+  if (typeof s !== 'string') return fallback;
+  return /^#[0-9a-fA-F]{6}$/.test(s) ? s.toLowerCase() : fallback;
 }
 
 function safeChat(s: unknown): string {
@@ -112,7 +116,8 @@ export class AtriumDO extends DurableObject {
     const att: Attachment = {
       id: crypto.randomUUID(),
       nickname: 'anon',
-      color: DEFAULT_COLOR,
+      bodyColor: DEFAULT_BODY_COLOR,
+      headColor: DEFAULT_HEAD_COLOR,
       tile: DEFAULT_TILE,
       facing: 'S',
       helloed: false,
@@ -136,12 +141,26 @@ export class AtriumDO extends DurableObject {
     switch (parsed.t) {
       case 'hello': {
         att.nickname = safeNick(parsed.nickname);
-        att.color = safeColor(parsed.color);
+        att.bodyColor = safeColor(parsed.bodyColor, DEFAULT_BODY_COLOR);
+        att.headColor = safeColor(parsed.headColor, DEFAULT_HEAD_COLOR);
         att.helloed = true;
         ws.serializeAttachment(att);
         const peers = this.peerList(ws);
         this.sendTo(ws, { t: 'init', selfId: att.id, peers });
         this.broadcastExcept(ws, { t: 'join', peer: this.peerStateOf(att) });
+        break;
+      }
+      case 'style': {
+        if (!att.helloed) return;
+        att.bodyColor = safeColor(parsed.bodyColor, att.bodyColor);
+        att.headColor = safeColor(parsed.headColor, att.headColor);
+        ws.serializeAttachment(att);
+        this.broadcastExcept(ws, {
+          t: 'style',
+          id: att.id,
+          bodyColor: att.bodyColor,
+          headColor: att.headColor,
+        });
         break;
       }
       case 'walk': {
@@ -185,7 +204,8 @@ export class AtriumDO extends DurableObject {
     return {
       id: att.id,
       nickname: att.nickname,
-      color: att.color,
+      bodyColor: att.bodyColor,
+      headColor: att.headColor,
       tile: att.tile,
       facing: att.facing,
     };

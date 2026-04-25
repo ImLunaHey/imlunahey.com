@@ -1,5 +1,15 @@
 import { Link } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  createAuthorizationUrl,
+  deleteStoredSession,
+  OAuthUserAgent,
+  type Session,
+} from '@atcute/oauth-browser-client';
+import { XRPC } from '@atcute/client';
+import type { ActorIdentifier } from '@atcute/lexicons';
+import { ATRIUM_FIGURE_SCOPE, ensureOAuthConfigured, getCurrentSession } from '../../lib/oauth';
+import { useProfile } from '../../hooks/use-profile';
 
 const TILE_W = 64;
 const TILE_H = 32;
@@ -199,9 +209,10 @@ function drawAvatar(
   j: number,
   bob: number,
   bodyColor: string,
+  headColor: string,
 ) {
   drawIsoBox(ctx, view, i, j, 0.45, 0.45, 0.85 + bob, bodyColor);
-  drawIsoBox(ctx, view, i, j, 0.5, 0.5, 0.4, COLORS.head, 0.85 + bob);
+  drawIsoBox(ctx, view, i, j, 0.5, 0.5, 0.4, headColor, 0.85 + bob);
 }
 
 // --- A* pathfinding ----------------------------------------------------------
@@ -264,7 +275,8 @@ type Avatar = {
 type Peer = Avatar & {
   id: string;
   nickname: string;
-  color: string;
+  bodyColor: string;
+  headColor: string;
   lastChat: { text: string; expires: number } | null;
 };
 
@@ -275,23 +287,28 @@ type SceneState = {
   bob: number;
   peers: Map<string, Peer>;
   selfId: string | null;
-  selfColor: string;
+  selfBodyColor: string;
+  selfHeadColor: string;
   selfChat: { text: string; expires: number } | null;
 };
 
 // --- wire protocol ---------------------------------------------------------
 
+type WirePeer = { id: string; nickname: string; bodyColor: string; headColor: string; tile: Tile; facing: Facing };
+
 type ServerMsg =
-  | { t: 'init'; selfId: string; peers: { id: string; nickname: string; color: string; tile: Tile; facing: Facing }[] }
-  | { t: 'join'; peer: { id: string; nickname: string; color: string; tile: Tile; facing: Facing } }
+  | { t: 'init'; selfId: string; peers: WirePeer[] }
+  | { t: 'join'; peer: WirePeer }
   | { t: 'walk'; id: string; from: Tile; path: Tile[]; at: number }
   | { t: 'chat'; id: string; text: string; at: number }
+  | { t: 'style'; id: string; bodyColor: string; headColor: string }
   | { t: 'leave'; id: string };
 
 type ClientMsg =
-  | { t: 'hello'; nickname: string; color: string }
+  | { t: 'hello'; nickname: string; bodyColor: string; headColor: string }
   | { t: 'walk'; from: Tile; path: Tile[] }
-  | { t: 'chat'; text: string };
+  | { t: 'chat'; text: string }
+  | { t: 'style'; bodyColor: string; headColor: string };
 
 const CHAT_TTL_MS = 5_000;
 
@@ -356,13 +373,23 @@ function renderScene(
   for (const peer of state.peers.values()) {
     sprites.push({
       depth: peer.pos[0] + peer.pos[1] + 0.01,
-      draw: () => drawAvatar(ctx, view, peer.pos[0], peer.pos[1], peer.walking ? state.bob : 0, peer.color),
+      draw: () =>
+        drawAvatar(ctx, view, peer.pos[0], peer.pos[1], peer.walking ? state.bob : 0, peer.bodyColor, peer.headColor),
     });
   }
   // self avatar — bias forward by epsilon so same-depth furniture renders behind it
   sprites.push({
     depth: a.pos[0] + a.pos[1] + 0.02,
-    draw: () => drawAvatar(ctx, view, a.pos[0], a.pos[1], a.walking ? state.bob : 0, state.selfColor),
+    draw: () =>
+      drawAvatar(
+        ctx,
+        view,
+        a.pos[0],
+        a.pos[1],
+        a.walking ? state.bob : 0,
+        state.selfBodyColor,
+        state.selfHeadColor,
+      ),
   });
   sprites.sort((x, y) => x.depth - y.depth);
   for (const s of sprites) s.draw();
@@ -432,22 +459,25 @@ function hslToHex(h: number, s: number, l: number): string {
 type OverlayEntry = { id: string; nickname: string; color: string; isSelf: boolean };
 type OverlayRefs = { wrap: HTMLDivElement; label: HTMLDivElement; bubble: HTMLDivElement };
 
+const DEFAULT_HEAD_COLOR = '#f3d7b0';
+
 export default function AtriumPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const overlayRefsMap = useRef<Map<string, OverlayRefs>>(new Map());
 
   const nicknameRef = useRef<string>('');
-  const colorRef = useRef<string>('#6aeaa0');
+  const bodyColorRef = useRef<string>('#6aeaa0');
+  const headColorRef = useRef<string>(DEFAULT_HEAD_COLOR);
   if (!nicknameRef.current) {
     nicknameRef.current = loadOrMintNickname();
-    colorRef.current = colorFromNickname(nicknameRef.current);
+    bodyColorRef.current = colorFromNickname(nicknameRef.current);
   }
 
   const [hint, setHint] = useState('click any tile to walk.');
   const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
   const [overlayList, setOverlayList] = useState<OverlayEntry[]>([
-    { id: 'self', nickname: nicknameRef.current, color: colorRef.current, isSelf: true },
+    { id: 'self', nickname: nicknameRef.current, color: bodyColorRef.current, isSelf: true },
   ]);
   const [chatDraft, setChatDraft] = useState('');
 
@@ -458,7 +488,8 @@ export default function AtriumPage() {
     bob: 0,
     peers: new Map(),
     selfId: null,
-    selfColor: colorRef.current,
+    selfBodyColor: bodyColorRef.current,
+    selfHeadColor: headColorRef.current,
     selfChat: null,
   });
 
@@ -498,7 +529,8 @@ export default function AtriumPage() {
             stateRef.current.peers.set(p.id, {
               id: p.id,
               nickname: p.nickname,
-              color: p.color,
+              bodyColor: p.bodyColor,
+              headColor: p.headColor,
               tile: p.tile,
               pos: [p.tile[0], p.tile[1]],
               path: [],
@@ -509,8 +541,8 @@ export default function AtriumPage() {
             });
           }
           setOverlayList([
-            { id: 'self', nickname: nicknameRef.current, color: colorRef.current, isSelf: true },
-            ...msg.peers.map((p) => ({ id: p.id, nickname: p.nickname, color: p.color, isSelf: false })),
+            { id: 'self', nickname: nicknameRef.current, color: bodyColorRef.current, isSelf: true },
+            ...msg.peers.map((p) => ({ id: p.id, nickname: p.nickname, color: p.bodyColor, isSelf: false })),
           ]);
           break;
         }
@@ -519,7 +551,8 @@ export default function AtriumPage() {
           stateRef.current.peers.set(p.id, {
             id: p.id,
             nickname: p.nickname,
-            color: p.color,
+            bodyColor: p.bodyColor,
+            headColor: p.headColor,
             tile: p.tile,
             pos: [p.tile[0], p.tile[1]],
             path: [],
@@ -531,7 +564,17 @@ export default function AtriumPage() {
           setOverlayList((prev) =>
             prev.some((o) => o.id === p.id)
               ? prev
-              : [...prev, { id: p.id, nickname: p.nickname, color: p.color, isSelf: false }],
+              : [...prev, { id: p.id, nickname: p.nickname, color: p.bodyColor, isSelf: false }],
+          );
+          break;
+        }
+        case 'style': {
+          const peer = stateRef.current.peers.get(msg.id);
+          if (!peer) break;
+          peer.bodyColor = msg.bodyColor;
+          peer.headColor = msg.headColor;
+          setOverlayList((prev) =>
+            prev.map((o) => (o.id === msg.id ? { ...o, color: msg.bodyColor } : o)),
           );
           break;
         }
@@ -583,7 +626,14 @@ export default function AtriumPage() {
           return;
         }
         backoffMs = 1000;
-        ws.send(JSON.stringify({ t: 'hello', nickname: nicknameRef.current, color: colorRef.current } satisfies ClientMsg));
+        ws.send(
+          JSON.stringify({
+            t: 'hello',
+            nickname: nicknameRef.current,
+            bodyColor: bodyColorRef.current,
+            headColor: headColorRef.current,
+          } satisfies ClientMsg),
+        );
       });
       ws.addEventListener('message', onMessage);
       ws.addEventListener('close', () => {
@@ -591,7 +641,7 @@ export default function AtriumPage() {
         if (cancelled) return;
         // drop everyone — they'll reappear on the next init
         stateRef.current.peers.clear();
-        setOverlayList([{ id: 'self', nickname: nicknameRef.current, color: colorRef.current, isSelf: true }]);
+        setOverlayList([{ id: 'self', nickname: nicknameRef.current, color: bodyColorRef.current, isSelf: true }]);
         scheduleReconnect();
       });
       ws.addEventListener('error', () => {
@@ -787,6 +837,195 @@ export default function AtriumPage() {
     };
   }, [walkable]);
 
+  // identity / figure persistence ------------------------------------------
+
+  const [session, setSession] = useState<Session | null>(null);
+  const [identityLoading, setIdentityLoading] = useState(true);
+  const [signInOpen, setSignInOpen] = useState(false);
+  const [handleInput, setHandleInput] = useState('');
+  const [signingIn, setSigningIn] = useState(false);
+  const [signInErr, setSignInErr] = useState<string | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [bodyDraft, setBodyDraft] = useState('#6aeaa0');
+  const [headDraft, setHeadDraft] = useState(DEFAULT_HEAD_COLOR);
+  const [saving, setSaving] = useState(false);
+  const [saveErr, setSaveErr] = useState<string | null>(null);
+
+  const did = session?.info.sub ?? '';
+  const { data: profile } = useProfile({ actor: did });
+  const signedInHandle = profile?.handle ?? null;
+
+  // shared helpers — apply local color/nickname changes everywhere they're
+  // used (refs the render loop reads, react state for the overlay list, the
+  // ws so peers see the new appearance).
+
+  const applyColors = useCallback((bodyColor: string, headColor: string) => {
+    bodyColorRef.current = bodyColor;
+    headColorRef.current = headColor;
+    stateRef.current.selfBodyColor = bodyColor;
+    stateRef.current.selfHeadColor = headColor;
+    setOverlayList((prev) => prev.map((o) => (o.id === 'self' ? { ...o, color: bodyColor } : o)));
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ t: 'style', bodyColor, headColor } satisfies ClientMsg));
+    }
+  }, []);
+
+  // Renaming mid-session needs the server to re-broadcast the peer's name —
+  // the wire protocol only does that on hello, so the cheapest way to
+  // propagate is to drop the connection and let the reconnect logic fire.
+  const applyNickname = useCallback((nick: string) => {
+    if (nicknameRef.current === nick) return;
+    nicknameRef.current = nick;
+    setOverlayList((prev) => prev.map((o) => (o.id === 'self' ? { ...o, nickname: nick } : o)));
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      try {
+        ws.close();
+      } catch {
+        /* ignore */
+      }
+    }
+  }, []);
+
+  // load existing session + figure record on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await getCurrentSession();
+        if (cancelled) return;
+        if (!s) return;
+        setSession(s);
+        try {
+          const agent = new OAuthUserAgent(s as unknown as ConstructorParameters<typeof OAuthUserAgent>[0]);
+          const rpc = new XRPC({ handler: agent });
+          const r = await rpc.get('com.atproto.repo.getRecord', {
+            params: {
+              repo: s.info.sub as ActorIdentifier,
+              collection: 'com.imlunahey.atrium.figure',
+              rkey: 'self',
+            },
+          });
+          if (cancelled) return;
+          const v = (r.data as unknown as { value?: { bodyColor?: string; headColor?: string } }).value;
+          const okHex = (h: unknown): h is string => typeof h === 'string' && /^#[0-9a-fA-F]{6}$/.test(h);
+          if (okHex(v?.bodyColor)) {
+            applyColors(v!.bodyColor!.toLowerCase(), okHex(v?.headColor) ? v!.headColor!.toLowerCase() : DEFAULT_HEAD_COLOR);
+          }
+        } catch {
+          // no figure record yet — fine, the user starts with derived colors
+        }
+      } finally {
+        if (!cancelled) setIdentityLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [applyColors]);
+
+  // when the profile resolves, swap the nickname → handle (forces a ws
+  // reconnect so peers see the new label too).
+  useEffect(() => {
+    if (signedInHandle) applyNickname(signedInHandle);
+  }, [signedInHandle, applyNickname]);
+
+  const onSignInSubmit = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const handle = handleInput.trim();
+      if (!handle) return;
+      setSignInErr(null);
+      setSigningIn(true);
+      try {
+        ensureOAuthConfigured();
+        const url = await createAuthorizationUrl({
+          target: { type: 'account', identifier: handle as ActorIdentifier },
+          scope: ATRIUM_FIGURE_SCOPE,
+          state: { returnTo: '/labs/atrium' },
+        });
+        window.location.assign(url.toString());
+      } catch (e2) {
+        setSignInErr(e2 instanceof Error ? e2.message : String(e2));
+        setSigningIn(false);
+      }
+    },
+    [handleInput],
+  );
+
+  const onSignOut = useCallback(async () => {
+    if (!session) return;
+    const sessionDid = session.info.sub;
+    try {
+      const agent = new OAuthUserAgent(session as unknown as ConstructorParameters<typeof OAuthUserAgent>[0]);
+      await agent.signOut();
+    } catch {
+      try {
+        deleteStoredSession(sessionDid as Parameters<typeof deleteStoredSession>[0]);
+      } catch {
+        /* ignore */
+      }
+    }
+    setSession(null);
+    setPanelOpen(false);
+    // mint a fresh guest identity so the next session looks distinct from
+    // the one we just signed out of (instead of inheriting the handle's
+    // colors without the handle).
+    const fresh = randomNickname();
+    try {
+      localStorage.setItem('atrium-nickname', fresh);
+    } catch {
+      /* ignore */
+    }
+    applyNickname(fresh);
+    applyColors(colorFromNickname(fresh), DEFAULT_HEAD_COLOR);
+  }, [session, applyNickname, applyColors]);
+
+  const openPanel = useCallback(() => {
+    setBodyDraft(bodyColorRef.current);
+    setHeadDraft(headColorRef.current);
+    setSaveErr(null);
+    setPanelOpen(true);
+  }, []);
+
+  const onSavePanel = useCallback(async () => {
+    if (!session) return;
+    const okHex = (h: string) => /^#[0-9a-f]{6}$/.test(h.toLowerCase());
+    if (!okHex(bodyDraft) || !okHex(headDraft)) {
+      setSaveErr('colors must be 6-digit #rrggbb hex.');
+      return;
+    }
+    setSaving(true);
+    setSaveErr(null);
+    try {
+      const agent = new OAuthUserAgent(session as unknown as ConstructorParameters<typeof OAuthUserAgent>[0]);
+      const rpc = new XRPC({ handler: agent });
+      const now = new Date().toISOString();
+      const record = {
+        $type: 'com.imlunahey.atrium.figure',
+        bodyColor: bodyDraft.toLowerCase(),
+        headColor: headDraft.toLowerCase(),
+        createdAt: now,
+        updatedAt: now,
+      };
+      await rpc.call('com.atproto.repo.putRecord', {
+        data: {
+          repo: session.info.sub as ActorIdentifier,
+          collection: 'com.imlunahey.atrium.figure',
+          rkey: 'self',
+          record,
+        },
+      });
+      applyColors(record.bodyColor, record.headColor);
+      setPanelOpen(false);
+    } catch (e) {
+      setSaveErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSaving(false);
+    }
+  }, [session, bodyDraft, headDraft, applyColors]);
+
   const onChatSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -858,6 +1097,89 @@ export default function AtriumPage() {
             {statusLabel}
           </div>
 
+          <div className="at-identity">
+            {identityLoading ? (
+              <span className="at-identity-loading">checking session…</span>
+            ) : session ? (
+              <>
+                <span className="at-identity-handle">@{signedInHandle ?? '…'}</span>
+                <button type="button" className="at-id-btn" onClick={openPanel}>edit avatar</button>
+                <button type="button" className="at-id-btn ghost" onClick={() => void onSignOut()}>sign out</button>
+              </>
+            ) : (
+              <>
+                <span className="at-identity-handle muted">guest · {nicknameRef.current}</span>
+                {signInOpen ? (
+                  <form className="at-signin-form" onSubmit={(e) => void onSignInSubmit(e)}>
+                    <input
+                      className="at-signin-input"
+                      placeholder="your.handle"
+                      value={handleInput}
+                      onChange={(e) => setHandleInput(e.target.value)}
+                      autoComplete="username"
+                      autoCapitalize="off"
+                      spellCheck={false}
+                      autoFocus
+                      disabled={signingIn}
+                    />
+                    <button className="at-id-btn" type="submit" disabled={!handleInput.trim() || signingIn}>
+                      {signingIn ? '…' : 'go'}
+                    </button>
+                    <button
+                      className="at-id-btn ghost"
+                      type="button"
+                      onClick={() => {
+                        setSignInOpen(false);
+                        setSignInErr(null);
+                      }}
+                    >
+                      cancel
+                    </button>
+                  </form>
+                ) : (
+                  <button type="button" className="at-id-btn" onClick={() => setSignInOpen(true)}>
+                    sign in
+                  </button>
+                )}
+                {signInErr ? <span className="at-id-err">{signInErr}</span> : null}
+              </>
+            )}
+          </div>
+
+          {panelOpen && session ? (
+            <div className="at-panel">
+              <div className="at-panel-title">edit avatar</div>
+              <p className="at-panel-sub">saved as <code>com.imlunahey.atrium.figure/self</code> on your pds.</p>
+              <label className="at-panel-row">
+                <span>body</span>
+                <input
+                  type="color"
+                  value={bodyDraft}
+                  onChange={(e) => setBodyDraft(e.target.value.toLowerCase())}
+                />
+                <code>{bodyDraft}</code>
+              </label>
+              <label className="at-panel-row">
+                <span>head</span>
+                <input
+                  type="color"
+                  value={headDraft}
+                  onChange={(e) => setHeadDraft(e.target.value.toLowerCase())}
+                />
+                <code>{headDraft}</code>
+              </label>
+              <div className="at-panel-actions">
+                <button type="button" className="at-id-btn primary" onClick={() => void onSavePanel()} disabled={saving}>
+                  {saving ? 'saving…' : 'save'}
+                </button>
+                <button type="button" className="at-id-btn ghost" onClick={() => setPanelOpen(false)} disabled={saving}>
+                  cancel
+                </button>
+              </div>
+              {saveErr ? <div className="at-id-err">{saveErr}</div> : null}
+            </div>
+          ) : null}
+
           <form className="at-chat" onSubmit={onChatSubmit}>
             <input
               className="at-chat-input"
@@ -871,7 +1193,7 @@ export default function AtriumPage() {
           </form>
 
           <div className="at-bar">
-            <span className="at-room">~/atrium · 10×10 · v2</span>
+            <span className="at-room">~/atrium · 10×10 · v3</span>
             <span className="at-hint">{hint}</span>
           </div>
         </div>
@@ -1067,8 +1389,143 @@ const CSS = `
   }
   .at-chat-input::placeholder { color: var(--color-fg-faint); }
 
+  .at-identity {
+    position: absolute;
+    top: var(--sp-3);
+    right: var(--sp-3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid var(--color-accent-dim);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-fg-dim);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    max-width: calc(100% - var(--sp-6));
+    flex-wrap: wrap;
+  }
+  .at-identity-handle { color: var(--color-accent); }
+  .at-identity-handle.muted { color: var(--color-fg-faint); }
+  .at-identity-loading { color: var(--color-fg-faint); }
+
+  .at-id-btn {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: var(--color-accent);
+    color: #000;
+    border: 0;
+    padding: 3px 8px;
+    cursor: pointer;
+    text-transform: lowercase;
+  }
+  .at-id-btn:hover:not(:disabled) { filter: brightness(1.1); }
+  .at-id-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .at-id-btn.ghost {
+    background: transparent;
+    color: var(--color-fg-dim);
+    border: 1px solid var(--color-border);
+  }
+  .at-id-btn.ghost:hover:not(:disabled) { color: var(--color-accent); border-color: var(--color-accent-dim); }
+  .at-id-btn.primary { background: var(--color-accent); color: #000; }
+
+  .at-signin-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .at-signin-input {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--color-border);
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 6px;
+    outline: 0;
+    width: 160px;
+  }
+  .at-signin-input:focus { border-color: var(--color-accent-dim); }
+  .at-id-err {
+    color: #ff8888;
+    font-size: 10px;
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  .at-panel {
+    position: absolute;
+    top: 60px;
+    right: var(--sp-3);
+    width: min(280px, calc(100% - var(--sp-6)));
+    padding: var(--sp-3);
+    background: rgba(0, 0, 0, 0.92);
+    border: 1px solid var(--color-accent-dim);
+    box-shadow: 0 0 24px color-mix(in oklch, var(--color-accent) 22%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--color-fg-dim);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+  .at-panel-title {
+    color: var(--color-accent);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .at-panel-sub {
+    color: var(--color-fg-faint);
+    font-size: 10px;
+    line-height: 1.4;
+    margin: 0;
+  }
+  .at-panel-sub code {
+    background: rgba(255, 255, 255, 0.04);
+    padding: 1px 4px;
+  }
+  .at-panel-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-size: 11px;
+  }
+  .at-panel-row > span:first-child {
+    width: 36px;
+    color: var(--color-fg-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 10px;
+  }
+  .at-panel-row input[type='color'] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    padding: 0;
+  }
+  .at-panel-row code {
+    color: var(--color-accent);
+    font-size: 11px;
+  }
+  .at-panel-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
   @media (max-width: 760px) {
     .at-status { font-size: 9px; padding: 3px 8px; }
     .at-chat { width: calc(100% - var(--sp-4)); bottom: 60px; }
+    .at-identity { font-size: 10px; padding: 3px 6px; }
+    .at-signin-input { width: 120px; }
+    .at-panel { top: auto; bottom: 110px; right: var(--sp-3); }
   }
 `;

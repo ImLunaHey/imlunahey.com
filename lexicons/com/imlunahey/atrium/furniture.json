@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "com.imlunahey.atrium.furniture",
+  "description": "A furniture item the user owns in the atrium hangout. One record per item (rkey=tid); the inventory is the collection of records under this collection. Placement in a specific room is a separate concern (handled by a per-room layout record in a future revision).",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["kind", "color", "createdAt"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "knownValues": ["chair", "table", "plant", "lamp", "crate", "rug"],
+            "description": "Which procedural shape the renderer composes for this item. Clients must ignore items whose kind they don't recognise (forward compatibility for future kinds)."
+          },
+          "color": {
+            "type": "string",
+            "minLength": 7,
+            "maxLength": 7,
+            "description": "Lowercase #rrggbb hex. Top-face color; the renderer derives the side-face shades."
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "description": "Optional human label for the item — shown in the inventory UI."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Client-supplied creation timestamp. UTC."
+          }
+        }
+      }
+    }
+  }
+}

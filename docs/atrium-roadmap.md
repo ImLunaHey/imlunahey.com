@@ -61,31 +61,63 @@ chat speech bubbles. No persistence yet — purely ephemeral.
 Ship criteria: open the page in two browser tabs, see both avatars walk
 around the same room, exchange chat messages. ✓
 
-## v3 — atproto persistence
+## v3 — atproto persistence (shipped)
 
-Goal: your avatar appearance and furniture inventory follow you across
-devices. Identity = your atproto did.
+Goal: your avatar appearance follows you across devices. Identity =
+your atproto did.
 
-- [ ] **OAuth sign-in** using the existing `lib/oauth.ts` (same flow
-      whtwnd / pdf-uploader / list-cleaner already use). Guest mode
-      stays available — sign-in is opt-in to unlock customization.
-- [ ] **Custom lexicon: `com.imlunahey.atrium.figure`** — a single
-      record-per-user holding avatar style choices: body color, head
-      color, hat (later), shirt (later), pants (later). Read on join,
-      written on save.
-- [ ] **Custom lexicon: `com.imlunahey.atrium.furniture`** — one record
-      per owned furniture item: kind, color, optional name. Inventory
-      is the user's collection of these records.
-- [ ] **Lexicon publish script** — add a new entry to
-      `scripts/lexicons-publish.ts` so the schemas live on
-      `com.imlunahey.atrium.*` paths the way our other lexicons do.
-- [ ] **Avatar customization UI** — small panel: pick body color,
-      head color. Save → write the figure record. Loads on next visit.
-- [ ] **Persistent presence color** — your avatar shows up in the same
-      colors for everyone in the room.
+- [x] **OAuth sign-in** in `Atrium.tsx` using the existing
+      `lib/oauth.ts`. Guest mode stays available — sign-in is opt-in.
+      `ATRIUM_FIGURE_SCOPE` requests create / update / delete on
+      `com.imlunahey.atrium.figure`; `ATRIUM_FURNITURE_SCOPE` requests
+      the same on the furniture collection (kept in `ALL_SCOPES` so the
+      hosted client metadata advertises them, but only figure scope is
+      actually requested at sign-in time today).
+- [x] **Custom lexicon: `com.imlunahey.atrium.figure`** at
+      `lexicons/com/imlunahey/atrium/figure.json`. `key: literal:self`
+      so each user has exactly one figure record. Required:
+      bodyColor, headColor, createdAt. Optional: updatedAt. Future
+      revisions will add hair / shirt / pants / hat layers — clients
+      should ignore unknown properties.
+- [x] **Custom lexicon: `com.imlunahey.atrium.furniture`** at
+      `lexicons/com/imlunahey/atrium/furniture.json`. `key: tid`,
+      one record per owned item. The lexicon is defined now so the
+      v4 catalogue + room editor can write against a stable schema
+      from the start. No UI in v3.
+- [x] **Lexicon publish script** picks the new files up automatically
+      — the existing `scripts/lexicons-publish.ts` walks every json
+      file under `lexicons/`, so no edits needed beyond adding the
+      files.
+- [x] **Wire protocol bumped** — `color` split into `bodyColor` +
+      `headColor` everywhere (hello/init/join). New `style` message
+      (both directions) lets a client update its colors mid-session
+      without reconnecting; server validates each color via a hex
+      regex with fallbacks.
+- [x] **Avatar customization UI** — top-right identity panel shows
+      `guest · <nickname>` + sign-in button when signed out, or
+      `@handle` + edit/sign-out when signed in. "edit avatar" opens
+      a floating panel with two `<input type="color">` widgets. Save
+      → `putRecord(rkey: 'self')` to the user's PDS, then a `style`
+      broadcast so the change propagates to peers immediately.
+- [x] **Auto-load on mount** — `getCurrentSession()` runs in a separate
+      effect; on hit it fetches the figure record via XRPC
+      `com.atproto.repo.getRecord` and applies the stored colors.
+      No-record-yet is treated as "user starts with derived colors",
+      not an error. Handle resolution rides the existing
+      `useProfile` hook (same one PdfUploader uses).
+- [x] **Identity → nickname** — when the profile resolves, nickname
+      switches from the guest `adjective-noun` to the user's handle.
+      Force-closes the ws to trigger reconnect, so peers re-init with
+      the new nickname (the protocol only broadcasts nicknames on
+      hello, not on a `rename` op — the close+reconnect is the
+      cheapest way to propagate it without adding a new message type).
+- [x] **Sign-out path** — agent.signOut() falls back to
+      deleteStoredSession on failure. Mints a fresh guest nickname so
+      the next session looks distinct, and resets colors to the
+      derived guest defaults.
 
 Ship criteria: customize your avatar, sign out, sign in on another
-device, your avatar matches.
+device, your avatar matches. ✓
 
 ## v4+ — depth
 

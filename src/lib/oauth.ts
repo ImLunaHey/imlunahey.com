@@ -46,6 +46,22 @@ export const PDF_SCOPE = [
 // listRecords read to find them doesn't need an extra scope (atproto
 // grants base read). Delete-only keeps the consent screen honest.
 export const LISTBLOCK_SCOPE = 'atproto repo:app.bsky.graph.listblock?action=delete';
+// Atrium lab persists the avatar appearance (figure, rkey=self) and
+// owned furniture inventory (one record per item) to the user's PDS.
+// Both collections need full CRUD so the customization panel can edit +
+// the inventory editor (later) can prune.
+export const ATRIUM_FIGURE_SCOPE = [
+  'atproto',
+  'repo:com.imlunahey.atrium.figure?action=create',
+  'repo:com.imlunahey.atrium.figure?action=update',
+  'repo:com.imlunahey.atrium.figure?action=delete',
+].join(' ');
+export const ATRIUM_FURNITURE_SCOPE = [
+  'atproto',
+  'repo:com.imlunahey.atrium.furniture?action=create',
+  'repo:com.imlunahey.atrium.furniture?action=update',
+  'repo:com.imlunahey.atrium.furniture?action=delete',
+].join(' ');
 
 /**
  * The specific repo scope strings that a token MUST carry to write the
@@ -72,6 +88,12 @@ export const WHTWND_DELETE_SCOPE = 'repo:com.whtwnd.blog.entry?action=delete';
 export const PDF_WRITE_SCOPE = 'repo:com.imlunahey.pdf?action=create';
 export const PDF_DELETE_SCOPE = 'repo:com.imlunahey.pdf?action=delete';
 export const LISTBLOCK_DELETE_SCOPE = 'repo:app.bsky.graph.listblock?action=delete';
+export const ATRIUM_FIGURE_WRITE_SCOPE = 'repo:com.imlunahey.atrium.figure?action=create';
+export const ATRIUM_FIGURE_UPDATE_SCOPE = 'repo:com.imlunahey.atrium.figure?action=update';
+export const ATRIUM_FIGURE_DELETE_SCOPE = 'repo:com.imlunahey.atrium.figure?action=delete';
+export const ATRIUM_FURNITURE_WRITE_SCOPE = 'repo:com.imlunahey.atrium.furniture?action=create';
+export const ATRIUM_FURNITURE_UPDATE_SCOPE = 'repo:com.imlunahey.atrium.furniture?action=update';
+export const ATRIUM_FURNITURE_DELETE_SCOPE = 'repo:com.imlunahey.atrium.furniture?action=delete';
 
 export function sessionHasScope(session: Session | null, scope: string): boolean {
   if (!session) return false;
@@ -123,6 +145,12 @@ export const ALL_SCOPES = [
   PDF_WRITE_SCOPE,
   PDF_DELETE_SCOPE,
   LISTBLOCK_DELETE_SCOPE,
+  ATRIUM_FIGURE_WRITE_SCOPE,
+  ATRIUM_FIGURE_UPDATE_SCOPE,
+  ATRIUM_FIGURE_DELETE_SCOPE,
+  ATRIUM_FURNITURE_WRITE_SCOPE,
+  ATRIUM_FURNITURE_UPDATE_SCOPE,
+  ATRIUM_FURNITURE_DELETE_SCOPE,
 ].join(' ');
 
 /**
