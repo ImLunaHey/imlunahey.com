@@ -49,22 +49,41 @@ interface ResponseInit {
   webSocket?: WebSocket;
 }
 
+/** Minimal D1 surface — only what `src/server/atrium-state.ts` calls. If
+ *  another consumer wants more (`batch`, `dump`, `exec`, etc.), grow this
+ *  interface in place. */
+interface D1PreparedStatement {
+  bind(...values: unknown[]): D1PreparedStatement;
+  first<T = unknown>(): Promise<T | null>;
+  run(): Promise<{ success: boolean; meta?: Record<string, unknown> }>;
+  all<T = unknown>(): Promise<{ results: T[] }>;
+}
+
+interface D1Database {
+  prepare(query: string): D1PreparedStatement;
+}
+
+type AtriumEnv = {
+  PRESENCE_DO: DurableObjectNamespace;
+  ATRIUM_DO: DurableObjectNamespace;
+  ATRIUM_DB: D1Database;
+  [key: string]: unknown;
+};
+
 declare module 'cloudflare:workers' {
-  export class DurableObject {
-    /** Cloudflare's runtime exposes the state as `ctx` on the instance. */
+  export class DurableObject<E = AtriumEnv> {
+    /** Cloudflare's runtime exposes the state as `ctx` and the env as
+     *  `env` on the instance — both available in any method. */
     protected readonly ctx: DurableObjectState;
-    constructor(state: DurableObjectState, env: unknown);
+    protected readonly env: E;
+    constructor(state: DurableObjectState, env: E);
     /** Hibernation lifecycle hooks — implement on subclasses that use
      *  `state.acceptWebSocket()`. */
     webSocketMessage?(ws: WebSocket, message: string | ArrayBuffer): void | Promise<void>;
     webSocketClose?(ws: WebSocket, code: number, reason: string, wasClean: boolean): void | Promise<void>;
     webSocketError?(ws: WebSocket, error: unknown): void | Promise<void>;
   }
-  export const env: {
-    PRESENCE_DO: DurableObjectNamespace;
-    ATRIUM_DO: DurableObjectNamespace;
-    [key: string]: unknown;
-  };
+  export const env: AtriumEnv;
 }
 
 // Cloudflare exposes a non-standard `default` cache on `caches` that's used

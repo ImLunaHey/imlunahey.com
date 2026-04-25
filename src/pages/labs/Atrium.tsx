@@ -85,35 +85,14 @@ function portalsFor(roomId: string): Portal[] {
  *  neighbour. West first since portals are mostly on east/south edges
  *  and "into the room" is west/north for those. Falls back to the
  *  caller's default if every neighbour is blocked or out of bounds. */
-/** Resolve the starting room. URL wins when provided (so
- *  /labs/atrium/garden always opens the garden). With no URL roomId
- *  (bare /labs/atrium), restore the last room from localStorage so
- *  a refresh doesn't dump you back in the lobby. Brand-new visitors
- *  with no stored room land in the lobby. */
-function initialRoomFromStorage(initialRoom: string | undefined): string {
-  if (initialRoom) return initialRoom;
-  if (typeof localStorage === 'undefined') return 'lobby';
-  try {
-    const stored = localStorage.getItem('atrium-current-room');
-    if (stored && stored.trim()) return stored.trim();
-  } catch {
-    /* private browsing / quota — fall through */
-  }
-  return 'lobby';
-}
-
-/** The room we were in before the current one — persisted alongside
- *  the current room so a refresh lands the avatar next to the entrance
- *  portal instead of dumping them in the centre. Null on a brand-new
- *  visit (no entrance to spawn at). */
-function loadPreviousRoom(): string | null {
-  if (typeof localStorage === 'undefined') return null;
-  try {
-    return localStorage.getItem('atrium-previous-room');
-  } catch {
-    return null;
-  }
-}
+/** Server-side snapshot of an atrium session — the room the user was
+ *  last in and the exact tile + sitting state at the time. The DO is
+ *  the only writer; the client receives this in `init.you` whenever it
+ *  (re)connects to a room and uses it to decide where to spawn. */
+type AtriumSavedState = {
+  currentRoom: string;
+  position: { tile: [number, number]; sitting: [number, number] | null } | null;
+};
 
 function findSpawnAdjacent(walkable: boolean[][], portal: Tile, fallback: Tile): Tile {
   const [pi, pj] = portal;
@@ -638,7 +617,7 @@ type WirePeer = {
 };
 
 type ServerMsg =
-  | { t: 'init'; selfId: string; peers: WirePeer[] }
+  | { t: 'init'; selfId: string; peers: WirePeer[]; you: AtriumSavedState | null }
   | { t: 'join'; peer: WirePeer }
   | { t: 'walk'; id: string; from: Tile; path: Tile[]; at: number }
   | { t: 'chat'; id: string; text: string; at: number }
@@ -1010,14 +989,13 @@ const DEFAULT_HEAD_COLOR = '#f3d7b0';
 
 export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
   // Room is internal state, not a route param. Walking onto a portal
-  // calls setRoom(dest) — no URL change, no remount. URL semantics:
-  //   - explicit /labs/atrium/X  → start in X (URL wins for deep links)
-  //   - bare /labs/atrium        → restore last room from localStorage,
-  //                                 fall back to 'lobby' for first-time
-  //                                 visitors
-  // Walking through a portal also writes to localStorage so refresh
-  // keeps you where you were.
-  const [roomId, setRoom] = useState<string>(() => initialRoomFromStorage(initialRoom));
+  // calls setRoom(dest) — no URL change, no remount. The full session
+  // (current room, previous room, exact tile + sitting state) is loaded
+  // from D1 on mount and saved back on every change so refresh, tab
+  // close, and even a different device end up in the same place.
+  // Initial value here is just a placeholder — the D1 fetch effect
+  // overwrites it once the bootstrap arrives.
+  const [roomId, setRoom] = useState<string>(initialRoom ?? 'lobby');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectRef = useRef<(() => void) | null>(null);
@@ -1030,30 +1008,18 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
   useEffect(() => {
     themeRef.current = themeForRoom(roomId);
     portalsRef.current = portalsFor(roomId);
-    // Persist (current, previous) so a refresh restores both the room
-    // AND spawns next to the entrance portal — without the previous
-    // value, the spawn lookup would fall through and drop the avatar
-    // in the centre. previousRoomRef still holds the OLD value at
-    // this point in the effect (we update it later in the spawn
-    // effect), so this captures "I'm now in <current>, I came from
-    // <previous>".
-    if (typeof localStorage !== 'undefined') {
-      try {
-        localStorage.setItem('atrium-current-room', roomId);
-        const prev = previousRoomRef.current;
-        if (prev) localStorage.setItem('atrium-previous-room', prev);
-      } catch {
-        /* ignore — storage full / private mode */
-      }
-    }
   }, [roomId]);
 
-  // Tracks the room we were just in (for entrance-portal spawn). useRef
-  // is safe here because the component no longer remounts on room
-  // change — room lives in state, not in the URL/route. Seeded from
-  // localStorage so a refresh of the current room reproduces the
-  // entrance-spawn that the original arrival did.
-  const previousRoomRef = useRef<string | null>(loadPreviousRoom());
+  // Tracks the room we were just in (for entrance-portal spawn). Seeded
+  // by the D1 bootstrap effect; null until then. useRef is safe here
+  // because the component no longer remounts on room change.
+  const previousRoomRef = useRef<string | null>(null);
+  /** Set by the WS `init` handler when the server returned saved state
+   *  for this room — the spawn effect uses it (exact tile + sitting)
+   *  instead of falling back to entrance / centre. Cleared after
+   *  consumption so a subsequent in-app room change doesn't reuse a
+   *  stale value. */
+  const pendingSpawnRef = useRef<{ tile: [number, number]; sitting: [number, number] | null } | null>(null);
 
   // Stable callback for the tick loop to fire room changes without
   // capturing setRoom in a closure that gets baked into the canvas
@@ -1062,6 +1028,14 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
   useEffect(() => {
     setRoomRef.current = setRoom;
   }, [setRoom]);
+
+  // The mount-once tick loop reads the current room from this ref so it
+  // can persist position snapshots tagged with the right room name on
+  // every walk completion + sit/stand.
+  const roomIdRef = useRef(roomId);
+  useEffect(() => {
+    roomIdRef.current = roomId;
+  }, [roomId]);
 
   const nicknameRef = useRef<string>('');
   const bodyColorRef = useRef<string>('#6aeaa0');
@@ -1123,27 +1097,42 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
     furnitureRef.current = furnitureFor(roomId);
     walkableRef.current = buildWalkable(furnitureRef.current);
 
-    // Spawn next to the entrance portal — i.e. the portal in the new
-    // room whose destination is the room we just came from. If we don't
-    // know where we came from (first time entering ANY room this mount),
-    // fall back to the room centre.
+    // Spawn priority:
+    //   1. If `init` returned a saved position for THIS room (refresh
+    //      restoration), use that exact tile + sitting state.
+    //   2. Otherwise fall back to the entrance portal — the portal in
+    //      this room whose destination is the room we just came from.
+    //   3. Otherwise drop the avatar in the centre.
+    const a = stateRef.current.avatar;
     let spawn: Tile = [5, 5];
-    const prev = previousRoomRef.current;
-    if (prev && prev !== roomId) {
-      const entrance = portalsRef.current.find((p) => p.dest === prev);
-      if (entrance) {
-        spawn = findSpawnAdjacent(walkableRef.current, entrance.tile, [5, 5]);
+    let spawnSitting: [number, number] | null = null;
+    const pending = pendingSpawnRef.current;
+    if (pending) {
+      const inb =
+        pending.tile[0] >= 0 && pending.tile[0] < ROOM_SIZE &&
+        pending.tile[1] >= 0 && pending.tile[1] < ROOM_SIZE;
+      if (inb && walkableRef.current[pending.tile[0]][pending.tile[1]]) {
+        spawn = [pending.tile[0], pending.tile[1]];
+        spawnSitting = pending.sitting;
+      }
+      pendingSpawnRef.current = null;
+    } else {
+      const prev = previousRoomRef.current;
+      if (prev && prev !== roomId) {
+        const entrance = portalsRef.current.find((p) => p.dest === prev);
+        if (entrance) {
+          spawn = findSpawnAdjacent(walkableRef.current, entrance.tile, [5, 5]);
+        }
       }
     }
     previousRoomRef.current = roomId;
 
-    const a = stateRef.current.avatar;
     a.tile = spawn;
     a.pos = [spawn[0], spawn[1]];
     a.path = [];
     a.walking = false;
     a.lastStep = performance.now();
-    a.sitting = null;
+    a.sitting = spawnSitting;
     a.sitOnArrival = null;
     a.emote = null;
     setHint('walk onto a glowing tile to teleport. click a chair to sit; type /wave or /dance to emote.');
@@ -1192,6 +1181,21 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
             { id: 'self', nickname: nicknameRef.current, color: bodyColorRef.current, isSelf: true },
             ...msg.peers.map((p) => ({ id: p.id, nickname: p.nickname, color: p.bodyColor, isSelf: false })),
           ]);
+          // Server-side persisted state for THIS user. The DO already
+          // filtered: `you.position` is the saved tile/sitting only when
+          // the user's last room matches the room we're joining now —
+          // otherwise position is null and we use entrance / centre.
+          if (msg.you?.position) {
+            const a = stateRef.current.avatar;
+            const inb =
+              msg.you.position.tile[0] >= 0 && msg.you.position.tile[0] < ROOM_SIZE &&
+              msg.you.position.tile[1] >= 0 && msg.you.position.tile[1] < ROOM_SIZE;
+            if (inb) {
+              a.tile = msg.you.position.tile;
+              a.pos = [msg.you.position.tile[0], msg.you.position.tile[1]];
+              a.sitting = msg.you.position.sitting;
+            }
+          }
           break;
         }
         case 'join': {

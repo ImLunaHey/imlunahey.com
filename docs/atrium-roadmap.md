@@ -342,6 +342,46 @@ portal you originally entered through.
 Brand-new visitors still get null + centre spawn (no entrance to
 spawn at). Same with deep links from outside the app on a fresh tab.
 
+### v7.6 — server-side persistence in D1, written by the DO (shipped)
+
+localStorage was never going to fix "I walked somewhere and refresh
+puts me at the centre" because there's no `previousRoom` to consult
+when nothing changed *between* rooms. Switched persistence to D1,
+keyed by `guest:<clientId>`, written exclusively by `AtriumDO`.
+
+- [x] D1 binding `ATRIUM_DB` declared in `wrangler.jsonc` with
+      `database_name: atrium` and a placeholder `database_id` the
+      operator fills in once via `wrangler d1 create atrium`. Migration
+      lives at `migrations/atrium/0001_init.sql` creating
+      `atrium_state(user_id PK, current_room, previous_room,
+      position_json, updated_at)`.
+- [x] `AtriumDO` is now the sole writer. It loads the user's previous
+      saved state from D1 on `hello`, broadcasts it to the client in
+      the new `init.you` field, and writes the user's current room +
+      tile + sitting state on every `walk` and `sit` (fire-and-forget,
+      so the broadcast doesn't wait on an edge round-trip).
+- [x] Each attachment now carries `roomId` (read from the upgrade
+      URL's `?room=` param) so the `webSocketMessage` D1 writes know
+      which room to persist under, even after a hibernation wake
+      where the original `fetch` context is gone.
+- [x] Client side, all localStorage room/position bookkeeping is gone
+      and the standalone `server/atrium-state.ts` server fns have
+      been deleted. The client just reads `init.you.position` (already
+      filtered to the current room by the DO) and uses it as the
+      pending spawn — same shape as the old localStorage path but
+      sourced from the server.
+- [x] Failures degrade silently: the DO's `loadSavedState` and
+      `saveCurrentState` both swallow exceptions, so a missing
+      `database_id` or D1 outage just means the user spawns at the
+      centre and nothing persists across reconnects. Functionally
+      equivalent to v7.0 in that case.
+
+Operator setup (one-time):
+  1. `wrangler d1 create atrium` → copy the database_id into
+     wrangler.jsonc.
+  2. `wrangler d1 migrations apply atrium --local` (dev) /
+     `--remote` (prod) to create the table.
+
 ### v7.4 — persist current room in localStorage (shipped)
 
 After v7.3, refreshing `/labs/atrium` always dropped you back in the

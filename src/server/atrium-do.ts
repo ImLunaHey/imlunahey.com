@@ -57,6 +57,18 @@ type Attachment = PeerState & {
    *  the per-ws random id, which makes every connection its own identity
    *  (i.e. dedup is a no-op for clients that don't send a clientId). */
   clientId: string;
+  /** The room this DO instance represents. Set from the upgrade URL on
+   *  accept and copied into every attachment so D1 writes from
+   *  webSocketMessage handlers (which fire on hibernation wake without
+   *  a fresh fetch context) know which room to persist under. */
+  roomId: string;
+};
+
+/** Persistent atrium row in D1 (`atrium_state`). The DO is the only
+ *  writer; clients read indirectly via the `you` field of `init`. */
+type SavedState = {
+  currentRoom: string;
+  position: { tile: Tile; sitting: Tile | null } | null;
 };
 
 type ClientMsg =
@@ -68,7 +80,7 @@ type ClientMsg =
   | { t: 'emote'; kind?: unknown };
 
 type ServerMsg =
-  | { t: 'init'; selfId: string; peers: PeerState[] }
+  | { t: 'init'; selfId: string; peers: PeerState[]; you: SavedState | null }
   | { t: 'join'; peer: PeerState }
   | { t: 'walk'; id: string; from: Tile; path: Tile[]; at: number }
   | { t: 'chat'; id: string; text: string; at: number }
@@ -126,6 +138,8 @@ export class AtriumDO extends DurableObject {
     if (request.headers.get('Upgrade') !== 'websocket') {
       return new Response('expected websocket', { status: 426 });
     }
+    const url = new URL(request.url);
+    const roomId = (url.searchParams.get('room') ?? '').toLowerCase() || 'lobby';
     const pair = new WebSocketPair();
     const client = pair[0];
     const server = pair[1];
@@ -141,6 +155,7 @@ export class AtriumDO extends DurableObject {
       sitting: null,
       helloed: false,
       clientId: id, // safe default: each connection is its own identity until hello says otherwise
+      roomId,
     };
     server.serializeAttachment(att);
     return new Response(null, { status: 101, webSocket: client });
@@ -167,10 +182,23 @@ export class AtriumDO extends DurableObject {
         if (typeof parsed.clientId === 'string' && parsed.clientId.length > 0 && parsed.clientId.length <= 200) {
           att.clientId = parsed.clientId;
         }
+        // Load this user's previous saved state from D1 BEFORE we
+        // overwrite their attachment tile/sitting — if they were last
+        // in this same room the client should respawn them at the
+        // saved tile (refresh case).
+        const saved = await this.loadSavedState(att.clientId);
+        if (saved && saved.currentRoom === att.roomId && saved.position) {
+          att.tile = saved.position.tile;
+          att.sitting = saved.position.sitting;
+        }
         ws.serializeAttachment(att);
+        // Persist the user's current room (D1 reflects "where this user
+        // is right now"). Tile + sitting follow whatever the client's
+        // walk/sit messages establish, so write them with the att values
+        // we just settled on.
+        await this.saveCurrentState(att);
         // Habbo-style dedup: a fresh hello with a clientId we already
-        // recognise displaces the older session. Close with a 4xxx code
-        // the client recognises so it stops reconnecting.
+        // recognise displaces the older session.
         for (const other of this.ctx.getWebSockets()) {
           if (other === ws) continue;
           const oa = other.deserializeAttachment() as Attachment | null;
@@ -193,7 +221,7 @@ export class AtriumDO extends DurableObject {
           if (oa.clientId === att.clientId) continue;
           peers.push(this.peerStateOf(oa));
         }
-        this.sendTo(ws, { t: 'init', selfId: att.id, peers });
+        this.sendTo(ws, { t: 'init', selfId: att.id, peers, you: saved });
         this.broadcastExcept(ws, { t: 'join', peer: this.peerStateOf(att) });
         break;
       }
@@ -223,6 +251,10 @@ export class AtriumDO extends DurableObject {
         att.sitting = null;
         ws.serializeAttachment(att);
         this.broadcastExcept(ws, { t: 'walk', id: att.id, from, path, at: Date.now() });
+        // Fire-and-forget D1 write — don't make the broadcast wait on
+        // an edge round-trip; failures here just mean the next
+        // walk/sit will try again.
+        void this.saveCurrentState(att).catch(() => {});
         break;
       }
       case 'chat': {
@@ -238,6 +270,7 @@ export class AtriumDO extends DurableObject {
         att.sitting = tile;
         ws.serializeAttachment(att);
         this.broadcastExcept(ws, { t: 'sit', id: att.id, tile });
+        void this.saveCurrentState(att).catch(() => {});
         break;
       }
       case 'emote': {
@@ -306,6 +339,66 @@ export class AtriumDO extends DurableObject {
       } catch {
         // ignore per-peer send failures
       }
+    }
+  }
+
+  // --- D1 persistence ----------------------------------------------------
+  // The DO is the only writer to atrium_state. Clients see persisted
+  // state via the `you` field on `init`; everything else flows through
+  // the existing walk/sit messages, which we mirror to D1 fire-and-forget.
+
+  private async loadSavedState(clientId: string): Promise<SavedState | null> {
+    if (!clientId) return null;
+    try {
+      const row = await this.env.ATRIUM_DB
+        .prepare('SELECT current_room, position_json FROM atrium_state WHERE user_id = ?')
+        .bind(`guest:${clientId}`)
+        .first<{ current_room: string; position_json: string | null }>();
+      if (!row) return null;
+      let position: SavedState['position'] = null;
+      if (row.position_json) {
+        try {
+          const parsed = JSON.parse(row.position_json) as { tile?: unknown; sitting?: unknown };
+          if (isTile(parsed.tile)) {
+            const sitting = isTile(parsed.sitting) ? (parsed.sitting as Tile) : null;
+            position = { tile: parsed.tile as Tile, sitting };
+          }
+        } catch {
+          /* corrupted blob — ignore */
+        }
+      }
+      return { currentRoom: row.current_room, position };
+    } catch {
+      // D1 outage / binding missing in dev — degrade gracefully to "no
+      // saved state". The user just spawns at the centre instead of
+      // their last spot; everything else still works.
+      return null;
+    }
+  }
+
+  private async saveCurrentState(att: Attachment): Promise<void> {
+    if (!att.clientId) return;
+    const position = { tile: att.tile, sitting: att.sitting };
+    try {
+      await this.env.ATRIUM_DB
+        .prepare(`
+          INSERT INTO atrium_state (user_id, current_room, previous_room, position_json, updated_at)
+          VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(user_id) DO UPDATE SET
+            current_room  = excluded.current_room,
+            position_json = excluded.position_json,
+            updated_at    = excluded.updated_at
+        `)
+        .bind(
+          `guest:${att.clientId}`,
+          att.roomId,
+          null,
+          JSON.stringify(position),
+          Date.now(),
+        )
+        .run();
+    } catch {
+      /* swallow — next walk/sit will retry */
     }
   }
 }
