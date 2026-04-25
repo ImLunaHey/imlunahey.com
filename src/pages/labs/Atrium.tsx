@@ -694,6 +694,18 @@ const EMOTE_DURATIONS: Record<EmoteKind, number> = {
 };
 const EMOTE_KINDS = new Set<string>(['wave', 'dance', 'jump']);
 
+type SlashCommand = {
+  name: string;          // includes the leading slash, e.g. '/home'
+  desc: string;          // shown in the popup
+  signedInOnly?: boolean;
+};
+const SLASH_COMMANDS: SlashCommand[] = [
+  { name: '/home', desc: 'go to your personal room', signedInOnly: true },
+  { name: '/wave', desc: 'wave at the room' },
+  { name: '/dance', desc: 'dance for ~3s' },
+  { name: '/jump', desc: 'small jump in place' },
+];
+
 type SceneState = {
   avatar: Avatar;
   hover: Tile | null;
@@ -721,6 +733,7 @@ type WirePeer = {
 type ServerMsg =
   | { t: 'init'; selfId: string; peers: WirePeer[]; you: AtriumSavedState | null; layout: Furniture[] | null; isOwner: boolean }
   | { t: 'layout'; layout: Furniture[] }
+  | { t: 'evicted'; reason: string }
   | { t: 'join'; peer: WirePeer }
   | { t: 'walk'; id: string; from: Tile; path: Tile[]; at: number }
   | { t: 'chat'; id: string; text: string; at: number }
@@ -1218,6 +1231,10 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
    *  enforces this against the connected clientId). Drives whether
    *  the edit toolbar shows. */
   const [isOwnerOfRoom, setIsOwnerOfRoom] = useState(false);
+  /** Slash-command autocomplete state — the popup opens whenever the
+   *  chat draft starts with `/`, filters commands by prefix, and is
+   *  navigable with ↑/↓/Tab/Enter. */
+  const [slashIdx, setSlashIdx] = useState(0);
   /** Owner-only edit mode for personal home rooms. While on, the click
    *  handler diverts: an empty walkable tile gets the selected `kind`
    *  placed; a furniture tile gets removed (in 'remove' mode) or
@@ -1491,6 +1508,15 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
             a.path = [];
             a.walking = false;
           }
+          break;
+        }
+        case 'evicted': {
+          // Owner of this home room left and didn't come back within
+          // the grace window. Bounce to the lobby; the ws will close
+          // (server initiated the close) so the existing room-change
+          // effect handles the reconnect.
+          setHint(`${msg.reason} — back to the lobby.`);
+          setRoomRef.current('lobby');
           break;
         }
       }
@@ -1922,6 +1948,10 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
   // identity / figure persistence ------------------------------------------
 
   const [session, setSession] = useState<Session | null>(null);
+  // Declared up here (before any callback that might reference it in a
+  // dep array) to avoid a temporal-dead-zone error in the synchronous
+  // useCallback deps. Recomputed cheaply per-render.
+  const myHomeRoomId = homeRoomIdFor(session?.info.sub);
   const [identityLoading, setIdentityLoading] = useState(true);
   const [signInOpen, setSignInOpen] = useState(false);
   const [handleInput, setHandleInput] = useState('');
@@ -2120,7 +2150,9 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
       const ws = wsRef.current;
       const wsOpen = ws && ws.readyState === WebSocket.OPEN;
 
-      // /wave, /dance, /jump → trigger an emote instead of sending chat
+      // Slash commands — emotes (wave/dance/jump) trigger an animation,
+      // /home warps to your personal room. Unknown /commands fall
+      // through and ship as plain chat (so people can quote them).
       if (text.startsWith('/')) {
         const cmd = text.slice(1).toLowerCase();
         if (EMOTE_KINDS.has(cmd)) {
@@ -2132,6 +2164,16 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
           if (wsOpen) ws!.send(JSON.stringify({ t: 'emote', kind } satisfies ClientMsg));
           setChatDraft('');
           setHint(`emote: ${kind}`);
+          return;
+        }
+        if (cmd === 'home') {
+          if (myHomeRoomId) {
+            setRoomRef.current(myHomeRoomId);
+            setHint('warping home…');
+          } else {
+            setHint('sign in to get a home room.');
+          }
+          setChatDraft('');
           return;
         }
         // unknown / — fall through and send as plain chat
@@ -2147,7 +2189,7 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
       if (wsOpen) ws!.send(JSON.stringify({ t: 'chat', text } satisfies ClientMsg));
       setChatDraft('');
     },
-    [chatDraft],
+    [chatDraft, myHomeRoomId],
   );
 
   const onTakeOver = useCallback(() => {
@@ -2157,8 +2199,17 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
 
   const peerCount = overlayList.length - 1;
   const roomLabel = PUBLIC_ROOMS.find((r) => r.id === roomId)?.label ?? roomId;
-  const myHomeRoomId = homeRoomIdFor(session?.info.sub);
   const inMyHome = !!myHomeRoomId && roomId === myHomeRoomId;
+  // Slash autocomplete filter — open whenever the chat draft starts
+  // with `/` and at least one command matches the prefix. Hides
+  // signed-in-only commands from guests.
+  const slashFiltered: SlashCommand[] = chatDraft.startsWith('/')
+    ? SLASH_COMMANDS.filter((c) => {
+        if (c.signedInOnly && !session) return false;
+        const head = chatDraft.split(/\s/)[0].toLowerCase();
+        return c.name.startsWith(head);
+      })
+    : [];
   const statusLabel =
     status === 'connected'
       ? `connected · ${peerCount} ${peerCount === 1 ? 'peer' : 'peers'}`
@@ -2346,11 +2397,60 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
           ) : null}
 
           <form className="at-chat" onSubmit={onChatSubmit}>
+            {slashFiltered.length > 0 ? (
+              <div className="at-cmd-pop" role="listbox">
+                {slashFiltered.map((cmd, i) => (
+                  <button
+                    key={cmd.name}
+                    type="button"
+                    role="option"
+                    aria-selected={i === slashIdx}
+                    className={`at-cmd-row ${i === slashIdx ? 'on' : ''}`}
+                    onMouseDown={(e) => {
+                      // mouseDown (not click) so the input doesn't lose focus
+                      // first, which would close the popup before the handler
+                      // fires.
+                      e.preventDefault();
+                      setChatDraft(cmd.name + ' ');
+                      setSlashIdx(0);
+                    }}
+                  >
+                    <span className="at-cmd-name">{cmd.name}</span>
+                    <span className="at-cmd-desc">{cmd.desc}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <input
               className="at-chat-input"
               value={chatDraft}
-              onChange={(e) => setChatDraft(e.target.value)}
-              placeholder="say hi…"
+              onChange={(e) => {
+                setChatDraft(e.target.value);
+                setSlashIdx(0);
+              }}
+              onKeyDown={(e) => {
+                if (slashFiltered.length === 0) return;
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  setSlashIdx((i) => Math.min(i + 1, slashFiltered.length - 1));
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  setSlashIdx((i) => Math.max(i - 1, 0));
+                } else if (e.key === 'Tab') {
+                  e.preventDefault();
+                  const cmd = slashFiltered[slashIdx];
+                  if (cmd) {
+                    setChatDraft(cmd.name + ' ');
+                    setSlashIdx(0);
+                  }
+                } else if (e.key === 'Escape') {
+                  // Stash a sentinel char that doesn't start with `/` so
+                  // the popup hides without losing the typed text.
+                  e.preventDefault();
+                  setChatDraft('');
+                }
+              }}
+              placeholder="say hi… or / for commands"
               maxLength={200}
               autoComplete="off"
               spellCheck={false}
@@ -2605,6 +2705,42 @@ const CSS = `
     transform: translateX(-50%);
     width: min(360px, calc(100% - var(--sp-6)));
   }
+  .at-cmd-pop {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.92);
+    border: 1px solid var(--color-accent-dim);
+    box-shadow: 0 0 18px color-mix(in oklch, var(--color-accent) 22%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 5;
+  }
+  .at-cmd-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 5px 10px;
+    background: transparent;
+    border: 0;
+    color: var(--color-fg-dim);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    cursor: pointer;
+    text-align: left;
+  }
+  .at-cmd-row:hover { color: var(--color-fg); background: color-mix(in oklch, var(--color-accent) 6%, transparent); }
+  .at-cmd-row.on {
+    color: var(--color-accent);
+    background: color-mix(in oklch, var(--color-accent) 12%, transparent);
+  }
+  .at-cmd-name { font-weight: 500; }
+  .at-cmd-desc { color: var(--color-fg-faint); font-size: 10px; }
   .at-chat-input {
     width: 100%;
     background: rgba(0, 0, 0, 0.85);

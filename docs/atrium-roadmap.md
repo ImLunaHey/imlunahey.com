@@ -557,11 +557,38 @@ friends via URL.
       up from 10 × 10) since the v9.1 invite-by-nickname feature will
       need collisions to be rare.
 
-### v9.1 — invites (next)
+### v9.1 — /home, autocomplete, evict on owner offline (shipped)
+
+- [x] `/home` chat command warps a signed-in user to their personal
+      room; for guests it shows "sign in to get a home room".
+- [x] Slash-command autocomplete popup above the chat input. Opens
+      whenever the draft starts with `/`, filters commands by prefix,
+      hides signed-in-only commands from guests. Arrow keys to
+      navigate, Tab to complete the highlighted entry, Esc to dismiss
+      (clears the draft), Enter still submits whatever's in the input
+      (so partial inputs fall through to plain chat for unknown
+      commands). Mouse click on a row also completes (uses
+      `onMouseDown` + preventDefault so the input doesn't lose focus
+      and tear down the popup before the handler runs).
+- [x] Server-side eviction: when an owner disconnects from a home
+      room, schedule a 10s grace timer. Reconnect by the same
+      clientId cancels it; after the grace expires, broadcast
+      `{t:'evicted', reason}` to remaining peers and `ws.close()`
+      their connections. Client receives `evicted`, sets
+      `setRoom('lobby')` and shows a hint. Refreshes don't kick
+      anyone (they reconnect well within the grace).
+- [x] Wider guest nickname pool (50 × 50 = 2500) was a v9.0
+      thing, kept for v9.2 invite uniqueness.
+
+### v9.2 — invites (next)
 
 - [ ] `/invite <name>` chat command — name = did, handle, or guest
       nickname. Resolves to a recipient_key, writes a row to a new
       `atrium_invites` table.
+- [ ] User autocomplete for the `/invite ` argument — needs a global
+      presence registry (cross-room) so we know who's online to
+      suggest. Probably a separate `AtriumPresenceDO` that each room
+      DO checks in/out of on hello/leave.
 - [ ] Notification chip in the identity panel when the user has
       pending invites; click to accept (warps to inviter's room) or
       dismiss.

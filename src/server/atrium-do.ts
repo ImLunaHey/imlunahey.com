@@ -89,7 +89,14 @@ type ServerMsg =
   | { t: 'sit'; id: string; tile: Tile | null }
   | { t: 'emote'; id: string; kind: string; at: number }
   | { t: 'layout'; layout: unknown[] }
+  | { t: 'evicted'; reason: string }
   | { t: 'leave'; id: string };
+
+/** Grace window between an owner disconnecting and visitors getting
+ *  evicted from their home room. Refreshes routinely flicker the WS
+ *  (close + immediate reconnect); without the delay, every visitor
+ *  would bounce out and back every time the owner re-renders. */
+const EVICT_GRACE_MS = 10_000;
 
 const MAX_LAYOUT_ITEMS = 60;
 const FURN_KINDS = new Set(['chair', 'table', 'plant', 'lamp', 'crate', 'rug']);
@@ -174,6 +181,12 @@ function safeChat(s: unknown): string {
 }
 
 export class AtriumDO extends DurableObject {
+  /** Pending eviction. When the owner of a home room disconnects we
+   *  schedule a delayed evict so a quick refresh doesn't kick everyone
+   *  out; a fresh hello with the same clientId cancels the timer. */
+  private evictTimer: ReturnType<typeof setTimeout> | null = null;
+  private evictingForOwnerId: string | null = null;
+
   async fetch(request: Request): Promise<Response> {
     if (request.headers.get('Upgrade') !== 'websocket') {
       return new Response('expected websocket', { status: 426 });
@@ -221,6 +234,13 @@ export class AtriumDO extends DurableObject {
         att.helloed = true;
         if (typeof parsed.clientId === 'string' && parsed.clientId.length > 0 && parsed.clientId.length <= 200) {
           att.clientId = parsed.clientId;
+        }
+        // Owner reconnected within the eviction grace window — cancel
+        // the pending evict so visitors don't get bounced.
+        if (this.evictTimer && this.evictingForOwnerId === att.clientId) {
+          clearTimeout(this.evictTimer);
+          this.evictTimer = null;
+          this.evictingForOwnerId = null;
         }
         // Load this user's previous saved state from D1 BEFORE we
         // overwrite their attachment tile/sitting — if they were last
@@ -373,6 +393,35 @@ export class AtriumDO extends DurableObject {
     const att = ws.deserializeAttachment() as Attachment | null;
     if (!att?.helloed) return;
     this.broadcastExcept(ws, { t: 'leave', id: att.id });
+    // If the disconnecting peer owned this room (a personal home),
+    // schedule an eviction for the remaining visitors after a grace
+    // period — refreshes flicker the WS and we don't want every
+    // refresh to dump everyone out.
+    if (isOwnerOfRoom(att.roomId, att.clientId)) {
+      this.scheduleEvict(att.clientId);
+    }
+  }
+
+  private scheduleEvict(ownerClientId: string): void {
+    if (this.evictTimer) clearTimeout(this.evictTimer);
+    this.evictingForOwnerId = ownerClientId;
+    this.evictTimer = setTimeout(() => {
+      this.evictTimer = null;
+      this.evictingForOwnerId = null;
+      // Owner didn't come back in time — kick everyone still in this
+      // home room. Send the message AND close their WS so the client's
+      // displaced/reconnect logic doesn't immediately rejoin.
+      const msg: ServerMsg = { t: 'evicted', reason: 'owner left' };
+      const s = JSON.stringify(msg);
+      for (const ws of this.ctx.getWebSockets()) {
+        try {
+          ws.send(s);
+          ws.close(1000, 'owner left');
+        } catch {
+          /* ignore — ws was already gone */
+        }
+      }
+    }, EVICT_GRACE_MS);
   }
 
   private peerStateOf(att: Attachment): PeerState {
