@@ -8,18 +8,25 @@ import { dealSolvable, klondikeSolvable } from './Klondike';
 // outputs against the solver: every one should solve.
 
 describe('klondike solver', () => {
-  it('reports a fresh-dealt board as solvable on most seeds', () => {
-    // 20 random user-facing seeds → every dealSolvable result must
-    // pass the solver. (this is the contract — the generator's whole
-    // job is to never return a deal that fails the solver.)
-    let solved = 0;
-    for (let s = 0; s < 20; s++) {
-      const seed = (s * 0x9e3779b1) >>> 0;
-      const deal = dealSolvable(seed);
-      if (klondikeSolvable(deal, 200_000)) solved++;
-    }
-    expect(solved).toBe(20);
-  });
+  it(
+    'reports a fresh-dealt board as solvable on most seeds',
+    () => {
+      // 20 random user-facing seeds → every dealSolvable result must
+      // pass the solver. (this is the contract — the generator's whole
+      // job is to never return a deal that fails the solver.)
+      let solved = 0;
+      for (let s = 0; s < 20; s++) {
+        const seed = (s * 0x9e3779b1) >>> 0;
+        const deal = dealSolvable(seed);
+        if (klondikeSolvable(deal, 200_000)) solved++;
+      }
+      expect(solved).toBe(20);
+    },
+    // 20 deals × up to 200k solver nodes each is plenty of work — well
+    // within budget locally but vitest's 5s default timeout was too
+    // tight on the slower github actions runner. 30s gives margin.
+    30_000,
+  );
 
   it('is deterministic — same user-facing seed → same deal', () => {
     const seedA = 0xdeadbeef;
