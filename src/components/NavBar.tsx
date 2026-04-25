@@ -15,6 +15,7 @@ const LINKS: { to: string; label: string; match?: (path: string) => boolean }[] 
   { to: '/globe', label: '/globe', match: (p) => p.startsWith('/globe') },
   { to: '/ai', label: '/ai', match: (p) => p.startsWith('/ai') },
   { to: '/guestbook', label: '/guestbook', match: (p) => p.startsWith('/guestbook') },
+  { to: '/homelab', label: '/homelab', match: (p) => p.startsWith('/homelab') },
   { to: '/uses', label: '/uses', match: (p) => p.startsWith('/uses') },
 ];
 

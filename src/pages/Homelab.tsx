@@ -133,25 +133,20 @@ const HOSTS: Host[] = [
   },
 ];
 
+// Only services with a URL — i.e. that uptime-kuma can monitor. The
+// boxes also run plenty of un-HTTP'able things (caddy, tailscale, nfs,
+// samba, smartd, rustic-backup, minecraft, arm, cloudflare-dns) but
+// those don't render here.
 const SERVICES: Service[] = [
   { name: 'jellyfin', host: 'nova', kind: 'media', desc: 'self-hosted media library; streams whatever gilbert ripped to whichever tv is on', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://jellyfin.flaked.org' },
   { name: 'immich', host: 'nova', kind: 'media', desc: 'photo library, replaces icloud for anything i actually care about', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://immich.flaked.org' },
   { name: 'matrix-synapse', host: 'nova', kind: 'infra', desc: 'matrix homeserver; federates out, postgres-backed', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://matrix.flaked.org' },
   { name: 'pihole', host: 'nova', kind: 'security', desc: 'network-wide dns blocklists for the whole house', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://pihole.flaked.org' },
   { name: 'uptime-kuma', host: 'nova', kind: 'infra', desc: 'monitors every other service. this page reads from its api.', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://status.flaked.org' },
-  { name: 'caddy', host: 'nova', kind: 'web', desc: 'reverse proxy + auto-tls for every public *.flaked.org hostname', status: 'up', latency_ms: 0, uptime_pct: 0 },
   { name: 'romm', host: 'nova', kind: 'media', desc: 'rom library + emulator frontend; postgres-backed', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://romm.flaked.org' },
   { name: 'rustfs', host: 'nova', kind: 'storage', desc: 's3-compatible object store; serves as a backup target', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://s3.flaked.org' },
   { name: 'gotify', host: 'nova', kind: 'infra', desc: 'push notifications for nixos upgrades + alerts', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://gotify.flaked.org' },
   { name: 'igotify', host: 'nova', kind: 'infra', desc: 'second gotify instance — split channel for noisier alerts', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://igotify.flaked.org' },
-  { name: 'cloudflare-dns', host: 'nova', kind: 'infra', desc: 'reads caddy vhosts at boot, upserts cloudflare a-records to match', status: 'up', latency_ms: 0, uptime_pct: 0 },
-  { name: 'minecraft (atm10)', host: 'gilbert', kind: 'automation', desc: 'all-the-mods 10 server on neoforge', status: 'up', latency_ms: 0, uptime_pct: 0 },
-  { name: 'arm', host: 'gilbert', kind: 'media', desc: 'automatic ripping machine — feed it a disc, get an mkv', status: 'up', latency_ms: 0, uptime_pct: 0 },
-  { name: 'nfs', host: 'gilbert', kind: 'storage', desc: '/mnt/media exports to the rest of the lan', status: 'up', latency_ms: 0, uptime_pct: 0 },
-  { name: 'samba', host: 'void', kind: 'storage', desc: 'smb shares for the few windows machines that need them', status: 'up', latency_ms: 0, uptime_pct: 0 },
-  { name: 'smartd', host: 'void', kind: 'security', desc: 'watches every disk for early-failure smart attributes; pages on trouble', status: 'up', latency_ms: 0, uptime_pct: 0 },
-  { name: 'rustic-backup', host: 'nova', kind: 'storage', desc: 'restic-compatible nightly backups; deduped + encrypted', status: 'up', latency_ms: 0, uptime_pct: 0 },
-  { name: 'tailscale', host: 'nova', kind: 'infra', desc: 'wireguard mesh; nova advertises subnet routes + acts as exit node', status: 'up', latency_ms: 0, uptime_pct: 0 },
 ];
 
 const KIND_LABEL: Record<Service['kind'], string> = {
@@ -383,9 +378,16 @@ export default function HomelabPage() {
                       <span className="svc-v">{liveSvc.latency_ms}ms</span>
                     </div>
                   </div>
-                ) : (
+                ) : !servicesDataReady ? (
                   <div className="svc-stats svc-stats-pending">
                     <span className="t-faint">awaiting uptime-kuma</span>
+                  </div>
+                ) : (
+                  // services blob HAS arrived but doesn't list this entry —
+                  // either no HTTP endpoint to monitor (caddy itself,
+                  // tailscale, nfs, etc.) or simply not in uptime-kuma yet.
+                  <div className="svc-stats svc-stats-pending">
+                    <span className="t-faint">not monitored</span>
                   </div>
                 )}
               </div>
