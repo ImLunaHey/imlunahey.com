@@ -74,12 +74,13 @@ export const notifyGuestbookEntry = createServerFn({ method: 'POST' })
     const who = data.handle ? `@${data.handle}` : data.did;
 
     try {
-      const res = await fetch('https://api.brrr.now/v1/send', {
+      // brrr.now's canonical API form: secret goes in the URL path.
+      // (`/v1/send` + Bearer header also works in theory, but the
+      // path-based form is what the brrr docs document and is what
+      // their own builder ui generates.)
+      const res = await fetch(`https://api.brrr.now/v1/${encodeURIComponent(secret)}`, {
         method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          authorization: `Bearer ${secret}`,
-        },
+        headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           title: 'new guestbook entry',
           subtitle: who,
