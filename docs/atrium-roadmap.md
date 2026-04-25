@@ -329,6 +329,19 @@ Verified end-to-end via two-client wire test: `sit` broadcasts the
 tile to peers, `emote` broadcasts kind + at, init payloads carry
 the `sitting` field. ✓
 
+### v7.5 — persist previousRoom too — refresh spawns at entrance (shipped)
+
+v7.4 only persisted the current room, so refresh restored the room
+correctly but `previousRoomRef` was always null on cold mount and the
+entrance-portal spawn fell through to the centre. Persist
+`atrium-previous-room` alongside `atrium-current-room` and seed
+`previousRoomRef` from it; effectively a refresh now behaves like a
+portal walk into the current room — same spawn next to the entrance
+portal you originally entered through.
+
+Brand-new visitors still get null + centre spawn (no entrance to
+spawn at). Same with deep links from outside the app on a fresh tab.
+
 ### v7.4 — persist current room in localStorage (shipped)
 
 After v7.3, refreshing `/labs/atrium` always dropped you back in the

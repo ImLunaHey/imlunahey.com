@@ -102,6 +102,19 @@ function initialRoomFromStorage(initialRoom: string | undefined): string {
   return 'lobby';
 }
 
+/** The room we were in before the current one — persisted alongside
+ *  the current room so a refresh lands the avatar next to the entrance
+ *  portal instead of dumping them in the centre. Null on a brand-new
+ *  visit (no entrance to spawn at). */
+function loadPreviousRoom(): string | null {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    return localStorage.getItem('atrium-previous-room');
+  } catch {
+    return null;
+  }
+}
+
 function findSpawnAdjacent(walkable: boolean[][], portal: Tile, fallback: Tile): Tile {
   const [pi, pj] = portal;
   const candidates: Tile[] = [
@@ -1017,12 +1030,18 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
   useEffect(() => {
     themeRef.current = themeForRoom(roomId);
     portalsRef.current = portalsFor(roomId);
-    // Persist current room so a refresh of /labs/atrium drops you back
-    // here instead of the lobby. /labs/atrium/<id> deep links still
-    // override on cold load (URL wins for explicit paths).
+    // Persist (current, previous) so a refresh restores both the room
+    // AND spawns next to the entrance portal — without the previous
+    // value, the spawn lookup would fall through and drop the avatar
+    // in the centre. previousRoomRef still holds the OLD value at
+    // this point in the effect (we update it later in the spawn
+    // effect), so this captures "I'm now in <current>, I came from
+    // <previous>".
     if (typeof localStorage !== 'undefined') {
       try {
         localStorage.setItem('atrium-current-room', roomId);
+        const prev = previousRoomRef.current;
+        if (prev) localStorage.setItem('atrium-previous-room', prev);
       } catch {
         /* ignore — storage full / private mode */
       }
@@ -1031,8 +1050,10 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
 
   // Tracks the room we were just in (for entrance-portal spawn). useRef
   // is safe here because the component no longer remounts on room
-  // change — room lives in state, not in the URL/route.
-  const previousRoomRef = useRef<string | null>(null);
+  // change — room lives in state, not in the URL/route. Seeded from
+  // localStorage so a refresh of the current room reproduces the
+  // entrance-spawn that the original arrival did.
+  const previousRoomRef = useRef<string | null>(loadPreviousRoom());
 
   // Stable callback for the tick loop to fire room changes without
   // capturing setRoom in a closure that gets baked into the canvas
