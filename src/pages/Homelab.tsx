@@ -1,7 +1,78 @@
-import { Link } from '@tanstack/react-router';
+import { Link, getRouteApi } from '@tanstack/react-router';
+import type { HomelabState, ServiceRow } from '../server/homelab-types';
 
-// All data is mock for now — will later be pulled from uptime kuma, prometheus,
-// and the nas itself. The shape matches what those sources already emit.
+// Editorial fields (hardware string, power draw, descriptions) are hand-
+// maintained in this file. Live fields (cpu/ram/storage/uptime/load +
+// service status/latency/uptime%) come from the homelab-agent push module
+// (../../nixos-configs/modules/homelab-agent.nix) → /api/homelab/ingest →
+// KV → loader. When KV is empty (cold deploy, secret unset, all hosts
+// down) the page falls back to the editorial defaults.
+
+const route = getRouteApi('/_main/homelab');
+
+const ICON_BY_NAME: Record<string, string> = {
+  jellyfin: '/icons/homelab/jellyfin.svg',
+  immich: '/icons/homelab/immich.svg',
+  'matrix-synapse': '/icons/homelab/synapse.svg',
+  pihole: '/icons/homelab/pi-hole.svg',
+  'uptime-kuma': '/icons/homelab/uptime-kuma.svg',
+  caddy: '/icons/homelab/caddy.svg',
+  romm: '/icons/homelab/romm.svg',
+  rustfs: '/icons/homelab/rustfs.svg',
+  gotify: '/icons/homelab/gotify.svg',
+  igotify: '/icons/homelab/gotify.svg',
+  'cloudflare-dns': '/icons/homelab/cloudflare.svg',
+  'minecraft (atm10)': '/icons/homelab/minecraft.svg',
+  arm: '/icons/homelab/arm.svg',
+  tailscale: '/icons/homelab/tailscale.svg',
+};
+
+const HOST_ICON = '/icons/homelab/nixos.svg';
+
+function fmtUptime(secs: number | undefined): string {
+  if (!secs || secs <= 0) return '—';
+  const d = Math.floor(secs / 86400);
+  const h = Math.floor((secs % 86400) / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function fmtKb(kb: number | undefined): string {
+  if (!kb || kb <= 0) return '—';
+  const gb = kb / (1024 * 1024);
+  if (gb >= 1) return `${gb.toFixed(1)} GiB`;
+  const mb = kb / 1024;
+  return `${mb.toFixed(0)} MiB`;
+}
+
+function fmtBytes(bytes: number | undefined): string {
+  if (!bytes || bytes <= 0) return '—';
+  const tb = bytes / 1024 ** 4;
+  if (tb >= 1) return `${tb.toFixed(2)} TiB`;
+  const gb = bytes / 1024 ** 3;
+  return `${gb.toFixed(1)} GiB`;
+}
+
+function fmtAge(ts: number | undefined): string {
+  if (!ts) return 'never';
+  const now = Date.now() / 1000;
+  const dt = Math.max(0, now - ts);
+  if (dt < 60) return `${Math.round(dt)}s ago`;
+  if (dt < 3600) return `${Math.round(dt / 60)}m ago`;
+  if (dt < 86400) return `${Math.round(dt / 3600)}h ago`;
+  return `${Math.round(dt / 86400)}d ago`;
+}
+
+/** A host counts as "fresh" if its last push was within the staleness
+ *  window. Window = 3× the 60s push interval, so a single missed beat
+ *  doesn't redden the page; two in a row does. */
+const STALE_AFTER_SECS = 180;
+function isFresh(ts: number | undefined): boolean {
+  if (!ts) return false;
+  return Date.now() / 1000 - ts < STALE_AFTER_SECS;
+}
 
 type Host = {
   name: string;
@@ -28,66 +99,59 @@ type Service = {
 
 const HOSTS: Host[] = [
   {
-    name: 'vault',
-    role: 'primary nas',
-    hw: 'synology ds1823xs+',
-    cpu: 'amd ryzen v1780b · 4c/8t',
-    ram: '32 GB ecc',
-    storage: '8× 16TB exos · raid6 · 80 TiB usable',
-    os: 'dsm 7.2',
-    powerW: 78,
-    uptimeDays: 412,
+    name: 'nova',
+    role: 'media server / reverse proxy / matrix',
+    hw: 'x86_64 server',
+    cpu: '?',
+    ram: '?',
+    storage: '?',
+    os: 'nixos 24.05',
+    powerW: 0,
+    uptimeDays: 0,
   },
   {
-    name: 'forge',
-    role: 'compute · docker host',
-    hw: 'minisforum ms-01',
-    cpu: 'intel i9-12900h · 14c/20t',
-    ram: '64 GB ddr5',
-    storage: '2× 2TB nvme · mirrored',
-    os: 'proxmox 8.2',
-    powerW: 42,
-    uptimeDays: 187,
+    name: 'gilbert',
+    role: 'media ripping / minecraft / nfs',
+    hw: 'x86_64 server',
+    cpu: '?',
+    ram: '?',
+    storage: '?',
+    os: 'nixos 24.05',
+    powerW: 0,
+    uptimeDays: 0,
   },
   {
-    name: 'edge',
-    role: 'gateway · firewall',
-    hw: 'protectli vp2420',
-    cpu: 'intel j6412 · 4c/4t',
-    ram: '16 GB',
-    storage: '256 GB nvme',
-    os: 'opnsense 24.1',
-    powerW: 11,
-    uptimeDays: 412,
-  },
-  {
-    name: 'pi-dns',
-    role: 'dns + adblock',
-    hw: 'raspberry pi 5',
-    cpu: 'bcm2712 · 4c',
-    ram: '8 GB',
-    storage: '128 GB sd',
-    os: 'pi os lite',
-    powerW: 4,
-    uptimeDays: 298,
+    name: 'void',
+    role: 'nas · zfs raid',
+    hw: 'x86_64 server',
+    cpu: '?',
+    ram: '?',
+    storage: 'zfs raid',
+    os: 'nixos 24.05',
+    powerW: 0,
+    uptimeDays: 0,
   },
 ];
 
 const SERVICES: Service[] = [
-  { name: 'jellyfin', host: 'forge', kind: 'media', desc: 'self-hosted plex alternative, serves 4k transcodes to the apple tv', status: 'up', latency_ms: 22, uptime_pct: 99.98, url: 'https://jellyfin.local' },
-  { name: 'immich', host: 'vault', kind: 'media', desc: 'photo library, replaces icloud for anything i care about', status: 'up', latency_ms: 41, uptime_pct: 99.82, url: 'https://photos.local' },
-  { name: 'nextcloud', host: 'forge', kind: 'storage', desc: 'files + calendar + contacts, backs up the iphone nightly', status: 'up', latency_ms: 55, uptime_pct: 99.72 },
-  { name: 'pihole', host: 'pi-dns', kind: 'security', desc: 'network-wide dns blocklists; ~18% of queries get nuked', status: 'up', latency_ms: 1, uptime_pct: 99.99 },
-  { name: 'uptime-kuma', host: 'forge', kind: 'infra', desc: 'monitoring. this page will pull from its api eventually.', status: 'up', latency_ms: 8, uptime_pct: 99.9 },
-  { name: 'gitea', host: 'forge', kind: 'infra', desc: 'mirrors my github repos + hosts private ones', status: 'up', latency_ms: 34, uptime_pct: 99.6 },
-  { name: 'home assistant', host: 'forge', kind: 'automation', desc: 'lights, blinds, and a tiny number of sensors i regret buying', status: 'up', latency_ms: 12, uptime_pct: 99.95 },
-  { name: 'vaultwarden', host: 'forge', kind: 'security', desc: 'self-hosted bitwarden; syncs to the ios app over tailscale', status: 'up', latency_ms: 29, uptime_pct: 99.88 },
-  { name: 'caddy', host: 'edge', kind: 'web', desc: 'reverse proxy + auto-tls for every internal service', status: 'up', latency_ms: 3, uptime_pct: 99.99 },
-  { name: 'tailscale', host: 'edge', kind: 'infra', desc: 'wireguard mesh; every device in one flat network', status: 'up', latency_ms: 16, uptime_pct: 99.97 },
-  { name: 'prometheus', host: 'forge', kind: 'infra', desc: 'metric scraper feeding grafana', status: 'up', latency_ms: 19, uptime_pct: 99.82 },
-  { name: 'grafana', host: 'forge', kind: 'infra', desc: 'dashboards for power, temps, service latency, network in/out', status: 'degraded', latency_ms: 280, uptime_pct: 98.4 },
-  { name: 'backrest', host: 'vault', kind: 'storage', desc: 'restic-based backup to b2 cold storage; nightly snapshots of everything', status: 'up', latency_ms: 50, uptime_pct: 99.5 },
-  { name: 'linkwarden', host: 'forge', kind: 'web', desc: 'self-hosted bookmarks archive — shadow copy of /bookmarks', status: 'up', latency_ms: 44, uptime_pct: 99.8 },
+  { name: 'jellyfin', host: 'nova', kind: 'media', desc: 'self-hosted media library; streams whatever gilbert ripped to whichever tv is on', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://jellyfin.flaked.org' },
+  { name: 'immich', host: 'nova', kind: 'media', desc: 'photo library, replaces icloud for anything i actually care about', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://immich.flaked.org' },
+  { name: 'matrix-synapse', host: 'nova', kind: 'infra', desc: 'matrix homeserver; federates out, postgres-backed', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://matrix.flaked.org' },
+  { name: 'pihole', host: 'nova', kind: 'security', desc: 'network-wide dns blocklists for the whole house', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://pihole.flaked.org' },
+  { name: 'uptime-kuma', host: 'nova', kind: 'infra', desc: 'monitors every other service. this page reads from its api.', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://status.flaked.org' },
+  { name: 'caddy', host: 'nova', kind: 'web', desc: 'reverse proxy + auto-tls for every public *.flaked.org hostname', status: 'up', latency_ms: 0, uptime_pct: 0 },
+  { name: 'romm', host: 'nova', kind: 'media', desc: 'rom library + emulator frontend; postgres-backed', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://romm.flaked.org' },
+  { name: 'rustfs', host: 'nova', kind: 'storage', desc: 's3-compatible object store; serves as a backup target', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://s3.flaked.org' },
+  { name: 'gotify', host: 'nova', kind: 'infra', desc: 'push notifications for nixos upgrades + alerts', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://gotify.flaked.org' },
+  { name: 'igotify', host: 'nova', kind: 'infra', desc: 'second gotify instance — split channel for noisier alerts', status: 'up', latency_ms: 0, uptime_pct: 0, url: 'https://igotify.flaked.org' },
+  { name: 'cloudflare-dns', host: 'nova', kind: 'infra', desc: 'reads caddy vhosts at boot, upserts cloudflare a-records to match', status: 'up', latency_ms: 0, uptime_pct: 0 },
+  { name: 'minecraft (atm10)', host: 'gilbert', kind: 'automation', desc: 'all-the-mods 10 server on neoforge', status: 'up', latency_ms: 0, uptime_pct: 0 },
+  { name: 'arm', host: 'gilbert', kind: 'media', desc: 'automatic ripping machine — feed it a disc, get an mkv', status: 'up', latency_ms: 0, uptime_pct: 0 },
+  { name: 'nfs', host: 'gilbert', kind: 'storage', desc: '/mnt/media exports to the rest of the lan', status: 'up', latency_ms: 0, uptime_pct: 0 },
+  { name: 'samba', host: 'void', kind: 'storage', desc: 'smb shares for the few windows machines that need them', status: 'up', latency_ms: 0, uptime_pct: 0 },
+  { name: 'smartd', host: 'void', kind: 'security', desc: 'watches every disk for early-failure smart attributes; pages on trouble', status: 'up', latency_ms: 0, uptime_pct: 0 },
+  { name: 'rustic-backup', host: 'nova', kind: 'storage', desc: 'restic-compatible nightly backups; deduped + encrypted', status: 'up', latency_ms: 0, uptime_pct: 0 },
+  { name: 'tailscale', host: 'nova', kind: 'infra', desc: 'wireguard mesh; nova advertises subnet routes + acts as exit node', status: 'up', latency_ms: 0, uptime_pct: 0 },
 ];
 
 const KIND_LABEL: Record<Service['kind'], string> = {
@@ -108,17 +172,33 @@ const KIND_GLYPH: Record<Service['kind'], string> = {
   security: '◈',
 };
 
-const totalPower = HOSTS.reduce((s, h) => s + h.powerW, 0);
-const monthlyKwh = (totalPower * 24 * 30) / 1000;
-const monthlyCostGBP = monthlyKwh * 0.28; // rough uk rate
-const totalStorageTb = 80 + 4; // mock mirrored nvme etc
-const usedPct = 62;
-
 export default function HomelabPage() {
-  const upCount = SERVICES.filter((s) => s.status === 'up').length;
-  const degradedCount = SERVICES.filter((s) => s.status === 'degraded').length;
-  const downCount = SERVICES.filter((s) => s.status === 'down').length;
-  const avgUptime = SERVICES.reduce((s, svc) => s + svc.uptime_pct, 0) / SERVICES.length;
+  const live = route.useLoaderData() as HomelabState;
+
+  // Merge live service status (keyed by name) onto the editorial list.
+  // Services not present in the live blob keep their editorial 'up'
+  // default but render without the status pill (gated below by `live`).
+  const liveServiceMap = new Map<string, ServiceRow>();
+  if (live.services) {
+    for (const s of live.services.data) liveServiceMap.set(s.name, s);
+  }
+  const servicesDataReady = live.services !== null;
+
+  const degradedCount = servicesDataReady
+    ? [...liveServiceMap.values()].filter((s) => s.status === 'degraded').length
+    : 0;
+  const downCount = servicesDataReady
+    ? [...liveServiceMap.values()].filter((s) => s.status === 'down').length
+    : 0;
+  const freshHosts = HOSTS.filter((h) => isFresh(live.hosts[h.name]?.ts)).length;
+
+  // Capacity (panel 04) is the sum of all reported zpools across hosts —
+  // void is the only one with zfs in practice, but a future host with a
+  // pool would just add to the total without code changes.
+  const allPools = Object.values(live.hosts).flatMap((h) => h.data.zpools ?? []);
+  const totalPoolBytes = allPools.reduce((s, p) => s + (p.size_bytes || 0), 0);
+  const usedPoolBytes = allPools.reduce((s, p) => s + (p.alloc_bytes || 0), 0);
+  const usedPct = totalPoolBytes > 0 ? (usedPoolBytes / totalPoolBytes) * 100 : 0;
 
   return (
     <>
@@ -132,13 +212,16 @@ export default function HomelabPage() {
             homelab<span className="dot">.</span>
           </h1>
           <p className="sub">
-            four boxes, a 10gbe switch, and too many docker containers. runs everything i refuse to cloud — photos,
-            media, backups, auth. numbers below are <b className="t-warn">mock data</b> while the uptime-kuma webhook
-            lives in a branch.
+            three nixos boxes on tailscale. runs everything i refuse to cloud — photos, media, matrix, push
+            notifications. host telemetry pushed every 60s by the homelab-agent module on each box; service
+            status scraped from uptime-kuma on nova.
           </p>
           <div className="meta">
             <span>
-              services <b className="t-accent">{upCount}</b> up
+              hosts <b className="t-accent">{freshHosts}</b>/{HOSTS.length} reporting
+            </span>
+            <span>
+              services <b className="t-accent">{SERVICES.length}</b>
               {degradedCount ? (
                 <>
                   {' '}
@@ -152,15 +235,9 @@ export default function HomelabPage() {
                 </>
               ) : null}
             </span>
-            <span>
-              avg uptime <b>{avgUptime.toFixed(2)}%</b>
-            </span>
-            <span>
-              total draw <b>{totalPower} W</b>
-            </span>
-            <span>
-              monthly <b>~£{monthlyCostGBP.toFixed(2)}</b>
-            </span>
+            {!servicesDataReady ? (
+              <span className="t-faint">service status pending uptime-kuma push</span>
+            ) : null}
           </div>
         </header>
 
@@ -175,18 +252,21 @@ export default function HomelabPage() {
           <pre className="topo">{`     [ internet ]
           │
      ┌────┴────┐
-     │   edge  │   opnsense · 1Gbps wan · 10Gbps lan
+     │ router  │   home gateway · 192.168.0.0/24
      └────┬────┘
           │
-     ┌────┴─────────┬────────────────┬─────────────┐
-     │              │                │             │
- ┌───┴───┐      ┌───┴───┐        ┌───┴───┐     ┌───┴──┐
- │ vault │◁────▷│ forge │◁──10g─▷│pi-dns │     │ wifi │
- │  nas  │      │ docker│        │pihole │     │ uap6 │
- └───────┘      └───────┘        └───────┘     └──┬───┘
-    80tb          ms-01            pi 5           │
-                                                  ▼
-                                              [ clients ]`}</pre>
+     ┌────┴───────────────┬──────────────┐
+     │                    │              │
+ ┌───┴────┐           ┌───┴────┐    ┌────┴───┐
+ │  nova  │           │gilbert │    │  void  │
+ │  .10   │           │  .11   │    │  .12   │
+ │ caddy  │           │ ripper │    │  zfs   │
+ │ matrix │           │  mc    │    │  nas   │
+ │ media  │           │  nfs   │    │ samba  │
+ └───┬────┘           └────────┘    └────────┘
+     │
+     ▼
+ [ tailscale ⇄ cloudflare dns ⇄ *.flaked.org ]`}</pre>
         </section>
 
         {/* 02 · HOSTS */}
@@ -194,36 +274,50 @@ export default function HomelabPage() {
           <h2>
             <span className="num">02 //</span>hosts.
           </h2>
-          <span className="src">{HOSTS.length} machines · {totalPower} W at idle</span>
+          <span className="src">{HOSTS.length} machines · all nixos · all on tailscale</span>
         </div>
         <section className="host-grid">
-          {HOSTS.map((h) => (
-            <div key={h.name} className="host-card">
-              <div className="host-hd">
-                <span className="host-name">{h.name}</span>
-                <span className="host-dot" />
-                <span className="host-role">{h.role}</span>
+          {HOSTS.map((h) => {
+            const entry = live.hosts[h.name];
+            const fresh = isFresh(entry?.ts);
+            const d = entry?.data;
+            const cpu = d?.cpu?.model
+              ? `${d.cpu.model.replace(/\s*\(.*\)\s*/g, '').trim()}${d.cpu.cores ? ` · ${d.cpu.cores}c` : ''}`
+              : '—';
+            const ram = d?.mem_kb ? fmtKb(d.mem_kb.total) : '—';
+            const storage = d?.zpools?.length
+              ? d.zpools.map((p) => `${p.name}: ${fmtBytes(p.size_bytes)} ${p.health}`).join(' · ')
+              : d?.root_kb
+              ? `root: ${fmtKb(d.root_kb.used)} / ${fmtKb(d.root_kb.total)}`
+              : '—';
+            const os = d?.os ?? h.os;
+            return (
+              <div key={h.name} className="host-card">
+                <div className="host-hd">
+                  <img src={HOST_ICON} className="host-ico" alt="" />
+                  <span className="host-name">{h.name}</span>
+                  {fresh ? <span className="host-dot" /> : null}
+                  <span className="host-role">{h.role}</span>
+                </div>
+                <dl className="host-dl">
+                  <dt>cpu</dt>
+                  <dd>{cpu}</dd>
+                  <dt>ram</dt>
+                  <dd>{ram}</dd>
+                  <dt>storage</dt>
+                  <dd>{storage}</dd>
+                  <dt>os</dt>
+                  <dd>{os}</dd>
+                  <dt>load</dt>
+                  <dd>{d?.load1 != null ? d.load1.toFixed(2) : '—'}</dd>
+                  <dt>uptime</dt>
+                  <dd>{fmtUptime(d?.uptime_secs)}</dd>
+                  <dt>last seen</dt>
+                  <dd className={fresh ? 't-accent' : 't-faint'}>{fmtAge(entry?.ts)}</dd>
+                </dl>
               </div>
-              <dl className="host-dl">
-                <dt>hardware</dt>
-                <dd>{h.hw}</dd>
-                <dt>cpu</dt>
-                <dd>{h.cpu}</dd>
-                <dt>ram</dt>
-                <dd>{h.ram}</dd>
-                <dt>storage</dt>
-                <dd>{h.storage}</dd>
-                <dt>os</dt>
-                <dd>{h.os}</dd>
-                <dt>power</dt>
-                <dd>
-                  <b className="t-accent">{h.powerW} W</b> idle
-                </dd>
-                <dt>uptime</dt>
-                <dd>{h.uptimeDays} days</dd>
-              </dl>
-            </div>
-          ))}
+            );
+          })}
         </section>
 
         {/* 03 · SERVICES */}
@@ -234,38 +328,53 @@ export default function HomelabPage() {
           <span className="src">{SERVICES.length} containers across {HOSTS.length} hosts</span>
         </div>
         <section className="svc-list">
-          {SERVICES.map((s) => (
-            <div key={s.name} className={'svc-row status-' + s.status}>
-              <div className="svc-ico" aria-hidden="true">
-                {KIND_GLYPH[s.kind]}
+          {SERVICES.map((s) => {
+            const liveSvc = liveServiceMap.get(s.name);
+            const status = liveSvc?.status ?? s.status;
+            const iconPath = ICON_BY_NAME[s.name];
+            return (
+              <div key={s.name} className={'svc-row status-' + status}>
+                <div className="svc-ico" aria-hidden="true">
+                  {iconPath ? (
+                    <img src={iconPath} alt="" className="svc-ico-img" />
+                  ) : (
+                    <span className="svc-ico-glyph">{KIND_GLYPH[s.kind]}</span>
+                  )}
+                </div>
+                <div className="svc-body">
+                  <div className="svc-top">
+                    <span className="svc-name">{s.name}</span>
+                    <span className="svc-kind">{KIND_LABEL[s.kind]}</span>
+                    <span className="svc-host">@{s.host}</span>
+                  </div>
+                  <div className="svc-desc">{s.desc}</div>
+                </div>
+                {liveSvc ? (
+                  <div className="svc-stats">
+                    <div className="svc-stat">
+                      <span className="svc-k">status</span>
+                      <span className={'svc-v svc-status'}>
+                        <span className="svc-led" />
+                        {status}
+                      </span>
+                    </div>
+                    <div className="svc-stat">
+                      <span className="svc-k">uptime</span>
+                      <span className="svc-v">{liveSvc.uptime_pct.toFixed(2)}%</span>
+                    </div>
+                    <div className="svc-stat">
+                      <span className="svc-k">latency</span>
+                      <span className="svc-v">{liveSvc.latency_ms}ms</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="svc-stats svc-stats-pending">
+                    <span className="t-faint">awaiting uptime-kuma</span>
+                  </div>
+                )}
               </div>
-              <div className="svc-body">
-                <div className="svc-top">
-                  <span className="svc-name">{s.name}</span>
-                  <span className="svc-kind">{KIND_LABEL[s.kind]}</span>
-                  <span className="svc-host">@{s.host}</span>
-                </div>
-                <div className="svc-desc">{s.desc}</div>
-              </div>
-              <div className="svc-stats">
-                <div className="svc-stat">
-                  <span className="svc-k">status</span>
-                  <span className={'svc-v svc-status'}>
-                    <span className="svc-led" />
-                    {s.status}
-                  </span>
-                </div>
-                <div className="svc-stat">
-                  <span className="svc-k">uptime</span>
-                  <span className="svc-v">{s.uptime_pct.toFixed(2)}%</span>
-                </div>
-                <div className="svc-stat">
-                  <span className="svc-k">latency</span>
-                  <span className="svc-v">{s.latency_ms}ms</span>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </section>
 
         {/* 04 · STORAGE */}
@@ -279,72 +388,81 @@ export default function HomelabPage() {
           <div className="panel c-storage">
             <div className="panel-hd">
               <span className="ttl">capacity</span>
-              <span className="src-tag">// vault (primary)</span>
+              <span className="src-tag">// zfs pools across all hosts</span>
             </div>
-            <div className="big-num">
-              <span className="num-val">{((totalStorageTb * usedPct) / 100).toFixed(0)}</span>
-              <span className="num-unit">TiB used</span>
-            </div>
-            <div className="bar">
-              <div className="bar-fill" style={{ width: `${usedPct}%` }} />
-            </div>
-            <div className="stat-line">
-              <span>
-                total <b>{totalStorageTb} TiB</b>
-              </span>
-              <span>
-                free <b>{((totalStorageTb * (100 - usedPct)) / 100).toFixed(0)} TiB</b>
-              </span>
-              <span className="t-faint">growth ~1.4 TiB/mo</span>
-            </div>
+            {totalPoolBytes > 0 ? (
+              <>
+                <div className="big-num">
+                  <span className="num-val">{(usedPoolBytes / 1024 ** 4).toFixed(1)}</span>
+                  <span className="num-unit">TiB used</span>
+                </div>
+                <div className="bar">
+                  <div className="bar-fill" style={{ width: `${usedPct}%` }} />
+                </div>
+                <div className="stat-line">
+                  <span>
+                    total <b>{(totalPoolBytes / 1024 ** 4).toFixed(1)} TiB</b>
+                  </span>
+                  <span>
+                    free{' '}
+                    <b>{((totalPoolBytes - usedPoolBytes) / 1024 ** 4).toFixed(1)} TiB</b>
+                  </span>
+                  <span className="t-faint">{usedPct.toFixed(0)}% used</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="big-num">
+                  <span className="num-val t-faint">—</span>
+                  <span className="num-unit">awaiting void</span>
+                </div>
+                <div className="stat-line">
+                  <span className="t-faint">
+                    void hasn't reported any zpools yet
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="panel c-backups">
             <div className="panel-hd">
               <span className="ttl">backups</span>
-              <span className="src-tag">// restic · b2 · b3sum</span>
+              <span className="src-tag">// rustic-backup module</span>
             </div>
             <dl className="bk-dl">
+              <dt>tool</dt>
+              <dd>rustic (restic-compatible)</dd>
+              <dt>schedule</dt>
+              <dd>nightly via systemd timer</dd>
+              <dt>encryption</dt>
+              <dd>per-host repo password (sops)</dd>
               <dt>last snapshot</dt>
-              <dd>
-                <b className="t-accent">2h 14m ago</b>
-              </dd>
-              <dt>snapshots held</dt>
-              <dd>day·30 · week·12 · month·24</dd>
-              <dt>offsite size</dt>
-              <dd>18.2 TiB compressed · deduped</dd>
-              <dt>last verify</dt>
-              <dd>2026-04-19 · clean</dd>
-              <dt>restore drill</dt>
-              <dd>quarterly · next 2026-06-01</dd>
+              <dd className="t-faint">tbd — agent will report</dd>
             </dl>
           </div>
 
           <div className="panel c-net">
             <div className="panel-hd">
               <span className="ttl">network</span>
-              <span className="src-tag">// 24h aggregate</span>
+              <span className="src-tag">// tailscale + caddy</span>
             </div>
             <dl className="bk-dl">
-              <dt>wan in</dt>
-              <dd>82.3 GiB</dd>
-              <dt>wan out</dt>
-              <dd>14.8 GiB</dd>
-              <dt>lan (10gbe)</dt>
-              <dd>
-                peak <b>6.2 Gbps</b>
-              </dd>
-              <dt>dns queries</dt>
-              <dd>192k · <span className="t-accent">18.4%</span> blocked</dd>
-              <dt>tailscale nodes</dt>
-              <dd>11 online</dd>
+              <dt>subnet</dt>
+              <dd>192.168.0.0/24</dd>
+              <dt>tailscale</dt>
+              <dd>nova as exit + subnet router</dd>
+              <dt>public dns</dt>
+              <dd>*.flaked.org via cloudflare</dd>
+              <dt>dns blocking</dt>
+              <dd className="t-faint">tbd — pihole stats</dd>
             </dl>
           </div>
         </section>
 
         <footer className="hl-footer">
           <span>
-            src: <span className="t-accent">uptime-kuma + prometheus → /api/homelab (tbd) → this page</span>
+            src: <span className="t-accent">homelab-agent (nixos) → /api/homelab/ingest (tbd) → this page</span>
           </span>
           <span>
             ←{' '}
@@ -422,6 +540,7 @@ const CSS = `
     margin-bottom: var(--sp-3);
     border-bottom: 1px dashed var(--color-border);
   }
+  .host-ico { width: 20px; height: 20px; object-fit: contain; opacity: 0.85; }
   .host-name {
     font-family: var(--font-display);
     font-size: 24px; color: var(--color-accent);
@@ -464,10 +583,24 @@ const CSS = `
     font-size: 24px;
     color: var(--color-fg-faint);
     text-align: center;
+    display: flex; align-items: center; justify-content: center;
   }
-  .svc-row.status-up .svc-ico { color: var(--color-accent); }
-  .svc-row.status-degraded .svc-ico { color: var(--color-warn); }
-  .svc-row.status-down .svc-ico { color: var(--color-alert); }
+  .svc-ico-img {
+    width: 28px; height: 28px;
+    object-fit: contain;
+    /* desaturate slightly so brand reds/greens don't fight the page accent */
+    filter: saturate(0.85);
+  }
+  .svc-ico-glyph { display: inline-block; }
+  .svc-row.status-up .svc-ico-glyph { color: var(--color-accent); }
+  .svc-row.status-degraded .svc-ico-glyph { color: var(--color-warn); }
+  .svc-row.status-down .svc-ico-glyph { color: var(--color-alert); }
+  .svc-stats-pending {
+    grid-template-columns: 1fr;
+    align-items: center; justify-content: end;
+    text-align: right;
+    font-family: var(--font-mono); font-size: var(--fs-xs);
+  }
 
   .svc-top { display: flex; gap: var(--sp-2); align-items: baseline; flex-wrap: wrap; }
   .svc-name {

@@ -34,6 +34,7 @@ import { Route as MainProjectsIndexRouteImport } from './routes/_main/projects/i
 import { Route as MainLabsIndexRouteImport } from './routes/_main/labs/index'
 import { Route as MainGamesIndexRouteImport } from './routes/_main/games/index'
 import { Route as MainBlogIndexRouteImport } from './routes/_main/blog/index'
+import { Route as ApiHomelabIngestRouteImport } from './routes/api/homelab.ingest'
 import { Route as MainWatchingRkeyRouteImport } from './routes/_main/watching/$rkey'
 import { Route as MainProjectsNameRouteImport } from './routes/_main/projects/$name'
 import { Route as MainLabsXkcdRouteImport } from './routes/_main/labs/xkcd'
@@ -280,6 +281,11 @@ const MainBlogIndexRoute = MainBlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
   getParentRoute: () => MainRoute,
+} as any)
+const ApiHomelabIngestRoute = ApiHomelabIngestRouteImport.update({
+  id: '/api/homelab/ingest',
+  path: '/api/homelab/ingest',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MainWatchingRkeyRoute = MainWatchingRkeyRouteImport.update({
   id: '/watching/$rkey',
@@ -1011,6 +1017,7 @@ export interface FileRoutesByFullPath {
   '/labs/xkcd': typeof MainLabsXkcdRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
+  '/api/homelab/ingest': typeof ApiHomelabIngestRoute
   '/blog/': typeof MainBlogIndexRoute
   '/games/': typeof MainGamesIndexRoute
   '/labs/': typeof MainLabsIndexRoute
@@ -1158,6 +1165,7 @@ export interface FileRoutesByTo {
   '/labs/xkcd': typeof MainLabsXkcdRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
+  '/api/homelab/ingest': typeof ApiHomelabIngestRoute
   '/blog': typeof MainBlogIndexRoute
   '/games': typeof MainGamesIndexRoute
   '/labs': typeof MainLabsIndexRoute
@@ -1307,6 +1315,7 @@ export interface FileRoutesById {
   '/_main/labs/xkcd': typeof MainLabsXkcdRoute
   '/_main/projects/$name': typeof MainProjectsNameRoute
   '/_main/watching/$rkey': typeof MainWatchingRkeyRoute
+  '/api/homelab/ingest': typeof ApiHomelabIngestRoute
   '/_main/blog/': typeof MainBlogIndexRoute
   '/_main/games/': typeof MainGamesIndexRoute
   '/_main/labs/': typeof MainLabsIndexRoute
@@ -1456,6 +1465,7 @@ export interface FileRouteTypes {
     | '/labs/xkcd'
     | '/projects/$name'
     | '/watching/$rkey'
+    | '/api/homelab/ingest'
     | '/blog/'
     | '/games/'
     | '/labs/'
@@ -1603,6 +1613,7 @@ export interface FileRouteTypes {
     | '/labs/xkcd'
     | '/projects/$name'
     | '/watching/$rkey'
+    | '/api/homelab/ingest'
     | '/blog'
     | '/games'
     | '/labs'
@@ -1751,6 +1762,7 @@ export interface FileRouteTypes {
     | '/_main/labs/xkcd'
     | '/_main/projects/$name'
     | '/_main/watching/$rkey'
+    | '/api/homelab/ingest'
     | '/_main/blog/'
     | '/_main/games/'
     | '/_main/labs/'
@@ -1790,6 +1802,7 @@ export interface RootRouteChildren {
   OauthCallbackRoute: typeof OauthCallbackRoute
   OauthClientMetadataDotjsonRoute: typeof OauthClientMetadataDotjsonRoute
   OgSplatRoute: typeof OgSplatRoute
+  ApiHomelabIngestRoute: typeof ApiHomelabIngestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1968,6 +1981,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/blog/'
       preLoaderRoute: typeof MainBlogIndexRouteImport
       parentRoute: typeof MainRoute
+    }
+    '/api/homelab/ingest': {
+      id: '/api/homelab/ingest'
+      path: '/api/homelab/ingest'
+      fullPath: '/api/homelab/ingest'
+      preLoaderRoute: typeof ApiHomelabIngestRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_main/watching/$rkey': {
       id: '/_main/watching/$rkey'
@@ -3112,6 +3132,7 @@ const rootRouteChildren: RootRouteChildren = {
   OauthCallbackRoute: OauthCallbackRoute,
   OauthClientMetadataDotjsonRoute: OauthClientMetadataDotjsonRoute,
   OgSplatRoute: OgSplatRoute,
+  ApiHomelabIngestRoute: ApiHomelabIngestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

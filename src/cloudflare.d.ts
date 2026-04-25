@@ -63,10 +63,28 @@ interface D1Database {
   prepare(query: string): D1PreparedStatement;
 }
 
+/** Minimal KV surface — only what the homelab ingest + page loader use. */
+interface KVNamespace {
+  get(key: string, options?: { type: 'text' }): Promise<string | null>;
+  get<T = unknown>(key: string, options: { type: 'json' }): Promise<T | null>;
+  put(
+    key: string,
+    value: string,
+    options?: { expirationTtl?: number; metadata?: unknown },
+  ): Promise<void>;
+  list(options?: { prefix?: string; limit?: number; cursor?: string }): Promise<{
+    keys: Array<{ name: string; expiration?: number; metadata?: unknown }>;
+    list_complete: boolean;
+    cursor?: string;
+  }>;
+  delete(key: string): Promise<void>;
+}
+
 type AtriumEnv = {
   PRESENCE_DO: DurableObjectNamespace;
   ATRIUM_DO: DurableObjectNamespace;
   ATRIUM_DB: D1Database;
+  HOMELAB?: KVNamespace;
   [key: string]: unknown;
 };
 

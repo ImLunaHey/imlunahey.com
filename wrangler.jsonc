@@ -49,5 +49,19 @@
 			"database_id": "3f62a301-e8e6-4afb-87b3-69106c0e7b6f",
 			"migrations_dir": "migrations/atrium"
 		}
+	],
+	// KV holds the latest per-host telemetry blob and the latest services
+	// blob pushed by the homelab-agent NixOS module
+	// (../nixos-configs/modules/homelab-agent.nix). Keys:
+	//   homelab:host:<hostname>  → { ts, data: HostData }
+	//   homelab:services         → { ts, source, data: ServiceRow[] }
+	// Create the namespace once with
+	//   wrangler kv namespace create HOMELAB
+	// then paste the resulting id below.
+	"kv_namespaces": [
+		{
+			"binding": "HOMELAB",
+			"id": "87f8cd0410224ac99c0ca2a16a1a3fd6"
+		}
 	]
 }
