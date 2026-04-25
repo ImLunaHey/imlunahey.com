@@ -1,10 +1,18 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 
+// fallback can be either a static node (the production "something broke"
+// page in Layout) or a render function that receives the caught error +
+// component stack — Layout uses the function form to surface the real
+// error in dev while keeping the friendly fallback in prod.
+type FallbackRender =
+  | ReactNode
+  | ((error: Error | null, errorInfo: ErrorInfo | null) => ReactNode);
+
 export class ErrorBoundary extends Component<
-  { fallback?: ReactNode; children: ReactNode },
+  { fallback?: FallbackRender; children: ReactNode },
   { hasError: boolean; error: Error | null; errorInfo: ErrorInfo | null }
 > {
-  constructor(props: { fallback?: ReactNode; children: ReactNode }) {
+  constructor(props: { fallback?: FallbackRender; children: ReactNode }) {
     super(props);
     this.state = {
       hasError: false,
@@ -13,23 +21,26 @@ export class ErrorBoundary extends Component<
     };
   }
 
-  static getDerivedStateFromError() {
-    // Update state so the next render will show the fallback UI
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error) {
+    // Capture the error in render-state so the function-form fallback
+    // can read it on first render — componentDidCatch fires after the
+    // first error render, which is too late if the fallback wants the
+    // stack on the first paint.
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // You can log the error to an error reporting service
     console.error('Error caught by ErrorBoundary:', error, errorInfo);
-    this.setState({
-      error: error,
-      errorInfo: errorInfo,
-    });
+    this.setState({ error, errorInfo });
   }
 
   render() {
     if (this.state.hasError) {
-      if (this.props.fallback !== undefined) return this.props.fallback;
+      const fb = this.props.fallback;
+      if (typeof fb === 'function') {
+        return fb(this.state.error, this.state.errorInfo);
+      }
+      if (fb !== undefined) return fb;
       return (
         <div className="p-6 bg-[#1a1a1a] border border-red-900 overflow-auto">
           <h2 className="text-xl font-semibold text-red-400 mb-4">Something went wrong.</h2>
