@@ -23,18 +23,18 @@ import {
 
 // ─── tile data model ─────────────────────────────────────────────────────────
 
-type Suit = 'bamboo' | 'circle' | 'character';
-type Wind = 'east' | 'south' | 'west' | 'north';
-type Dragon = 'red' | 'green' | 'white';
+export type Suit = 'bamboo' | 'circle' | 'character';
+export type Wind = 'east' | 'south' | 'west' | 'north';
+export type Dragon = 'red' | 'green' | 'white';
 
-type Face =
+export type Face =
   | { kind: 'suit'; suit: Suit; n: number }
   | { kind: 'wind'; dir: Wind }
   | { kind: 'dragon'; color: Dragon }
   | { kind: 'season'; n: number }
   | { kind: 'flower'; n: number };
 
-function faceSymbolId(f: Face): string {
+export function faceSymbolId(f: Face): string {
   if (f.kind === 'suit') return `mj-${f.suit}-${f.n}`;
   if (f.kind === 'wind') return `mj-wind-${f.dir}`;
   if (f.kind === 'dragon') return `mj-dragon-${f.color}`;
@@ -44,7 +44,7 @@ function faceSymbolId(f: Face): string {
 
 // match rule: same exact face for ordinary tiles; any season matches any
 // season; any flower matches any flower.
-function facesMatch(a: Face, b: Face): boolean {
+export function facesMatch(a: Face, b: Face): boolean {
   if (a.kind === 'season' && b.kind === 'season') return true;
   if (a.kind === 'flower' && b.kind === 'flower') return true;
   if (a.kind !== b.kind) return false;
@@ -58,7 +58,7 @@ function facesMatch(a: Face, b: Face): boolean {
 // (suits / winds / dragons) the four copies form two same-face pairs each.
 // for seasons / flowers, the four are unique but match within their group,
 // so we partition them into two cross-tile pairs.
-function buildFacePairs(rng: () => number): Face[][] {
+export function buildFacePairs(rng: () => number): Face[][] {
   const pairs: Face[][] = [];
   const suits: Suit[] = ['bamboo', 'circle', 'character'];
   for (const suit of suits) {
@@ -88,7 +88,7 @@ function buildFacePairs(rng: () => number): Face[][] {
 
 // ─── layout ──────────────────────────────────────────────────────────────────
 
-type Slot = { id: number; layer: number; col: number; row: number };
+export type Slot = { id: number; layer: number; col: number; row: number };
 
 export type LayoutId = 'pyramid' | 'wide' | 'tower';
 
@@ -138,9 +138,9 @@ export const LAYOUTS: Record<LayoutId, LayoutDef> = {
   },
 };
 
-const LAYOUT_ORDER: LayoutId[] = ['pyramid', 'wide', 'tower'];
+export const LAYOUT_ORDER: LayoutId[] = ['pyramid', 'wide', 'tower'];
 
-function buildLayout(layoutId: LayoutId): Slot[] {
+export function buildLayout(layoutId: LayoutId): Slot[] {
   const out: Slot[] = [];
   let id = 0;
   for (const [layer, c0, c1, r0, r1] of LAYOUTS[layoutId].ranges) {
@@ -160,24 +160,24 @@ function buildLayout(layoutId: LayoutId): Slot[] {
 // rng seed for the deal. that means one shareable number — `1234567890` —
 // fully determines both the shape and the tile arrangement.
 
-function encodeSeed(layoutId: LayoutId, rand30: number): number {
+export function encodeSeed(layoutId: LayoutId, rand30: number): number {
   const code = LAYOUT_ORDER.indexOf(layoutId);
   return (((code & 0x3) << 30) | (rand30 & 0x3fffffff)) >>> 0;
 }
 
-function decodeSeed(seed: number): LayoutId {
+export function decodeSeed(seed: number): LayoutId {
   const code = (seed >>> 30) & 0x3;
   return LAYOUT_ORDER[code] ?? 'pyramid';
 }
 
-function freshSeed(layoutId: LayoutId): number {
+export function freshSeed(layoutId: LayoutId): number {
   return encodeSeed(layoutId, (Math.random() * 0x40000000) >>> 0);
 }
 
 // a tile is "free" iff:
 //   - no tile in `present` overlaps it from a higher layer at the same (col,row), AND
 //   - it has at least one of the two side-neighbours empty (left or right).
-function isFree(slot: Slot, present: Map<number, Slot>): boolean {
+export function isFree(slot: Slot, present: Map<number, Slot>): boolean {
   let leftBlocked = false;
   let rightBlocked = false;
   for (const s of present.values()) {
@@ -198,7 +198,7 @@ function isFree(slot: Slot, present: Map<number, Slot>): boolean {
 // then assign face-pairs to that order. since we only ever remove free pairs,
 // that exact sequence is replayable by the user — the puzzle is solvable.
 // random play can dead-end; we retry the simulation until it succeeds.
-function rngFromSeed(seed: number): () => number {
+export function rngFromSeed(seed: number): () => number {
   let s = (seed >>> 0) || 1;
   return () => {
     s = (s * 1664525 + 1013904223) >>> 0;
@@ -206,7 +206,7 @@ function rngFromSeed(seed: number): () => number {
   };
 }
 
-function shuffled<T>(arr: T[], rand: () => number): T[] {
+export function shuffled<T>(arr: T[], rand: () => number): T[] {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
@@ -215,7 +215,51 @@ function shuffled<T>(arr: T[], rand: () => number): T[] {
   return a;
 }
 
-function trySimulate(slots: Slot[], rng: () => number): Array<[Slot, Slot]> | null {
+// the "match group" key — two faces match iff they share this key. ordinary
+// tiles match by exact face; seasons match any season; flowers any flower.
+export function matchGroupKey(f: Face): string {
+  if (f.kind === 'season') return 'season';
+  if (f.kind === 'flower') return 'flower';
+  return faceSymbolId(f);
+}
+
+// distribute face-pairs over a removal-order timeline so that the two pairs
+// of any given match group land at indices i and i + half. this is what
+// makes the puzzle reliably greedy-solvable: by the time the second pair
+// of a face becomes free, the first pair is gone — so the player always
+// has exactly one valid match for that face, and naive play wins.
+//
+// `doubleGroups[i]` is a 2-pair group (4 tiles of the same match group);
+// `singletonPairs[i]` is a single pair (only 2 tiles of that match group
+// remain — happens during shuffleRemaining, never in fresh generation).
+// the total pairs must equal `orderLen`.
+export function arrangeFacesSpread(
+  doubleGroups: Face[][][],
+  singletonPairs: Face[][],
+  orderLen: number,
+  rng: () => number,
+): Face[][] {
+  const half = Math.floor(orderLen / 2);
+  const out: Face[][] = new Array(orderLen);
+  const doubles = shuffled(doubleGroups, rng);
+  const singles = shuffled(singletonPairs, rng);
+  const D = doubles.length;
+  for (let i = 0; i < D; i++) {
+    out[i] = doubles[i][0];
+    out[i + half] = doubles[i][1];
+  }
+  // singletons fill the holes left between the double-spread blocks
+  const remaining: number[] = [];
+  for (let i = D; i < half; i++) remaining.push(i);
+  for (let i = half + D; i < orderLen; i++) remaining.push(i);
+  const remainingShuffled = shuffled(remaining, rng);
+  for (let i = 0; i < singles.length; i++) {
+    out[remainingShuffled[i]] = singles[i];
+  }
+  return out;
+}
+
+export function trySimulate(slots: Slot[], rng: () => number): Array<[Slot, Slot]> | null {
   const present = new Map<number, Slot>();
   for (const s of slots) present.set(s.id, s);
   const pairs: Array<[Slot, Slot]> = [];
@@ -235,33 +279,158 @@ function trySimulate(slots: Slot[], rng: () => number): Array<[Slot, Slot]> | nu
   return pairs;
 }
 
-function generateDeal(seed: number): { slots: Slot[]; faces: Map<number, Face>; layoutId: LayoutId } {
-  const layoutId = decodeSeed(seed);
-  const slots = buildLayout(layoutId);
-  const rng = rngFromSeed(seed);
+// like trySimulate, but bias each step toward pairs of free tiles in the
+// same (layer, row). that produces a removal order whose face-pairs tend
+// to be geographically close on the board, which is what a human player
+// naturally matches anyway — so the resulting deal is far more amenable
+// to greedy play.
+function trySimulateBiased(slots: Slot[], rng: () => number): Array<[Slot, Slot]> | null {
+  const present = new Map<number, Slot>();
+  for (const s of slots) present.set(s.id, s);
+  const pairs: Array<[Slot, Slot]> = [];
+  while (present.size > 0) {
+    const free: Slot[] = [];
+    for (const s of present.values()) if (isFree(s, present)) free.push(s);
+    if (free.length < 2) return null;
+
+    // group by (layer, row); prefer rows that have ≥ 2 free tiles.
+    const byRow = new Map<string, Slot[]>();
+    for (const s of free) {
+      const k = `${s.layer}|${s.row}`;
+      let arr = byRow.get(k);
+      if (!arr) byRow.set(k, (arr = []));
+      arr.push(s);
+    }
+    const candidateKeys = [...byRow.keys()].filter((k) => byRow.get(k)!.length >= 2);
+    let a: Slot | null = null;
+    let b: Slot | null = null;
+    if (candidateKeys.length > 0) {
+      const k = candidateKeys[Math.floor(rng() * candidateKeys.length)];
+      const tiles = byRow.get(k)!;
+      const i1 = Math.floor(rng() * tiles.length);
+      let i2 = Math.floor(rng() * tiles.length);
+      while (i2 === i1) i2 = Math.floor(rng() * tiles.length);
+      a = tiles[i1];
+      b = tiles[i2];
+    } else {
+      const i1 = Math.floor(rng() * free.length);
+      let i2 = Math.floor(rng() * free.length);
+      while (i2 === i1) i2 = Math.floor(rng() * free.length);
+      a = free[i1];
+      b = free[i2];
+    }
+    pairs.push([a, b]);
+    present.delete(a.id);
+    present.delete(b.id);
+  }
+  return pairs;
+}
+
+// build a single candidate deal at a given internal rng seed.
+function buildCandidate(
+  slots: Slot[],
+  internalSeed: number,
+): { faces: Map<number, Face> } | null {
+  const rng = rngFromSeed(internalSeed);
   let order: Array<[Slot, Slot]> | null = null;
   for (let attempt = 0; attempt < 50; attempt++) {
-    order = trySimulate(slots, rng);
+    order = trySimulateBiased(slots, rng);
     if (order) break;
   }
-  if (!order) {
-    // extremely unlikely with this layout — fall back to the best-effort
-    // pairing so the page still renders something playable-ish.
-    const pairs = buildFacePairs(rng);
-    const faces = new Map<number, Face>();
-    for (let i = 0; i < slots.length; i += 2) {
-      const f = pairs[Math.floor(i / 2)];
-      faces.set(slots[i].id, f[0]);
-      faces.set(slots[i + 1].id, f[1]);
-    }
-    return { slots, faces, layoutId };
+  if (!order) return null;
+
+  const allPairs = buildFacePairs(rng);
+  const doubleGroups: Face[][][] = [];
+  for (let i = 0; i < allPairs.length; i += 2) {
+    doubleGroups.push([allPairs[i], allPairs[i + 1]]);
   }
-  const pairs = shuffled(buildFacePairs(rng), rng);
+  const arranged = arrangeFacesSpread(doubleGroups, [], order.length, rng);
   const faces = new Map<number, Face>();
   for (let k = 0; k < order.length; k++) {
     const [a, b] = order[k];
-    faces.set(a.id, pairs[k][0]);
-    faces.set(b.id, pairs[k][1]);
+    faces.set(a.id, arranged[k][0]);
+    faces.set(b.id, arranged[k][1]);
+  }
+  return { faces };
+}
+
+// run a "greedy random" simulated player on a deal: each step, pick a
+// random matching pair from the currently-free tiles and remove it. the
+// random choice deliberately mirrors a careless human — so a deal that
+// passes this check is one that *most plays* of it can win, not just the
+// theoretical optimum.
+function simulateGreedyPlay(
+  slots: Slot[],
+  faces: Map<number, Face>,
+  rng: () => number,
+): { won: boolean; pairs: number } {
+  const present = new Map<number, Slot>();
+  for (const s of slots) present.set(s.id, s);
+  let pairs = 0;
+  while (present.size > 0) {
+    const free: Slot[] = [];
+    for (const s of present.values()) if (isFree(s, present)) free.push(s);
+    const matches: Array<[Slot, Slot]> = [];
+    for (let i = 0; i < free.length; i++) {
+      for (let j = i + 1; j < free.length; j++) {
+        const fa = faces.get(free[i].id)!;
+        const fb = faces.get(free[j].id)!;
+        if (facesMatch(fa, fb)) matches.push([free[i], free[j]]);
+      }
+    }
+    if (matches.length === 0) break;
+    const pick = matches[Math.floor(rng() * matches.length)];
+    present.delete(pick[0].id);
+    present.delete(pick[1].id);
+    pairs++;
+  }
+  return { won: present.size === 0, pairs };
+}
+
+// score a candidate by what fraction of greedy plays succeed. higher = more
+// forgiving deal — the player can blunder a few times and still win.
+function scoreCandidate(slots: Slot[], faces: Map<number, Face>, internalSeed: number, trials = 16): number {
+  let wins = 0;
+  for (let i = 0; i < trials; i++) {
+    const rng = rngFromSeed((internalSeed ^ ((i + 1) * 0x9e3779b1)) >>> 0);
+    if (simulateGreedyPlay(slots, faces, rng).won) wins++;
+  }
+  return wins / trials;
+}
+
+export function generateDeal(seed: number): { slots: Slot[]; faces: Map<number, Face>; layoutId: LayoutId } {
+  const layoutId = decodeSeed(seed);
+  const slots = buildLayout(layoutId);
+
+  // try up to N internally-salted candidates and accept the first one that
+  // a greedy random player wins ≥ 75% of the time. if none does, fall back
+  // to the highest-scoring candidate seen. user-facing seed stays the same:
+  // the salting is deterministic, so the "share this seed" flow still
+  // reproduces the exact deal on a friend's machine.
+  const ACCEPT_THRESHOLD = 0.85;
+  const MAX_ATTEMPTS = 128;
+  let best: { faces: Map<number, Face>; score: number } | null = null;
+  for (let salt = 0; salt < MAX_ATTEMPTS; salt++) {
+    const internalSeed = ((seed * 0x9e3779b1) ^ (salt * 0x85ebca6b)) >>> 0;
+    const candidate = buildCandidate(slots, internalSeed);
+    if (!candidate) continue;
+    const score = scoreCandidate(slots, candidate.faces, internalSeed);
+    if (score >= ACCEPT_THRESHOLD) {
+      return { slots, faces: candidate.faces, layoutId };
+    }
+    if (!best || score > best.score) best = { faces: candidate.faces, score };
+  }
+  if (best) return { slots, faces: best.faces, layoutId };
+
+  // ultimate fallback — every attempt failed even to construct an order.
+  // shouldn't happen for any of our layouts, but renders something playable.
+  const rng = rngFromSeed(seed);
+  const pairs = buildFacePairs(rng);
+  const faces = new Map<number, Face>();
+  for (let i = 0; i < slots.length; i += 2) {
+    const f = pairs[Math.floor(i / 2)];
+    faces.set(slots[i].id, f[0]);
+    faces.set(slots[i + 1].id, f[1]);
   }
   return { slots, faces, layoutId };
 }
@@ -270,7 +439,7 @@ function generateDeal(seed: number): { slots: Slot[]; faces: Map<number, Face>; 
 // fresh valid removal order. the player's progress (which slots are gone) is
 // preserved; only the visible face values change. like generateDeal, the
 // resulting board is guaranteed to have *a* solution sequence.
-function shuffleRemaining(
+export function shuffleRemaining(
   slots: Slot[],
   existingFaces: Map<number, Face>,
   remainingIds: Set<number>,
@@ -317,20 +486,38 @@ function shuffleRemaining(
   }
   if (pairs.length * 2 !== faces.length) return null;
 
-  const shuffledPairs = shuffled(pairs, rng);
-
   let order: Array<[Slot, Slot]> | null = null;
   for (let attempt = 0; attempt < 50; attempt++) {
-    order = trySimulate(remainingSlots, rng);
+    order = trySimulateBiased(remainingSlots, rng);
     if (order) break;
   }
-  if (!order || order.length !== shuffledPairs.length) return null;
+  if (!order || order.length !== pairs.length) return null;
+
+  // classify pairs by match group: a group with both pairs present (4 tiles
+  // remaining) becomes a "double", a group with only one pair (2 tiles)
+  // becomes a "singleton". then spread the doubles at distance half so the
+  // shuffled board is greedy-solvable, same as a fresh deal.
+  const byKey = new Map<string, Face[][]>();
+  for (const p of pairs) {
+    const k = matchGroupKey(p[0]);
+    const existing = byKey.get(k);
+    if (existing) existing.push(p);
+    else byKey.set(k, [p]);
+  }
+  const doubles: Face[][][] = [];
+  const singles: Face[][] = [];
+  for (const arr of byKey.values()) {
+    if (arr.length === 2) doubles.push([arr[0], arr[1]]);
+    else if (arr.length === 1) singles.push(arr[0]);
+    else return null; // unexpected — shouldn't happen for valid inventory
+  }
+  const arranged = arrangeFacesSpread(doubles, singles, order.length, rng);
 
   const out = new Map(existingFaces);
   for (let k = 0; k < order.length; k++) {
     const [a, b] = order[k];
-    out.set(a.id, shuffledPairs[k][0]);
-    out.set(b.id, shuffledPairs[k][1]);
+    out.set(a.id, arranged[k][0]);
+    out.set(b.id, arranged[k][1]);
   }
   return out;
 }
