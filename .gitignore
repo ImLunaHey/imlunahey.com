@@ -31,3 +31,8 @@ dist-ssr
 # vitest
 **/__image_diffs__/**
 **/__image_snapshots__/**
+# library: tmdb response cache from `pnpm library:build` — kept locally
+# so re-runs are instant + reproducible; rebuilt on demand. ~30MB so
+# not worth committing. The build emits src/data/library.json (small,
+# committed) which is what the page actually imports.
+data/library-tmdb-cache.json

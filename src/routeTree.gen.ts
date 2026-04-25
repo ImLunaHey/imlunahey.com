@@ -21,7 +21,6 @@ import { Route as ApiMastodonStreamRouteImport } from './routes/api/mastodon-str
 import { Route as MainUsesRouteImport } from './routes/_main/uses'
 import { Route as MainTimelineRouteImport } from './routes/_main/timeline'
 import { Route as MainMusicRouteImport } from './routes/_main/music'
-import { Route as MainLibraryRouteImport } from './routes/_main/library'
 import { Route as MainHomelabRouteImport } from './routes/_main/homelab'
 import { Route as MainHealthRouteImport } from './routes/_main/health'
 import { Route as MainGuestbookRouteImport } from './routes/_main/guestbook'
@@ -32,12 +31,14 @@ import { Route as MainBookmarksRouteImport } from './routes/_main/bookmarks'
 import { Route as MainAiRouteImport } from './routes/_main/ai'
 import { Route as MainWatchingIndexRouteImport } from './routes/_main/watching/index'
 import { Route as MainProjectsIndexRouteImport } from './routes/_main/projects/index'
+import { Route as MainLibraryIndexRouteImport } from './routes/_main/library/index'
 import { Route as MainLabsIndexRouteImport } from './routes/_main/labs/index'
 import { Route as MainGamesIndexRouteImport } from './routes/_main/games/index'
 import { Route as MainBlogIndexRouteImport } from './routes/_main/blog/index'
 import { Route as ApiHomelabIngestRouteImport } from './routes/api/homelab.ingest'
 import { Route as MainWatchingRkeyRouteImport } from './routes/_main/watching/$rkey'
 import { Route as MainProjectsNameRouteImport } from './routes/_main/projects/$name'
+import { Route as MainLibraryImdbIdRouteImport } from './routes/_main/library/$imdbId'
 import { Route as MainLabsXkcdRouteImport } from './routes/_main/labs/xkcd'
 import { Route as MainLabsWordleRouteImport } from './routes/_main/labs/wordle'
 import { Route as MainLabsWhtwndRouteImport } from './routes/_main/labs/whtwnd'
@@ -218,11 +219,6 @@ const MainMusicRoute = MainMusicRouteImport.update({
   path: '/music',
   getParentRoute: () => MainRoute,
 } as any)
-const MainLibraryRoute = MainLibraryRouteImport.update({
-  id: '/library',
-  path: '/library',
-  getParentRoute: () => MainRoute,
-} as any)
 const MainHomelabRoute = MainHomelabRouteImport.update({
   id: '/homelab',
   path: '/homelab',
@@ -273,6 +269,11 @@ const MainProjectsIndexRoute = MainProjectsIndexRouteImport.update({
   path: '/projects/',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLibraryIndexRoute = MainLibraryIndexRouteImport.update({
+  id: '/library/',
+  path: '/library/',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsIndexRoute = MainLabsIndexRouteImport.update({
   id: '/labs/',
   path: '/labs/',
@@ -301,6 +302,11 @@ const MainWatchingRkeyRoute = MainWatchingRkeyRouteImport.update({
 const MainProjectsNameRoute = MainProjectsNameRouteImport.update({
   id: '/projects/$name',
   path: '/projects/$name',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLibraryImdbIdRoute = MainLibraryImdbIdRouteImport.update({
+  id: '/library/$imdbId',
+  path: '/library/$imdbId',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsXkcdRoute = MainLabsXkcdRouteImport.update({
@@ -918,7 +924,6 @@ export interface FileRoutesByFullPath {
   '/guestbook': typeof MainGuestbookRoute
   '/health': typeof MainHealthRoute
   '/homelab': typeof MainHomelabRoute
-  '/library': typeof MainLibraryRoute
   '/music': typeof MainMusicRoute
   '/timeline': typeof MainTimelineRoute
   '/uses': typeof MainUsesRoute
@@ -1022,12 +1027,14 @@ export interface FileRoutesByFullPath {
   '/labs/whtwnd': typeof MainLabsWhtwndRoute
   '/labs/wordle': typeof MainLabsWordleRoute
   '/labs/xkcd': typeof MainLabsXkcdRoute
+  '/library/$imdbId': typeof MainLibraryImdbIdRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
   '/api/homelab/ingest': typeof ApiHomelabIngestRoute
   '/blog/': typeof MainBlogIndexRoute
   '/games/': typeof MainGamesIndexRoute
   '/labs/': typeof MainLabsIndexRoute
+  '/library/': typeof MainLibraryIndexRoute
   '/projects/': typeof MainProjectsIndexRoute
   '/watching/': typeof MainWatchingIndexRoute
   '/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
@@ -1066,7 +1073,6 @@ export interface FileRoutesByTo {
   '/guestbook': typeof MainGuestbookRoute
   '/health': typeof MainHealthRoute
   '/homelab': typeof MainHomelabRoute
-  '/library': typeof MainLibraryRoute
   '/music': typeof MainMusicRoute
   '/timeline': typeof MainTimelineRoute
   '/uses': typeof MainUsesRoute
@@ -1171,12 +1177,14 @@ export interface FileRoutesByTo {
   '/labs/whtwnd': typeof MainLabsWhtwndRoute
   '/labs/wordle': typeof MainLabsWordleRoute
   '/labs/xkcd': typeof MainLabsXkcdRoute
+  '/library/$imdbId': typeof MainLibraryImdbIdRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
   '/api/homelab/ingest': typeof ApiHomelabIngestRoute
   '/blog': typeof MainBlogIndexRoute
   '/games': typeof MainGamesIndexRoute
   '/labs': typeof MainLabsIndexRoute
+  '/library': typeof MainLibraryIndexRoute
   '/projects': typeof MainProjectsIndexRoute
   '/watching': typeof MainWatchingIndexRoute
   '/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
@@ -1217,7 +1225,6 @@ export interface FileRoutesById {
   '/_main/guestbook': typeof MainGuestbookRoute
   '/_main/health': typeof MainHealthRoute
   '/_main/homelab': typeof MainHomelabRoute
-  '/_main/library': typeof MainLibraryRoute
   '/_main/music': typeof MainMusicRoute
   '/_main/timeline': typeof MainTimelineRoute
   '/_main/uses': typeof MainUsesRoute
@@ -1322,12 +1329,14 @@ export interface FileRoutesById {
   '/_main/labs/whtwnd': typeof MainLabsWhtwndRoute
   '/_main/labs/wordle': typeof MainLabsWordleRoute
   '/_main/labs/xkcd': typeof MainLabsXkcdRoute
+  '/_main/library/$imdbId': typeof MainLibraryImdbIdRoute
   '/_main/projects/$name': typeof MainProjectsNameRoute
   '/_main/watching/$rkey': typeof MainWatchingRkeyRoute
   '/api/homelab/ingest': typeof ApiHomelabIngestRoute
   '/_main/blog/': typeof MainBlogIndexRoute
   '/_main/games/': typeof MainGamesIndexRoute
   '/_main/labs/': typeof MainLabsIndexRoute
+  '/_main/library/': typeof MainLibraryIndexRoute
   '/_main/projects/': typeof MainProjectsIndexRoute
   '/_main/watching/': typeof MainWatchingIndexRoute
   '/_main/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
@@ -1369,7 +1378,6 @@ export interface FileRouteTypes {
     | '/guestbook'
     | '/health'
     | '/homelab'
-    | '/library'
     | '/music'
     | '/timeline'
     | '/uses'
@@ -1473,12 +1481,14 @@ export interface FileRouteTypes {
     | '/labs/whtwnd'
     | '/labs/wordle'
     | '/labs/xkcd'
+    | '/library/$imdbId'
     | '/projects/$name'
     | '/watching/$rkey'
     | '/api/homelab/ingest'
     | '/blog/'
     | '/games/'
     | '/labs/'
+    | '/library/'
     | '/projects/'
     | '/watching/'
     | '/labs/at-uri/$'
@@ -1517,7 +1527,6 @@ export interface FileRouteTypes {
     | '/guestbook'
     | '/health'
     | '/homelab'
-    | '/library'
     | '/music'
     | '/timeline'
     | '/uses'
@@ -1622,12 +1631,14 @@ export interface FileRouteTypes {
     | '/labs/whtwnd'
     | '/labs/wordle'
     | '/labs/xkcd'
+    | '/library/$imdbId'
     | '/projects/$name'
     | '/watching/$rkey'
     | '/api/homelab/ingest'
     | '/blog'
     | '/games'
     | '/labs'
+    | '/library'
     | '/projects'
     | '/watching'
     | '/labs/at-uri/$'
@@ -1667,7 +1678,6 @@ export interface FileRouteTypes {
     | '/_main/guestbook'
     | '/_main/health'
     | '/_main/homelab'
-    | '/_main/library'
     | '/_main/music'
     | '/_main/timeline'
     | '/_main/uses'
@@ -1772,12 +1782,14 @@ export interface FileRouteTypes {
     | '/_main/labs/whtwnd'
     | '/_main/labs/wordle'
     | '/_main/labs/xkcd'
+    | '/_main/library/$imdbId'
     | '/_main/projects/$name'
     | '/_main/watching/$rkey'
     | '/api/homelab/ingest'
     | '/_main/blog/'
     | '/_main/games/'
     | '/_main/labs/'
+    | '/_main/library/'
     | '/_main/projects/'
     | '/_main/watching/'
     | '/_main/labs/at-uri/$'
@@ -1903,13 +1915,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainMusicRouteImport
       parentRoute: typeof MainRoute
     }
-    '/_main/library': {
-      id: '/_main/library'
-      path: '/library'
-      fullPath: '/library'
-      preLoaderRoute: typeof MainLibraryRouteImport
-      parentRoute: typeof MainRoute
-    }
     '/_main/homelab': {
       id: '/_main/homelab'
       path: '/homelab'
@@ -1980,6 +1985,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainProjectsIndexRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/library/': {
+      id: '/_main/library/'
+      path: '/library'
+      fullPath: '/library/'
+      preLoaderRoute: typeof MainLibraryIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/': {
       id: '/_main/labs/'
       path: '/labs'
@@ -2020,6 +2032,13 @@ declare module '@tanstack/react-router' {
       path: '/projects/$name'
       fullPath: '/projects/$name'
       preLoaderRoute: typeof MainProjectsNameRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/library/$imdbId': {
+      id: '/_main/library/$imdbId'
+      path: '/library/$imdbId'
+      fullPath: '/library/$imdbId'
+      preLoaderRoute: typeof MainLibraryImdbIdRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/xkcd': {
@@ -2867,7 +2886,6 @@ interface MainRouteChildren {
   MainGuestbookRoute: typeof MainGuestbookRoute
   MainHealthRoute: typeof MainHealthRoute
   MainHomelabRoute: typeof MainHomelabRoute
-  MainLibraryRoute: typeof MainLibraryRoute
   MainMusicRoute: typeof MainMusicRoute
   MainTimelineRoute: typeof MainTimelineRoute
   MainUsesRoute: typeof MainUsesRoute
@@ -2968,11 +2986,13 @@ interface MainRouteChildren {
   MainLabsWhtwndRoute: typeof MainLabsWhtwndRoute
   MainLabsWordleRoute: typeof MainLabsWordleRoute
   MainLabsXkcdRoute: typeof MainLabsXkcdRoute
+  MainLibraryImdbIdRoute: typeof MainLibraryImdbIdRoute
   MainProjectsNameRoute: typeof MainProjectsNameRoute
   MainWatchingRkeyRoute: typeof MainWatchingRkeyRoute
   MainBlogIndexRoute: typeof MainBlogIndexRoute
   MainGamesIndexRoute: typeof MainGamesIndexRoute
   MainLabsIndexRoute: typeof MainLabsIndexRoute
+  MainLibraryIndexRoute: typeof MainLibraryIndexRoute
   MainProjectsIndexRoute: typeof MainProjectsIndexRoute
   MainWatchingIndexRoute: typeof MainWatchingIndexRoute
   MainLabsAtUriSplatRoute: typeof MainLabsAtUriSplatRoute
@@ -3009,7 +3029,6 @@ const MainRouteChildren: MainRouteChildren = {
   MainGuestbookRoute: MainGuestbookRoute,
   MainHealthRoute: MainHealthRoute,
   MainHomelabRoute: MainHomelabRoute,
-  MainLibraryRoute: MainLibraryRoute,
   MainMusicRoute: MainMusicRoute,
   MainTimelineRoute: MainTimelineRoute,
   MainUsesRoute: MainUsesRoute,
@@ -3110,11 +3129,13 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsWhtwndRoute: MainLabsWhtwndRoute,
   MainLabsWordleRoute: MainLabsWordleRoute,
   MainLabsXkcdRoute: MainLabsXkcdRoute,
+  MainLibraryImdbIdRoute: MainLibraryImdbIdRoute,
   MainProjectsNameRoute: MainProjectsNameRoute,
   MainWatchingRkeyRoute: MainWatchingRkeyRoute,
   MainBlogIndexRoute: MainBlogIndexRoute,
   MainGamesIndexRoute: MainGamesIndexRoute,
   MainLabsIndexRoute: MainLabsIndexRoute,
+  MainLibraryIndexRoute: MainLibraryIndexRoute,
   MainProjectsIndexRoute: MainProjectsIndexRoute,
   MainWatchingIndexRoute: MainWatchingIndexRoute,
   MainLabsAtUriSplatRoute: MainLabsAtUriSplatRoute,

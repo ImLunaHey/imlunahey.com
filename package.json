@@ -18,7 +18,8 @@
     "test:browser": "vitest --workspace=vitest.workspace.ts",
     "guestbook:marker": "tsx --env-file=.env.local scripts/guestbook-marker.ts",
     "leaderboard:marker": "tsx --env-file=.env.local scripts/leaderboard-marker.ts",
-    "lexicons:publish": "tsx --env-file=.env.local scripts/lexicons-publish.ts"
+    "lexicons:publish": "tsx --env-file=.env.local scripts/lexicons-publish.ts",
+    "library:build": "tsx scripts/library-build.ts"
   },
   "dependencies": {
     "@ariakit/react": "^0.4.17",
