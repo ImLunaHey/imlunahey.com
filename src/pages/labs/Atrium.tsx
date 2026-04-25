@@ -97,6 +97,16 @@ type AtriumSavedState = {
   position: { tile: [number, number]; sitting: [number, number] | null } | null;
 };
 
+/** Sanitised did → home-room id. dids include `:` which our room id
+ *  validator rejects, so we swap them for `-`. Server reverses the
+ *  same transformation when checking ownership. Returns null for
+ *  unknown / guest sessions (only signed-in users get personal rooms). */
+function homeRoomIdFor(did: string | null | undefined): string | null {
+  if (!did) return null;
+  if (!/^did:(plc|web):[a-z0-9._-]+$/i.test(did)) return null;
+  return `home-${did.toLowerCase().replace(/:/g, '-')}`;
+}
+
 /** Look up a chair at this tile in the current room's furniture and
  *  return its facing (defaults to S when the tile isn't a chair or
  *  the chair has no explicit facing). Used everywhere we set an
@@ -709,7 +719,8 @@ type WirePeer = {
 };
 
 type ServerMsg =
-  | { t: 'init'; selfId: string; peers: WirePeer[]; you: AtriumSavedState | null }
+  | { t: 'init'; selfId: string; peers: WirePeer[]; you: AtriumSavedState | null; layout: Furniture[] | null; isOwner: boolean }
+  | { t: 'layout'; layout: Furniture[] }
   | { t: 'join'; peer: WirePeer }
   | { t: 'walk'; id: string; from: Tile; path: Tile[]; at: number }
   | { t: 'chat'; id: string; text: string; at: number }
@@ -724,7 +735,8 @@ type ClientMsg =
   | { t: 'chat'; text: string }
   | { t: 'style'; bodyColor: string; headColor: string }
   | { t: 'sit'; tile: Tile | null }
-  | { t: 'emote'; kind: EmoteKind };
+  | { t: 'emote'; kind: EmoteKind }
+  | { t: 'editLayout'; layout: Furniture[] };
 
 const DISPLACED_CODE = 4001;
 
@@ -1010,8 +1022,22 @@ function loadOrMintClientId(): string {
 }
 
 function randomNickname(): string {
-  const adjectives = ['cosy', 'vivid', 'tidy', 'soft', 'lush', 'plush', 'wry', 'mint', 'rosy', 'amber'];
-  const nouns = ['lemur', 'finch', 'otter', 'fox', 'crow', 'badger', 'orca', 'newt', 'koi', 'moth'];
+  // Bigger pool than v3 — invites by nickname (v9.1) need collisions
+  // to be rare. 50 × 50 = 2500 combinations.
+  const adjectives = [
+    'cosy', 'vivid', 'tidy', 'soft', 'lush', 'plush', 'wry', 'mint', 'rosy', 'amber',
+    'silver', 'golden', 'bronze', 'velvet', 'sapphire', 'jade', 'opal', 'pearl', 'coral', 'azure',
+    'crisp', 'mellow', 'breezy', 'snug', 'sunny', 'misty', 'dewy', 'glowing', 'sparkly', 'quiet',
+    'curious', 'gentle', 'brave', 'witty', 'merry', 'cheery', 'sleepy', 'sleepy', 'drowsy', 'eager',
+    'jolly', 'nimble', 'crafty', 'noble', 'kind', 'bold', 'shy', 'meek', 'wise', 'tame',
+  ];
+  const nouns = [
+    'lemur', 'finch', 'otter', 'fox', 'crow', 'badger', 'orca', 'newt', 'koi', 'moth',
+    'wren', 'sparrow', 'robin', 'magpie', 'heron', 'falcon', 'kestrel', 'swift', 'dove', 'owl',
+    'hare', 'mole', 'vole', 'shrew', 'stoat', 'weasel', 'marten', 'pine', 'lynx', 'puma',
+    'seal', 'whale', 'dolphin', 'narwhal', 'manatee', 'walrus', 'porcupine', 'hedgehog', 'pangolin', 'tapir',
+    'salamander', 'gecko', 'iguana', 'tortoise', 'turtle', 'frog', 'toad', 'beetle', 'cricket', 'firefly',
+  ];
   const a = adjectives[Math.floor(Math.random() * adjectives.length)];
   const n = nouns[Math.floor(Math.random() * nouns.length)];
   return `${a}-${n}`;
@@ -1183,11 +1209,60 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
   // Updated synchronously alongside the theme/portals refs above.
   const furnitureRef = useRef<Furniture[]>(furnitureFor(roomId));
   const walkableRef = useRef<boolean[][]>(buildWalkable(furnitureRef.current));
+  /** When the WS init delivers a custom layout (personal home room
+   *  loaded from D1), it gets parked here so the room-change effect
+   *  uses it instead of the hardcoded ROOM_LAYOUTS lookup. Cleared on
+   *  room change so a stale layout doesn't bleed into the next room. */
+  const customLayoutRef = useRef<Furniture[] | null>(null);
+  /** True when the WS init reports we own the current room (server
+   *  enforces this against the connected clientId). Drives whether
+   *  the edit toolbar shows. */
+  const [isOwnerOfRoom, setIsOwnerOfRoom] = useState(false);
+  /** Owner-only edit mode for personal home rooms. While on, the click
+   *  handler diverts: an empty walkable tile gets the selected `kind`
+   *  placed; a furniture tile gets removed (in 'remove' mode) or
+   *  replaced (when a kind is selected). */
+  const [editMode, setEditMode] = useState(false);
+  /** Active palette tool — null until first activation. 'remove' is
+   *  the wrench/eraser; everything else is a furniture kind to place. */
+  const [editTool, setEditTool] = useState<FurnKind | 'remove' | null>(null);
+  // Reset edit state when leaving a room (or losing ownership).
+  useEffect(() => {
+    if (!isOwnerOfRoom) {
+      setEditMode(false);
+      setEditTool(null);
+    }
+  }, [isOwnerOfRoom]);
+  // Edit operations always go through this helper — keeps the
+  // optimistic local update + ws send paired.
+  const sendEditLayout = useCallback((layout: Furniture[]) => {
+    customLayoutRef.current = layout;
+    furnitureRef.current = layout;
+    walkableRef.current = buildWalkable(layout);
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ t: 'editLayout', layout } satisfies ClientMsg));
+    }
+  }, []);
+  // Mirror edit state into refs so the mount-once canvas effect's
+  // click handler always reads the current values without rebinding.
+  const editModeRef = useRef(editMode);
+  const editToolRef = useRef(editTool);
+  const sendEditLayoutRef = useRef(sendEditLayout);
+  useEffect(() => {
+    editModeRef.current = editMode;
+    editToolRef.current = editTool;
+    sendEditLayoutRef.current = sendEditLayout;
+  }, [editMode, editTool, sendEditLayout]);
 
   // On room change, swap furniture + walkability and respawn the avatar
   // at the room centre. Respawn prevents bouncing back through a portal
   // we just used and avoids landing on a tile the new room blocks.
   useEffect(() => {
+    // Reset custom layout on room change — the WS init for the new
+    // room will repopulate it if applicable.
+    customLayoutRef.current = null;
+    setIsOwnerOfRoom(false);
     furnitureRef.current = furnitureFor(roomId);
     walkableRef.current = buildWalkable(furnitureRef.current);
 
@@ -1284,6 +1359,15 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
             { id: 'self', nickname: nicknameRef.current, color: bodyColorRef.current, isSelf: true },
             ...msg.peers.map((p) => ({ id: p.id, nickname: p.nickname, color: p.bodyColor, isSelf: false })),
           ]);
+          // Apply custom layout if one was sent (personal home rooms).
+          // Replace furniture + walkability refs in place so the next
+          // render frame sees the new layout.
+          if (msg.layout) {
+            customLayoutRef.current = msg.layout;
+            furnitureRef.current = msg.layout;
+            walkableRef.current = buildWalkable(msg.layout);
+          }
+          setIsOwnerOfRoom(!!msg.isOwner);
           // Server-side persisted state for THIS user. The DO already
           // filtered: `you.position` is the saved tile/sitting only when
           // the user's last room matches the room we're joining now —
@@ -1390,6 +1474,23 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
         case 'leave': {
           stateRef.current.peers.delete(msg.id);
           setOverlayList((prev) => prev.filter((o) => o.id !== msg.id));
+          break;
+        }
+        case 'layout': {
+          // Owner edited the layout — update everyone (including the
+          // editor's own client, which already had it locally). Avatars
+          // standing on a tile that just became blocked are nudged off
+          // to the room centre to avoid being stuck inside furniture.
+          customLayoutRef.current = msg.layout;
+          furnitureRef.current = msg.layout;
+          walkableRef.current = buildWalkable(msg.layout);
+          const a = stateRef.current.avatar;
+          if (!a.sitting && !walkableRef.current[Math.round(a.pos[0])]?.[Math.round(a.pos[1])]) {
+            a.tile = [5, 5];
+            a.pos = [5, 5];
+            a.path = [];
+            a.walking = false;
+          }
           break;
         }
       }
@@ -1548,6 +1649,43 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
       const start: Tile = [Math.round(a.pos[0]), Math.round(a.pos[1])];
       const ws = wsRef.current;
       const wsOpen = ws && ws.readyState === WebSocket.OPEN;
+
+      // Edit mode short-circuits the normal walk/sit pipeline. Owner
+      // is enforced server-side too; here we just gate the UI so a
+      // misclick from a non-owner never goes anywhere.
+      if (editModeRef.current && editToolRef.current) {
+        const tool = editToolRef.current;
+        const layout = furnitureRef.current;
+        const existing = layout.find((f) => f.tile[0] === ti && f.tile[1] === tj);
+        if (tool === 'remove') {
+          if (!existing) {
+            setHint('nothing here to remove.');
+            return;
+          }
+          sendEditLayoutRef.current(layout.filter((f) => !(f.tile[0] === ti && f.tile[1] === tj)));
+          setHint('removed.');
+        } else {
+          if (existing) {
+            setHint('something is already here. switch to remove first.');
+            return;
+          }
+          // basic per-kind defaults so newly-placed items don't all
+          // look the same colour
+          const colors: Record<FurnKind, string> = {
+            chair: '#ff8a8a',
+            table: '#d2b48c',
+            plant: '#88aa55',
+            lamp: '#ffcc55',
+            crate: '#a07050',
+            rug: '#3a5a8a',
+          };
+          const item: Furniture = { tile: [ti, tj], kind: tool, color: colors[tool] };
+          if (tool === 'chair') item.facing = 'S';
+          sendEditLayoutRef.current([...layout, item]);
+          setHint(`placed ${tool}.`);
+        }
+        return;
+      }
 
       // Did the user click on a chair? Chairs are non-walkable, so the
       // normal walkable check would just say "blocked" — here we route to
@@ -2019,6 +2157,8 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
 
   const peerCount = overlayList.length - 1;
   const roomLabel = PUBLIC_ROOMS.find((r) => r.id === roomId)?.label ?? roomId;
+  const myHomeRoomId = homeRoomIdFor(session?.info.sub);
+  const inMyHome = !!myHomeRoomId && roomId === myHomeRoomId;
   const statusLabel =
     status === 'connected'
       ? `connected · ${peerCount} ${peerCount === 1 ? 'peer' : 'peers'}`
@@ -2081,6 +2221,15 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
             ) : session ? (
               <>
                 <span className="at-identity-handle">@{signedInHandle ?? '…'}</span>
+                <button
+                  type="button"
+                  className={`at-id-btn ${roomId === myHomeRoomId ? 'ghost' : ''}`}
+                  onClick={() => myHomeRoomId && setRoomRef.current(myHomeRoomId)}
+                  disabled={!myHomeRoomId || roomId === myHomeRoomId}
+                  title={myHomeRoomId ? `your home — ${myHomeRoomId}` : ''}
+                >
+                  go home
+                </button>
                 <button type="button" className="at-id-btn" onClick={openPanel}>edit avatar</button>
                 <button type="button" className="at-id-btn ghost" onClick={() => void onSignOut()}>sign out</button>
               </>
@@ -2155,6 +2304,44 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
                 </button>
               </div>
               {saveErr ? <div className="at-id-err">{saveErr}</div> : null}
+            </div>
+          ) : null}
+
+          {inMyHome && isOwnerOfRoom ? (
+            <div className="at-edit">
+              <button
+                type="button"
+                className={`at-id-btn ${editMode ? 'primary' : 'ghost'}`}
+                onClick={() => {
+                  setEditMode((m) => !m);
+                  if (!editMode && !editTool) setEditTool('chair');
+                }}
+              >
+                {editMode ? '✓ done' : '✎ edit room'}
+              </button>
+              {editMode ? (
+                <div className="at-palette">
+                  {(['chair', 'table', 'plant', 'lamp', 'crate', 'rug'] as const).map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      className={`at-pal-btn ${editTool === k ? 'on' : ''}`}
+                      onClick={() => setEditTool(k)}
+                      title={`place ${k}`}
+                    >
+                      {k}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className={`at-pal-btn remove ${editTool === 'remove' ? 'on' : ''}`}
+                    onClick={() => setEditTool('remove')}
+                    title="remove furniture"
+                  >
+                    ✕ remove
+                  </button>
+                </div>
+              ) : null}
             </div>
           ) : null}
 
@@ -2364,6 +2551,51 @@ const CSS = `
   @keyframes at-pulse {
     0%, 100% { opacity: 0.4; }
     50% { opacity: 1; }
+  }
+
+  .at-edit {
+    position: absolute;
+    bottom: 110px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    pointer-events: auto;
+  }
+  .at-palette {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid var(--color-accent-dim);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: calc(100vw - var(--sp-6));
+  }
+  .at-pal-btn {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: transparent;
+    color: var(--color-fg-dim);
+    border: 1px solid var(--color-border);
+    padding: 3px 8px;
+    cursor: pointer;
+    text-transform: lowercase;
+  }
+  .at-pal-btn:hover { color: var(--color-fg); border-color: var(--color-border-bright); }
+  .at-pal-btn.on {
+    color: var(--color-accent);
+    border-color: var(--color-accent-dim);
+    background: color-mix(in oklch, var(--color-accent) 10%, transparent);
+  }
+  .at-pal-btn.remove.on {
+    color: #ff8888;
+    border-color: #ff5577;
+    background: color-mix(in oklch, #ff5577 14%, transparent);
   }
 
   .at-chat {

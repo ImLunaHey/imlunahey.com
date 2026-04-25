@@ -77,17 +77,57 @@ type ClientMsg =
   | { t: 'chat'; text?: unknown }
   | { t: 'style'; bodyColor?: unknown; headColor?: unknown }
   | { t: 'sit'; tile?: unknown }
-  | { t: 'emote'; kind?: unknown };
+  | { t: 'emote'; kind?: unknown }
+  | { t: 'editLayout'; layout?: unknown };
 
 type ServerMsg =
-  | { t: 'init'; selfId: string; peers: PeerState[]; you: SavedState | null }
+  | { t: 'init'; selfId: string; peers: PeerState[]; you: SavedState | null; layout: unknown[] | null; isOwner: boolean }
   | { t: 'join'; peer: PeerState }
   | { t: 'walk'; id: string; from: Tile; path: Tile[]; at: number }
   | { t: 'chat'; id: string; text: string; at: number }
   | { t: 'style'; id: string; bodyColor: string; headColor: string }
   | { t: 'sit'; id: string; tile: Tile | null }
   | { t: 'emote'; id: string; kind: string; at: number }
+  | { t: 'layout'; layout: unknown[] }
   | { t: 'leave'; id: string };
+
+const MAX_LAYOUT_ITEMS = 60;
+const FURN_KINDS = new Set(['chair', 'table', 'plant', 'lamp', 'crate', 'rug']);
+const FACING_VALUES = new Set(['N', 'S', 'E', 'W']);
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+
+/** Reject anything other than a furniture array small enough to fit in
+ *  a single D1 write. Server doesn't render the items — it just gates
+ *  who can write and broadcasts the blob to room peers — but a basic
+ *  shape check stops a malicious client from filling the table. */
+function safeLayout(x: unknown): unknown[] | null {
+  if (!Array.isArray(x)) return null;
+  if (x.length > MAX_LAYOUT_ITEMS) return null;
+  for (const item of x) {
+    if (!item || typeof item !== 'object') return null;
+    const o = item as Record<string, unknown>;
+    if (!FURN_KINDS.has(o.kind as string)) return null;
+    if (typeof o.color !== 'string' || !HEX_RE.test(o.color)) return null;
+    if (!isTile(o.tile)) return null;
+    if (o.facing != null && !FACING_VALUES.has(o.facing as string)) return null;
+  }
+  return x;
+}
+
+/** A `home-...` room is editable by the user whose sanitised did
+ *  appears in its suffix. did-plc / did-web only — anything else
+ *  isn't a personal room and has no owner (visitable but read-only). */
+function homeOwnerSuffix(roomId: string): string | null {
+  const m = /^home-(did-(plc|web)-[a-z0-9._-]+)$/.exec(roomId);
+  return m ? m[1] : null;
+}
+
+function isOwnerOfRoom(roomId: string, clientId: string): boolean {
+  const expected = homeOwnerSuffix(roomId);
+  if (!expected) return false;
+  const sanitised = clientId.replace(/:/g, '-');
+  return expected === sanitised;
+}
 
 const EMOTE_KINDS = ['wave', 'dance', 'jump'] as const;
 
@@ -221,7 +261,12 @@ export class AtriumDO extends DurableObject {
           if (oa.clientId === att.clientId) continue;
           peers.push(this.peerStateOf(oa));
         }
-        this.sendTo(ws, { t: 'init', selfId: att.id, peers, you: saved });
+        // Personal-room layout (if any) — fetched fresh on every hello
+        // so visitors see whatever the owner has edited up to this
+        // moment, no caching.
+        const layout = await this.loadRoomLayout(att.roomId);
+        const isOwner = isOwnerOfRoom(att.roomId, att.clientId);
+        this.sendTo(ws, { t: 'init', selfId: att.id, peers, you: saved, layout, isOwner });
         this.broadcastExcept(ws, { t: 'join', peer: this.peerStateOf(att) });
         break;
       }
@@ -282,6 +327,23 @@ export class AtriumDO extends DurableObject {
         if (!(EMOTE_KINDS as readonly string[]).includes(parsed.kind)) return;
         // ephemeral — no state stored, just broadcast
         this.broadcastExcept(ws, { t: 'emote', id: att.id, kind: parsed.kind, at: Date.now() });
+        break;
+      }
+      case 'editLayout': {
+        if (!att.helloed) return;
+        if (!isOwnerOfRoom(att.roomId, att.clientId)) return;
+        const layout = safeLayout(parsed.layout);
+        if (!layout) return;
+        await this.saveRoomLayout(att.roomId, att.clientId, layout);
+        // Broadcast to EVERYONE in the room (including the editor) so
+        // every client agrees on the same furnitureRef. Sender's own
+        // optimistic update will be overwritten with the same value
+        // moments later.
+        const msg: ServerMsg = { t: 'layout', layout };
+        const s = JSON.stringify(msg);
+        for (const peer of this.ctx.getWebSockets()) {
+          try { peer.send(s); } catch { /* ignore */ }
+        }
         break;
       }
     }
@@ -376,6 +438,41 @@ export class AtriumDO extends DurableObject {
       // saved state". The user just spawns at the centre instead of
       // their last spot; everything else still works.
       return null;
+    }
+  }
+
+  private async loadRoomLayout(roomId: string): Promise<unknown[] | null> {
+    if (!homeOwnerSuffix(roomId)) return null;
+    try {
+      const row = await this.env.ATRIUM_DB
+        .prepare('SELECT layout_json FROM atrium_layouts WHERE room_id = ?')
+        .bind(roomId)
+        .first<{ layout_json: string }>();
+      if (!row) return null;
+      try {
+        return safeLayout(JSON.parse(row.layout_json));
+      } catch {
+        return null;
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  private async saveRoomLayout(roomId: string, ownerClientId: string, layout: unknown[]): Promise<void> {
+    try {
+      await this.env.ATRIUM_DB
+        .prepare(`
+          INSERT INTO atrium_layouts (room_id, owner_id, layout_json, updated_at)
+          VALUES (?, ?, ?, ?)
+          ON CONFLICT(room_id) DO UPDATE SET
+            layout_json = excluded.layout_json,
+            updated_at  = excluded.updated_at
+        `)
+        .bind(roomId, ownerClientId, JSON.stringify(layout), Date.now())
+        .run();
+    } catch {
+      /* swallow — owner's next edit will retry */
     }
   }
 

@@ -517,6 +517,57 @@ boundary); just needed to actually use it in the renderer.
 - [x] `AvatarDraw` carries `facing`; renderScene passes
       `peer.facing` / `a.facing` from the existing avatar state.
 
+## v9 — personal home rooms + furniture editor (shipped)
+
+Goal: signed-in users get their own room they can decorate, share with
+friends via URL.
+
+- [x] **Personal room id** = `home-<did-with-colons-replaced>` (server
+      validates the format strictly: `home-did-(plc|web)-...`). Guests
+      don't get one — explicit per the user's spec; the "go home"
+      button is only enabled when signed in.
+- [x] **D1 layouts** at `migrations/atrium/0002_layouts.sql`:
+      `atrium_layouts(room_id PK, owner_id, layout_json, updated_at)`.
+      Stores the full furniture array as JSON. Whole-array writes on
+      every edit (no incremental ops); rooms cap at 60 items.
+- [x] **DO loads layout on hello** — the new `init.layout` field is
+      `null` for hardcoded public rooms, the saved JSON for personal
+      rooms with prior edits, or null for never-edited home rooms
+      (client falls back to a friendly default starter via
+      `furnitureFor` → `DEFAULT_LAYOUT`).
+- [x] **Init also carries `isOwner`** — server compares the
+      sanitised `clientId` to the room id's home suffix; client uses
+      the flag to decide whether to show the edit toolbar.
+- [x] **`editLayout` client → server message**, gated server-side on
+      `isOwnerOfRoom`. Validates the array (kind whitelist, hex color
+      regex, in-bounds tiles, optional facing in {N,S,E,W}, ≤ 60
+      items) before upserting D1.
+- [x] **`layout` server → client broadcast** to everyone in the room
+      so visitors see the owner's edits in real time. Avatars
+      standing on a tile that just became blocked are nudged to the
+      room centre to avoid being stuck inside furniture.
+- [x] **Edit toolbar UI** — shows when `inMyHome && isOwnerOfRoom`.
+      Furniture palette (chair / table / plant / lamp / crate / rug)
+      plus a remove tool. Click a tile in edit mode → place selected
+      kind (or remove if existing matches the remove tool). Optimistic
+      local update + ws send.
+- [x] **"Go home" button** in the identity panel — disabled when
+      signed out, takes you to your personal room when signed in.
+- [x] **Bigger guest nickname pool** (50 × 50 = 2500 combinations,
+      up from 10 × 10) since the v9.1 invite-by-nickname feature will
+      need collisions to be rare.
+
+### v9.1 — invites (next)
+
+- [ ] `/invite <name>` chat command — name = did, handle, or guest
+      nickname. Resolves to a recipient_key, writes a row to a new
+      `atrium_invites` table.
+- [ ] Notification chip in the identity panel when the user has
+      pending invites; click to accept (warps to inviter's room) or
+      dismiss.
+- [ ] Atproto handle → did resolution server-side for handle-based
+      invites.
+
 ## v8 — walk-leg animation (shipped)
 
 The body-stretch bob from v1 was the cheapest "you're walking" cue we
