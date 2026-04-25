@@ -62,6 +62,7 @@ import { Route as MainLabsSudokuRouteImport } from './routes/_main/labs/sudoku'
 import { Route as MainLabsSubnetRouteImport } from './routes/_main/labs/subnet'
 import { Route as MainLabsSpectrogramRouteImport } from './routes/_main/labs/spectrogram'
 import { Route as MainLabsSnakeRouteImport } from './routes/_main/labs/snake'
+import { Route as MainLabsShadersRouteImport } from './routes/_main/labs/shaders'
 import { Route as MainLabsScryfallRouteImport } from './routes/_main/labs/scryfall'
 import { Route as MainLabsScreenshotMakerRouteImport } from './routes/_main/labs/screenshot-maker'
 import { Route as MainLabsSchemaRouteImport } from './routes/_main/labs/schema'
@@ -414,6 +415,11 @@ const MainLabsSpectrogramRoute = MainLabsSpectrogramRouteImport.update({
 const MainLabsSnakeRoute = MainLabsSnakeRouteImport.update({
   id: '/labs/snake',
   path: '/labs/snake',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsShadersRoute = MainLabsShadersRouteImport.update({
+  id: '/labs/shaders',
+  path: '/labs/shaders',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsScryfallRoute = MainLabsScryfallRouteImport.update({
@@ -952,6 +958,7 @@ export interface FileRoutesByFullPath {
   '/labs/schema': typeof MainLabsSchemaRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/labs/scryfall': typeof MainLabsScryfallRoute
+  '/labs/shaders': typeof MainLabsShadersRoute
   '/labs/snake': typeof MainLabsSnakeRoute
   '/labs/spectrogram': typeof MainLabsSpectrogramRoute
   '/labs/subnet': typeof MainLabsSubnetRoute
@@ -1094,6 +1101,7 @@ export interface FileRoutesByTo {
   '/labs/schema': typeof MainLabsSchemaRoute
   '/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/labs/scryfall': typeof MainLabsScryfallRoute
+  '/labs/shaders': typeof MainLabsShadersRoute
   '/labs/snake': typeof MainLabsSnakeRoute
   '/labs/spectrogram': typeof MainLabsSpectrogramRoute
   '/labs/subnet': typeof MainLabsSubnetRoute
@@ -1238,6 +1246,7 @@ export interface FileRoutesById {
   '/_main/labs/schema': typeof MainLabsSchemaRoute
   '/_main/labs/screenshot-maker': typeof MainLabsScreenshotMakerRoute
   '/_main/labs/scryfall': typeof MainLabsScryfallRoute
+  '/_main/labs/shaders': typeof MainLabsShadersRoute
   '/_main/labs/snake': typeof MainLabsSnakeRoute
   '/_main/labs/spectrogram': typeof MainLabsSpectrogramRoute
   '/_main/labs/subnet': typeof MainLabsSubnetRoute
@@ -1382,6 +1391,7 @@ export interface FileRouteTypes {
     | '/labs/schema'
     | '/labs/screenshot-maker'
     | '/labs/scryfall'
+    | '/labs/shaders'
     | '/labs/snake'
     | '/labs/spectrogram'
     | '/labs/subnet'
@@ -1524,6 +1534,7 @@ export interface FileRouteTypes {
     | '/labs/schema'
     | '/labs/screenshot-maker'
     | '/labs/scryfall'
+    | '/labs/shaders'
     | '/labs/snake'
     | '/labs/spectrogram'
     | '/labs/subnet'
@@ -1667,6 +1678,7 @@ export interface FileRouteTypes {
     | '/_main/labs/schema'
     | '/_main/labs/screenshot-maker'
     | '/_main/labs/scryfall'
+    | '/_main/labs/shaders'
     | '/_main/labs/snake'
     | '/_main/labs/spectrogram'
     | '/_main/labs/subnet'
@@ -2103,6 +2115,13 @@ declare module '@tanstack/react-router' {
       path: '/labs/snake'
       fullPath: '/labs/snake'
       preLoaderRoute: typeof MainLabsSnakeRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/shaders': {
+      id: '/_main/labs/shaders'
+      path: '/labs/shaders'
+      fullPath: '/labs/shaders'
+      preLoaderRoute: typeof MainLabsShadersRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/scryfall': {
@@ -2806,6 +2825,7 @@ interface MainRouteChildren {
   MainLabsSchemaRoute: typeof MainLabsSchemaRoute
   MainLabsScreenshotMakerRoute: typeof MainLabsScreenshotMakerRoute
   MainLabsScryfallRoute: typeof MainLabsScryfallRoute
+  MainLabsShadersRoute: typeof MainLabsShadersRoute
   MainLabsSnakeRoute: typeof MainLabsSnakeRoute
   MainLabsSpectrogramRoute: typeof MainLabsSpectrogramRoute
   MainLabsSubnetRoute: typeof MainLabsSubnetRoute
@@ -2942,6 +2962,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsSchemaRoute: MainLabsSchemaRoute,
   MainLabsScreenshotMakerRoute: MainLabsScreenshotMakerRoute,
   MainLabsScryfallRoute: MainLabsScryfallRoute,
+  MainLabsShadersRoute: MainLabsShadersRoute,
   MainLabsSnakeRoute: MainLabsSnakeRoute,
   MainLabsSpectrogramRoute: MainLabsSpectrogramRoute,
   MainLabsSubnetRoute: MainLabsSubnetRoute,

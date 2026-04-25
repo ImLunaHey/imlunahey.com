@@ -24,7 +24,8 @@
 
     "types": [
       "@atcute/bluesky/lexicons",
-      "@atcute/whitewind/lexicons"
+      "@atcute/whitewind/lexicons",
+      "@webgpu/types"
       // "@vitest/browser/providers/playwright",
       // "@vitest/browser/matchers"
     ]

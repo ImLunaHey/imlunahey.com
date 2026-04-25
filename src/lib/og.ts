@@ -134,7 +134,8 @@ export type OgSlug =
   | 'lab/audio-extractor'
   | 'lab/clipper'
   | 'lab/converter'
-  | 'lab/twitch-live';
+  | 'lab/twitch-live'
+  | 'lab/shaders';
 
 type OgEntry = {
   title: string;
@@ -272,6 +273,7 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/clipper': { title: 'clipper.', subtitle: 'trim any video to a range + save the clip, in-browser', description: 'trim any video to a time range and save the clip as mp4. re-muxes (and re-encodes only when needed) in-browser via mediabunny + webcodecs.', glyph: '✂', slug: '/labs/clipper' },
   'lab/converter': { title: 'converter.', subtitle: 'mp4 / webm / mkv / mov / mp3 / wav / ogg / flac — in-browser', description: 'format converter — mp4 ↔ webm ↔ mkv ↔ mov for video, plus audio-only output to mp3 / wav / ogg / flac. re-muxes when codecs allow, re-encodes otherwise.', glyph: '↔', slug: '/labs/converter' },
   'lab/twitch-live': { title: 'twitch live.', subtitle: 'top live streams right now, filter by game + language', description: 'top live streams on twitch right now — thumbnails, viewer counts, uptime. filter by game or language. polls every minute via the helix api.', glyph: '▶', slug: '/labs/twitch-live' },
+  'lab/shaders': { title: 'shaders.', subtitle: 'live wgsl fragment shaders, on the gpu', description: 'live wgsl fragment-shader playground in webgpu — eight presets including plasma, raymarched spheres, mandelbrot, voronoi, kaleidoscope. edit + recompile live.', glyph: '◬', slug: '/labs/shaders' },
 };
 
 const W = 1200;

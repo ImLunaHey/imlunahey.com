@@ -252,6 +252,9 @@ importers:
       '@vitest/ui':
         specifier: ^4.1.4
         version: 4.1.5(vitest@4.1.5)
+      '@webgpu/types':
+        specifier: ^0.1.69
+        version: 0.1.69
       eslint:
         specifier: ^9.21.0
         version: 9.39.4(jiti@2.6.1)
@@ -2429,6 +2432,9 @@ packages:
 
   '@vitest/utils@4.1.5':
     resolution: {integrity: sha512-76wdkrmfXfqGjueGgnb45ITPyUi1ycZ4IHgC2bhPDUfWHklY/q3MdLOAB+TF1e6xfl8NxNY0ZYaPCFNWSsw3Ug==}
+
+  '@webgpu/types@0.1.69':
+    resolution: {integrity: sha512-RPmm6kgRbI8e98zSD3RVACvnuktIja5+yLgDAkTmxLr90BEwdTXRQWNLF3ETTTyH/8mKhznZuN5AveXYFEsMGQ==}
 
   '@yarnpkg/lockfile@1.1.0':
     resolution: {integrity: sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==}
@@ -7061,6 +7067,8 @@ snapshots:
       '@vitest/pretty-format': 4.1.5
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.0
+
+  '@webgpu/types@0.1.69': {}
 
   '@yarnpkg/lockfile@1.1.0': {}
 

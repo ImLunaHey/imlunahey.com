@@ -303,6 +303,14 @@ const LABS: Lab[] = [
     ready: true,
   },
   {
+    slug: 'shaders',
+    title: 'shaders',
+    desc: 'live wgsl fragment-shader playground on the gpu. eight presets (plasma, raymarched spheres, mandelbrot, voronoi, kaleidoscope, …). edit the wgsl, watch it recompile live.',
+    tags: ['gpu', 'animation'],
+    year: '2026',
+    ready: true,
+  },
+  {
     slug: 'terminal',
     title: 'terminal',
     desc: 'a fake shell for the site. cd /labs, ls, cat readme.txt, open /games. arrow-key history, neofetch, the whole thing.',
