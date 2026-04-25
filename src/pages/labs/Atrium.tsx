@@ -81,6 +81,25 @@ function portalsFor(roomId: string): Portal[] {
   return PORTALS[roomId] ?? [];
 }
 
+/** Pick a spawn tile next to a portal — the first walkable cardinal
+ *  neighbour. West first since portals are mostly on east/south edges
+ *  and "into the room" is west/north for those. Falls back to the
+ *  caller's default if every neighbour is blocked or out of bounds. */
+function findSpawnAdjacent(walkable: boolean[][], portal: Tile, fallback: Tile): Tile {
+  const [pi, pj] = portal;
+  const candidates: Tile[] = [
+    [pi - 1, pj],
+    [pi, pj - 1],
+    [pi + 1, pj],
+    [pi, pj + 1],
+  ];
+  for (const c of candidates) {
+    if (c[0] < 0 || c[0] >= ROOM_SIZE || c[1] < 0 || c[1] >= ROOM_SIZE) continue;
+    if (walkable[c[0]][c[1]]) return c;
+  }
+  return fallback;
+}
+
 // --- iso projection ----------------------------------------------------------
 
 function project(view: View, i: number, j: number, h: number): { x: number; y: number } {
@@ -617,6 +636,7 @@ function renderScene(
   furniture: Furniture[],
   theme: RoomTheme,
   portals: Portal[],
+  occupancy: Record<string, number>,
 ) {
   const w = ctx.canvas.width / (window.devicePixelRatio || 1);
   const h = ctx.canvas.height / (window.devicePixelRatio || 1);
@@ -663,6 +683,17 @@ function renderScene(
       ctx.lineTo(cx - TILE_W / 2, cy);
       ctx.closePath();
       ctx.stroke();
+      // destination label + occupancy floating above the portal
+      const count = occupancy[p.dest];
+      const label = count != null ? `${p.destLabel} · ${count}` : p.destLabel;
+      ctx.font = "bold 11px 'JetBrains Mono Variable', ui-monospace, monospace";
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)';
+      ctx.strokeText(label, cx, cy - TILE_H / 2 - 4);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+      ctx.fillText(label, cx, cy - TILE_H / 2 - 4);
     }
   }
 
@@ -976,8 +1007,13 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
     { id: 'self', nickname: nicknameRef.current, color: bodyColorRef.current, isSelf: true },
   ]);
   const [chatDraft, setChatDraft] = useState('');
-  const [navOpen, setNavOpen] = useState(false);
-  const [occupancy, setOccupancy] = useState<Record<string, number>>({});
+  // Live per-room occupancy used to label portals — kept in a ref because
+  // the canvas effect is mount-once and reads it each frame.
+  const occupancyRef = useRef<Record<string, number>>({});
+  // Tracks the room we came from so we can spawn the avatar next to the
+  // entrance portal on arrival (otherwise teleporting feels like falling
+  // out of the sky into the room centre).
+  const previousRoomRef = useRef<string | null>(null);
 
   const stateRef = useRef<SceneState>({
     avatar: {
@@ -1014,16 +1050,31 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
   useEffect(() => {
     furnitureRef.current = furnitureFor(roomId);
     walkableRef.current = buildWalkable(furnitureRef.current);
+
+    // Spawn next to the entrance portal — i.e. the portal in the new
+    // room whose destination is the room we just came from. If we don't
+    // know where we came from (URL deep link / first mount), fall back
+    // to the room centre.
+    let spawn: Tile = [5, 5];
+    const prev = previousRoomRef.current;
+    if (prev) {
+      const entrance = portalsRef.current.find((p) => p.dest === prev);
+      if (entrance) {
+        spawn = findSpawnAdjacent(walkableRef.current, entrance.tile, [5, 5]);
+      }
+    }
+    previousRoomRef.current = roomId;
+
     const a = stateRef.current.avatar;
-    a.tile = [5, 5];
-    a.pos = [5, 5];
+    a.tile = spawn;
+    a.pos = [spawn[0], spawn[1]];
     a.path = [];
     a.walking = false;
     a.lastStep = performance.now();
     a.sitting = null;
     a.sitOnArrival = null;
     a.emote = null;
-    setHint('click any tile to walk. (click a chair to sit; type /wave or /dance to emote.)');
+    setHint('walk onto a glowing tile to teleport. click a chair to sit; type /wave or /dance to emote.');
   }, [roomId]);
 
   // websocket lifecycle ------------------------------------------------------
@@ -1236,7 +1287,10 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
     // opens a new one to the new room's DO.
   }, [roomId]);
 
-  // navigator: poll the worker for live occupancy of each public room ------
+  // poll the worker for live per-room occupancy → renders as a small label
+  // above each portal so the user can see how busy a destination is before
+  // walking through. Written into a ref because the canvas effect is
+  // mount-once and reads it each frame.
 
   useEffect(() => {
     let cancelled = false;
@@ -1246,7 +1300,7 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
         const r = await fetch(`/api/atrium-rooms?ids=${encodeURIComponent(ids)}`, { cache: 'no-store' });
         if (!r.ok) return;
         const data = (await r.json()) as Record<string, number>;
-        if (!cancelled) setOccupancy(data);
+        if (!cancelled) occupancyRef.current = data;
       } catch {
         /* ignore — keep the last known counts */
       }
@@ -1476,7 +1530,7 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
         s.hover = null;
       }
 
-      renderScene(ctx, view, s, furnitureRef.current, themeRef.current, portalsRef.current);
+      renderScene(ctx, view, s, furnitureRef.current, themeRef.current, portalsRef.current, occupancyRef.current);
 
       // Determine which avatar (if any) is under the cursor — labels are
       // hidden by default and fade in only for the hovered avatar (or any
@@ -1929,66 +1983,7 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
           </form>
 
           <div className="at-bar">
-            <div className="at-nav">
-              <button
-                className="at-nav-trigger"
-                type="button"
-                onClick={() => setNavOpen((o) => !o)}
-                aria-expanded={navOpen}
-              >
-                ~/atrium/<span className="at-nav-room">{roomLabel}</span> ▾
-              </button>
-              {navOpen ? (
-                <div className="at-nav-pop">
-                  <div className="at-nav-section">public rooms</div>
-                  {PUBLIC_ROOMS.map((r) => {
-                    const isHere = r.id === roomId;
-                    const count = occupancy[r.id] ?? 0;
-                    const inner = (
-                      <>
-                        <span className="at-nav-row-label">
-                          {isHere ? '· ' : '  '}
-                          {r.label}
-                        </span>
-                        <span className="at-nav-row-count">{count}</span>
-                      </>
-                    );
-                    return r.id === 'lobby' ? (
-                      <Link
-                        key={r.id}
-                        to="/labs/atrium"
-                        className={`at-nav-row ${isHere ? 'on' : ''}`}
-                        onClick={() => setNavOpen(false)}
-                        title={r.blurb}
-                      >
-                        {inner}
-                      </Link>
-                    ) : (
-                      <Link
-                        key={r.id}
-                        to="/labs/atrium/$roomId"
-                        params={{ roomId: r.id }}
-                        className={`at-nav-row ${isHere ? 'on' : ''}`}
-                        onClick={() => setNavOpen(false)}
-                        title={r.blurb}
-                      >
-                        {inner}
-                      </Link>
-                    );
-                  })}
-                  {!PUBLIC_ROOMS.some((r) => r.id === roomId) ? (
-                    <>
-                      <div className="at-nav-section">currently</div>
-                      <div className="at-nav-row on">
-                        <span className="at-nav-row-label">· {roomId}</span>
-                        <span className="at-nav-row-hint">custom</span>
-                      </div>
-                    </>
-                  ) : null}
-                  <div className="at-nav-foot">click any room to switch</div>
-                </div>
-              ) : null}
-            </div>
+            <span className="at-room">~/atrium/<span className="at-room-name">{roomLabel}</span></span>
             <span className="at-hint">{hint}</span>
           </div>
         </div>
@@ -2061,72 +2056,12 @@ const CSS = `
     letter-spacing: 0.08em;
     font-size: 10px;
   }
-  .at-hint { color: var(--color-accent); }
-
-  .at-nav { position: relative; }
-  .at-nav-trigger {
-    background: transparent;
-    border: 0;
-    padding: 0;
-    color: var(--color-fg-faint);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-  }
-  .at-nav-trigger:hover { color: var(--color-accent); }
-  .at-nav-room {
+  .at-room-name {
     color: var(--color-accent);
     text-transform: lowercase;
     letter-spacing: 0;
   }
-  .at-nav-pop {
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 0;
-    min-width: 220px;
-    background: rgba(0, 0, 0, 0.92);
-    border: 1px solid var(--color-accent-dim);
-    box-shadow: 0 0 24px color-mix(in oklch, var(--color-accent) 22%, transparent);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    padding: 4px 0;
-    z-index: 10;
-  }
-  .at-nav-section {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-fg-faint);
-    padding: 6px 12px 2px;
-  }
-  .at-nav-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding: 4px 12px;
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    color: var(--color-fg-dim);
-    text-decoration: none;
-    cursor: pointer;
-  }
-  .at-nav-row:hover { background: color-mix(in oklch, var(--color-accent) 10%, transparent); color: var(--color-fg); }
-  .at-nav-row.on { color: var(--color-accent); }
-  .at-nav-row-label { white-space: pre; }
-  .at-nav-row-count { color: var(--color-fg-faint); font-variant-numeric: tabular-nums; }
-  .at-nav-row-hint { color: var(--color-fg-faint); font-size: 10px; font-style: italic; }
-  .at-nav-foot {
-    border-top: 1px dashed var(--color-border);
-    margin-top: 4px;
-    padding: 4px 12px;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: var(--color-fg-faint);
-    text-align: center;
-  }
+  .at-hint { color: var(--color-accent); }
 
   .at-overlay {
     position: absolute;

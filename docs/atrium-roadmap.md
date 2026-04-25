@@ -329,6 +329,33 @@ Verified end-to-end via two-client wire test: `sit` broadcasts the
 tile to peers, `emote` broadcasts kind + at, init payloads carry
 the `sitting` field. ✓
 
+### v7.1 — portal-only teleport + entrance spawn (shipped)
+
+The bottom-bar navigator dropdown made it possible to skip the portal
+tiles entirely (click "café" in the list and you were just there). That
+broke the "atrium is a place you walk through" intent and gave portals
+no real reason to exist. Two fixes:
+
+- [x] **Navigator dropdown removed.** The bottom bar is now plain
+      `~/atrium/<room>` text, no clickable list. Only walking onto a
+      portal tile teleports between rooms in-app. URL deep links still
+      work (typing `/labs/atrium/cafe` or refreshing) — those are
+      distinct from a UI shortcut.
+- [x] **Live occupancy now floats above each portal tile** as canvas
+      text — `café · 3` etc. Fed by the same `/api/atrium-rooms` poll
+      as before; the polling effect now writes into a ref instead of
+      React state since the canvas renderer reads it each frame and we
+      no longer need re-renders. Replaces the discoverability the
+      dropdown provided.
+- [x] **Spawn next to the entrance portal.** Track the previous room
+      in `previousRoomRef`. On room change, find the portal in the new
+      room whose `dest` matches the previous room (= the doorway you
+      came through) and place the avatar on the first walkable
+      cardinal neighbour of that portal tile. Falls back to `[5,5]`
+      for first mount / URL deep links / rooms with no return portal.
+      Prevents teleporting from feeling like falling out of the sky
+      into the centre.
+
 ## v8+ — depth
 
 Once v7 is solid, the rest of the long tail.
