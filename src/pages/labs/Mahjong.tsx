@@ -798,6 +798,8 @@ export default function MahjongPage() {
   const [handleInput, setHandleInput] = useState('');
   const [seedInput, setSeedInput] = useState('');
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
+  const [focusMode, setFocusMode] = useState(false);
+  const shellRef = useRef<HTMLElement>(null);
 
   const { session } = useAtprotoSession();
   const { data: profile } = useProfile({ actor: session?.info.sub ?? '' });
@@ -979,6 +981,64 @@ export default function MahjongPage() {
     }
   }, [seed]);
 
+  // focus / fullscreen mode hides the page chrome and (where supported)
+  // promotes the board element to real fullscreen via the fullscreen api.
+  // on browsers that block the api (eg. iframed contexts, some mobile
+  // safaris), the css-only "focus" state still works as a distraction-
+  // free reading mode.
+  const enterFocus = useCallback(async () => {
+    setFocusMode(true);
+    const el = shellRef.current;
+    if (el && document.fullscreenEnabled && !document.fullscreenElement) {
+      try {
+        await el.requestFullscreen();
+      } catch {
+        /* fall back silently to css-only focus */
+      }
+    }
+  }, []);
+
+  const exitFocus = useCallback(async () => {
+    setFocusMode(false);
+    if (typeof document !== 'undefined' && document.fullscreenElement) {
+      try {
+        await document.exitFullscreen();
+      } catch {
+        /* ignore */
+      }
+    }
+  }, []);
+
+  const toggleFocus = useCallback(() => {
+    if (focusMode) void exitFocus();
+    else void enterFocus();
+  }, [focusMode, enterFocus, exitFocus]);
+
+  // keep state in sync with the browser's fullscreen state — pressing
+  // ESC or hitting F11 exits fullscreen, and we want the css focus
+  // class to come off at the same moment.
+  useEffect(() => {
+    function onChange() {
+      if (!document.fullscreenElement && focusMode) setFocusMode(false);
+    }
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, [focusMode]);
+
+  // ESC also exits the css-only focus mode (Fullscreen API would have
+  // already exited on its own; this catches the no-fullscreen path).
+  useEffect(() => {
+    if (!focusMode) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        void exitFocus();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [focusMode, exitFocus]);
+
   async function startSignIn(handle: string) {
     setPublishError(null);
     try {
@@ -1117,7 +1177,50 @@ export default function MahjongPage() {
   return (
     <>
       <style>{CSS}</style>
-      <main className="shell-mahjong">
+      <main
+        className={`shell-mahjong${focusMode ? ' focus' : ''}`}
+        ref={shellRef}
+      >
+        {focusMode ? (
+          <div className="focus-bar" role="toolbar">
+            <span className="fb-stat">
+              <span className="fb-lbl">time</span>
+              <b>{formatTime(elapsed)}</b>
+            </span>
+            <span className="fb-stat">
+              <span className="fb-lbl">pairs</span>
+              <b>{matchesMade}/72</b>
+            </span>
+            <span className="fb-stat">
+              <span className="fb-lbl">free</span>
+              <b className={availableMatches === 0 ? 't-alert' : 't-accent'}>{availableMatches}</b>
+            </span>
+            <button
+              type="button"
+              className="ghost-btn fb-btn"
+              onClick={findHint}
+              disabled={won || stuck}
+            >
+              hint
+            </button>
+            <button
+              type="button"
+              className="ghost-btn fb-btn"
+              onClick={onShuffle}
+              disabled={won || !shuffleAvailable || present.size < 2}
+            >
+              {shuffleAvailable ? 'shuffle' : 'shuffle ✓'}
+            </button>
+            <button
+              type="button"
+              className="ghost-btn fb-btn"
+              onClick={() => void exitFocus()}
+              title="esc"
+            >
+              exit
+            </button>
+          </div>
+        ) : null}
         <header className="page-hd">
           <div className="label">~/labs/mahjong</div>
           <h1>mahjong<span className="dot">.</span></h1>
@@ -1175,6 +1278,14 @@ export default function MahjongPage() {
                 : 'shuffle already used — restart or start a new deal'}
             >
               {shuffleAvailable ? 'shuffle' : 'shuffle ✓'}
+            </button>
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={toggleFocus}
+              title="distraction-free, fullscreen where supported. esc to exit."
+            >
+              fullscreen
             </button>
           </div>
         </section>
@@ -1572,6 +1683,69 @@ const CSS = `
     font-size: var(--fs-xs);
     color: var(--color-fg-faint);
   }
+
+  /* focus / fullscreen mode — hide everything except the board, then
+     stretch the stage-wrap to fill the available space. works the same
+     whether the Fullscreen API kicked in (real fullscreen) or we're
+     just CSS-only on a browser that blocked it. */
+  .shell-mahjong.focus {
+    max-width: none;
+    margin: 0; padding: 0;
+    width: 100%; height: 100vh;
+    display: flex; flex-direction: column;
+    background: var(--color-bg);
+  }
+  .shell-mahjong.focus:fullscreen { height: 100vh; }
+  .shell-mahjong.focus .page-hd,
+  .shell-mahjong.focus .controls,
+  .shell-mahjong.focus .seed-row,
+  .shell-mahjong.focus .lb,
+  .shell-mahjong.focus .mahjong-footer { display: none; }
+  .shell-mahjong.focus .stage-wrap {
+    flex: 1;
+    margin: 0;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 56px 16px 16px; /* leave room for the floating focus bar */
+  }
+  .shell-mahjong.focus .board {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+  }
+
+  .focus-bar {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: 6px 12px;
+    background: color-mix(in oklch, var(--color-bg) 92%, transparent);
+    border: 1px solid var(--color-border-bright);
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--color-fg-dim);
+    z-index: 100;
+    backdrop-filter: blur(4px);
+  }
+  .fb-stat { display: inline-flex; align-items: baseline; gap: 6px; }
+  .fb-lbl {
+    color: var(--color-fg-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 10px;
+  }
+  .fb-stat b { color: var(--color-fg); font-weight: 400; }
+  .fb-stat b.t-accent { color: var(--color-accent); }
+  .fb-stat b.t-alert { color: var(--color-alert); }
+  .fb-btn { padding: 4px 10px; font-size: 10px; }
 `;
 
 // ─── leaderboard panel ──────────────────────────────────────────────────────
