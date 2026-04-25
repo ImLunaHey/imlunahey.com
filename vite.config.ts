@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
@@ -7,6 +7,32 @@ import { cloudflare } from '@cloudflare/vite-plugin';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 const analyse = process.env.ANALYSE === '1';
+
+// dev-only: 302-redirect any request hitting localhost to the same path
+// on 127.0.0.1. atproto's oauth flow requires the loopback host to be
+// the literal IP — some PDSes reject "localhost" outright — and most
+// browser autocomplete will hand the user "localhost" if they've ever
+// visited it before. silently bouncing here means dev sign-in just works
+// without anyone having to remember to type 127.0.0.1.
+const redirectLocalhostPlugin = (): Plugin => ({
+  name: 'dev-redirect-localhost-to-loopback',
+  apply: 'serve',
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      const host = req.headers.host;
+      if (typeof host === 'string' && /^localhost(:|$)/.test(host)) {
+        const proto = (req.headers['x-forwarded-proto'] as string | undefined) ?? 'http';
+        const portAndAfter = host.slice('localhost'.length);
+        const target = `${proto}://127.0.0.1${portAndAfter}${req.url ?? '/'}`;
+        res.statusCode = 302;
+        res.setHeader('Location', target);
+        res.end();
+        return;
+      }
+      next();
+    });
+  },
+});
 
 // Stamped into the bundle at build time. Used by /humans.txt for the
 // "last update" line. Prefers the author-date of HEAD (YYYY-MM-DD) so
@@ -31,6 +57,7 @@ export default defineConfig({
     __BUILD_DATE__: JSON.stringify(buildDate),
   },
   plugins: [
+    redirectLocalhostPlugin(),
     tailwindcss(),
     tanstackStart({
       spa: { enabled: true },
