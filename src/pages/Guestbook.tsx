@@ -626,5 +626,44 @@ const CSS = `
   @media (max-width: 760px) {
     .signin-card { grid-template-columns: 1fr; }
     .signin-actions { align-items: flex-start; }
+
+    /* a touch tighter so the prose doesn't lose more cols to the
+       gutters than it has to on a 360px phone */
+    .shell-gb { padding: 0 var(--sp-4); }
+
+    /* long at-uris are unbreakable tokens that otherwise force a
+       horizontal scroll for the whole page */
+    .lex-line { gap: 4px 8px; }
+    .lex-line code { word-break: break-all; }
+    .entry-uri {
+      white-space: normal;
+      word-break: break-all;
+      overflow: visible;
+    }
+
+    /* two-column rows that use justify-content: space-between on the
+       desktop break down to "left side wide, right side off-screen" on
+       phones — stack them vertically instead */
+    .drafter-foot {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--sp-3);
+    }
+    .drafter-btns { justify-content: flex-end; }
+    .entry-ft {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 4px;
+    }
+    .gb-footer {
+      flex-direction: column;
+      gap: var(--sp-3);
+      align-items: flex-start;
+    }
+
+    /* the "sign out" button is 10px text on desktop — fine to skim
+       past but well below an ios tap target. bump it on mobile only */
+    .btn-ghost.tiny { padding: 8px 12px; font-size: 11px; }
+    .entry-link { padding: 6px 0; }
   }
 `;
