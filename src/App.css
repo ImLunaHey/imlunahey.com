@@ -427,7 +427,20 @@ a:hover {
   top: 0;
   z-index: 10;
   font-size: var(--fs-sm);
+  /* never let a single link's text wrap to a second line; at narrow
+     desktop / tablet widths the flex layout would otherwise squeeze
+     each link and break its own label (e.g. "/" + "homelab" stacked)
+     well before the 760px mobile scroller kicks in. paired with
+     overflow-x: auto so the nav scrolls when nav items genuinely
+     don't all fit on one line. */
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.nav::-webkit-scrollbar { display: none; }
+.nav > * { flex-shrink: 0; }
 .nav .brand {
   font-family: var(--font-display);
   font-size: var(--fs-xl);
@@ -455,19 +468,15 @@ a:hover {
   button[title="Toggle Debug Mode"] { display: none !important; }
 }
 
-/* mobile nav — horizontal scroller with fade-mask on both edges.
-   the .sp flex-spacer is hidden so every link sits in the same scroll track,
-   and every child gets flex-shrink: 0 so nothing collapses. no hamburger. */
+/* mobile nav — visual tweaks only. the horizontal-scroll mechanics
+   (overflow-x, white-space: nowrap, flex-shrink: 0) live on the base
+   .nav rule so the same behaviour kicks in at any narrow width, not
+   just below 760px. the .sp flex-spacer collapses on mobile so every
+   link sits in the same scroll track. no hamburger. */
 @media (max-width: 760px) {
   .nav {
     gap: var(--sp-4);
     padding: var(--sp-3) var(--sp-4);
-    overflow-x: auto;
-    overflow-y: hidden;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
     mask-image: linear-gradient(
       to right,
       transparent 0,
@@ -483,8 +492,6 @@ a:hover {
       transparent 100%
     );
   }
-  .nav::-webkit-scrollbar { display: none; }
-  .nav > * { flex-shrink: 0; }
   .nav .sp { display: none; }
   .nav .brand { font-size: var(--fs-lg); }
 }
