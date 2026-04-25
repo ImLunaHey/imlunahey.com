@@ -273,6 +273,19 @@ cases — that's fine. The point isn't that every distinct identity gets
 a uniquely identifiable face, it's that two people are visually
 distinguishable at a glance most of the time.
 
+### v6.1 — labels on hover
+
+The always-on nickname labels above every avatar partly covered the
+new identicon faces. Hidden them by default; the tick computes which
+avatar (if any) the cursor is over and fades that label in. Labels
+also auto-show whenever a peer is mid-chat so you can see who's
+speaking without having to hover them. Bubbles still always show
+when chat lands.
+
+Label transform also changed from `translate(-50%, 0)` to
+`translate(-50%, -100%)` so when it does appear, it sits *above*
+the anchor point — never overlapping the head.
+
 ## v7+ — depth
 
 Once v6 is solid, the rest of the long tail.

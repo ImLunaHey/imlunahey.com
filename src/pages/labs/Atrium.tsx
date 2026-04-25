@@ -1283,28 +1283,49 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
 
       renderScene(ctx, view, s, furnitureRef.current, themeRef.current, portalsRef.current);
 
-      // position DOM overlays + expire stale chat bubbles
-      const positionOverlay = (id: string, i: number, j: number) => {
+      // Determine which avatar (if any) is under the cursor — labels are
+      // hidden by default and fade in only for the hovered avatar (or any
+      // peer that's mid-chat, so you can see who's speaking).
+      let hoveredAvatarId: string | null = null;
+      if (s.hover) {
+        const [hi, hj] = s.hover;
+        if (Math.round(a.pos[0]) === hi && Math.round(a.pos[1]) === hj) {
+          hoveredAvatarId = 'self';
+        } else {
+          for (const peer of s.peers.values()) {
+            if (Math.round(peer.pos[0]) === hi && Math.round(peer.pos[1]) === hj) {
+              hoveredAvatarId = peer.id;
+              break;
+            }
+          }
+        }
+      }
+
+      // position DOM overlays + expire stale chat bubbles + toggle label visibility
+      const updateOverlay = (
+        id: string,
+        i: number,
+        j: number,
+        chat: { text: string; expires: number } | null,
+        clearChat: () => void,
+      ) => {
         const refs = overlayRefsMap.current.get(id);
         if (!refs) return;
         const top = project(view, i, j, 1.55);
         refs.wrap.style.transform = `translate(${top.x}px, ${top.y}px)`;
-      };
-      const expireChat = (id: string, last: { text: string; expires: number } | null, clear: () => void) => {
-        if (!last) return;
-        if (now >= last.expires) {
-          const refs = overlayRefsMap.current.get(id);
-          if (refs) refs.bubble.style.display = 'none';
-          clear();
+        if (chat && now >= chat.expires) {
+          refs.bubble.style.display = 'none';
+          clearChat();
+          chat = null;
         }
+        const visible = id === hoveredAvatarId || chat != null;
+        refs.label.style.opacity = visible ? '1' : '0';
       };
-      positionOverlay('self', a.pos[0], a.pos[1]);
-      expireChat('self', s.selfChat, () => {
+      updateOverlay('self', a.pos[0], a.pos[1], s.selfChat, () => {
         s.selfChat = null;
       });
       for (const peer of s.peers.values()) {
-        positionOverlay(peer.id, peer.pos[0], peer.pos[1]);
-        expireChat(peer.id, peer.lastChat, () => {
+        updateOverlay(peer.id, peer.pos[0], peer.pos[1], peer.lastChat, () => {
           peer.lastChat = null;
         });
       }
@@ -1919,9 +1940,12 @@ const CSS = `
     background: rgba(0, 0, 0, 0.7);
     border: 1px solid currentColor;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
-    transform: translate(-50%, 0);
+    transform: translate(-50%, -100%);
     white-space: nowrap;
-    margin-top: 4px;
+    /* hidden by default to keep faces visible — the tick loop fades us in
+       when the cursor is over our tile, or when this peer is mid-chat. */
+    opacity: 0;
+    transition: opacity 0.12s ease-out;
   }
   .peer-bubble {
     font-family: var(--font-mono);
