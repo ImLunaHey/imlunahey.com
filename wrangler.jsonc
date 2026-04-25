@@ -9,10 +9,12 @@
   "compatibility_flags": ["nodejs_compat"],
   "durable_objects": {
     "bindings": [
-      { "name": "PRESENCE_DO", "class_name": "PresenceDO" }
+      { "name": "PRESENCE_DO", "class_name": "PresenceDO" },
+      { "name": "ATRIUM_DO", "class_name": "AtriumDO" }
     ]
   },
   "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["PresenceDO"] }
+    { "tag": "v1", "new_sqlite_classes": ["PresenceDO"] },
+    { "tag": "v2", "new_sqlite_classes": ["AtriumDO"] }
   ]
 }

@@ -1,6 +1,7 @@
 import serverEntry from '@tanstack/react-start/server-entry';
 
 export { PresenceDO } from './server/presence-do';
+export { AtriumDO } from './server/atrium-do';
 
 /**
  * Paths that must always hit the worker fresh — OAuth callbacks, server-fn
@@ -40,6 +41,20 @@ const STALE_WHILE_REVALIDATE_SECS = 300;
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown): Promise<Response> {
+    // Atrium websocket endpoint — intercept BEFORE serverEntry sees it,
+    // because the TanStack runtime doesn't propagate the `webSocket` field
+    // on Response init that CF needs for a 101 upgrade.
+    const url = new URL(request.url);
+    if (url.pathname === '/api/atrium-ws') {
+      if (request.headers.get('Upgrade') !== 'websocket') {
+        return new Response('expected websocket', { status: 426 });
+      }
+      const e = env as { ATRIUM_DO: DurableObjectNamespace };
+      const id = e.ATRIUM_DO.idFromName('global-v1');
+      const stub = e.ATRIUM_DO.get(id) as unknown as { fetch(req: Request): Promise<Response> };
+      return stub.fetch(request);
+    }
+
     // @tanstack/react-start's fetch signature accepts the CF invocation
     // tuple as varargs — the library unwraps whatever we pass.
     const response = await (serverEntry.fetch as (req: Request, ...rest: unknown[]) => Promise<Response>)(

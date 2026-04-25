@@ -19,14 +19,50 @@ interface DurableObjectNamespace<T = unknown> {
 
 interface DurableObjectState {
   readonly id: DurableObjectId;
+  /** Hibernatable websocket API — see CF docs.
+   *  Once accepted, the DO can suspend while the WS is open and is woken on
+   *  incoming messages via the `webSocket*` lifecycle hooks. */
+  acceptWebSocket(ws: WebSocket): void;
+  /** Returns every WebSocket previously passed to `acceptWebSocket` that's
+   *  still open. Survives DO hibernation. */
+  getWebSockets(): WebSocket[];
+}
+
+interface WebSocket {
+  /** Persists arbitrary JSON-serialisable state alongside this WS so it
+   *  survives DO hibernation. Must be called after acceptWebSocket. */
+  serializeAttachment(value: unknown): void;
+  deserializeAttachment(): unknown;
+}
+
+/** Cloudflare extension: a paired client+server WebSocket created by
+ *  `new WebSocketPair()`. The server half is `accept()`-ed (or, for
+ *  hibernation, passed to `acceptWebSocket`); the client half is returned
+ *  to the requester via `new Response(null, { status: 101, webSocket })`. */
+declare class WebSocketPair {
+  0: WebSocket;
+  1: WebSocket;
+  constructor();
+}
+
+interface ResponseInit {
+  webSocket?: WebSocket;
 }
 
 declare module 'cloudflare:workers' {
   export class DurableObject {
+    /** Cloudflare's runtime exposes the state as `ctx` on the instance. */
+    protected readonly ctx: DurableObjectState;
     constructor(state: DurableObjectState, env: unknown);
+    /** Hibernation lifecycle hooks — implement on subclasses that use
+     *  `state.acceptWebSocket()`. */
+    webSocketMessage?(ws: WebSocket, message: string | ArrayBuffer): void | Promise<void>;
+    webSocketClose?(ws: WebSocket, code: number, reason: string, wasClean: boolean): void | Promise<void>;
+    webSocketError?(ws: WebSocket, error: unknown): void | Promise<void>;
   }
   export const env: {
     PRESENCE_DO: DurableObjectNamespace;
+    ATRIUM_DO: DurableObjectNamespace;
     [key: string]: unknown;
   };
 }

@@ -14,34 +14,52 @@ walker that's already shipped. Everything below is deferred work.
 - [x] Hover tile highlight (green for walkable, red for blocked)
 - [x] Walk animation (sub-tile interp + height bob)
 
-## v2 — multiplayer presence
+## v2 — multiplayer presence (shipped)
 
 Goal: see other people walking around the same room in real time, with
 chat speech bubbles. No persistence yet — purely ephemeral.
 
-- [ ] **Cloudflare durable object** as the room's authoritative state.
-      One DO per room id; clients connect via websocket. The worker
-      already exists at `src/worker.ts`, so adding a DO export + binding
-      in `wrangler.jsonc` is the integration point.
-- [ ] **Wire protocol** — small JSON messages: `{type:'join', avatar}`,
-      `{type:'walk', path}`, `{type:'chat', text}`, `{type:'leave'}`.
-      Server broadcasts state diffs back to every connected client.
-- [ ] **Client websocket** — open in `Atrium.tsx`'s effect, reconcile
-      remote avatars into the render loop. Each remote avatar uses the
-      same `drawAvatar` primitive but with a different color.
-- [ ] **Speech bubbles** — chat input pinned to the bottom of the canvas;
-      message renders as a CSS bubble anchored to the speaker's screen
-      position for ~5s. Word-wrap, max ~80 chars.
-- [ ] **Identity** — at first just an anonymous nickname stored in
-      localStorage. Atproto identity gets wired in v3.
-- [ ] **Smooth interp for remote avatars** — server sends path; client
-      reproduces the same step interpolation locally so movement looks
-      natural even at low message rates.
-- [ ] **Heartbeat / disconnect** — drop avatars after 30s of silence to
-      handle dead clients without explicit leave.
+- [x] **AtriumDO** at `src/server/atrium-do.ts` — one DO instance per
+      room (currently a single `global-v1` room), uses Cloudflare's
+      hibernatable websocket API so the DO can suspend while connections
+      are idle. Per-WS state lives in `serializeAttachment` so it
+      survives hibernation cycles.
+- [x] **Wire protocol** (JSON, both directions). Client → server:
+      `{t:'hello', nickname, color}`, `{t:'walk', from, path}`,
+      `{t:'chat', text}`. Server → client: `{t:'init', selfId, peers}`,
+      `{t:'join', peer}`, `{t:'walk', id, from, path, at}`,
+      `{t:'chat', id, text, at}`, `{t:'leave', id}`. Sender doesn't
+      receive its own walks/chats back (handled optimistically client-side).
+      Inputs validated server-side (tile bounds, path length cap, color
+      regex, nickname/chat control-char strip).
+- [x] **Worker integration** — websocket upgrade intercepted in
+      `src/worker.ts` BEFORE TanStack's serverEntry sees it (the runtime
+      strips the `webSocket` field from Response init that CF needs for
+      the 101 upgrade). DO binding + v2 migration added to
+      `wrangler.jsonc`.
+- [x] **Client websocket** — separate `useEffect` opens ws, sends
+      `hello`, dispatches incoming messages. Reconnect with exponential
+      backoff (1s → 30s) on close. Click handler now sends `walk` after
+      updating local state optimistically.
+- [x] **Remote avatars** — `Peer` type extends `Avatar`, every peer is
+      walked through the same `advanceWalk` interpolator the local
+      avatar uses. Server-sent `at` timestamp lets us start the
+      interpolation slightly in the past to compensate for latency.
+      Drawn with the peer's own color via the extended `drawAvatar`.
+- [x] **Identity** — nickname stored in `localStorage`
+      (`atrium-nickname`), randomly minted on first visit
+      (`adjective-noun` pattern, e.g. `cosy-lemur`). Body color
+      deterministically derived from nickname via djb2 hash → HSL.
+- [x] **Speech bubbles + nickname labels** — DOM overlay layer per
+      avatar, position updated every frame via direct
+      `style.transform = translate(x, y)` (no React re-renders during
+      walks). Bubble shows on chat receive, auto-clears after 5s.
+- [x] **Connection status badge** — top-left of canvas, shows
+      `connecting…` / `connected · N peers` / `reconnecting…` with a
+      coloured pulse dot.
 
 Ship criteria: open the page in two browser tabs, see both avatars walk
-around the same room, exchange chat messages.
+around the same room, exchange chat messages. ✓
 
 ## v3 — atproto persistence
 
