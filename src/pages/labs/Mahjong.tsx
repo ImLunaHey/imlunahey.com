@@ -266,6 +266,75 @@ function generateDeal(seed: number): { slots: Slot[]; faces: Map<number, Face>; 
   return { slots, faces, layoutId };
 }
 
+// re-pair the faces of the tiles still on the board and reassign them to a
+// fresh valid removal order. the player's progress (which slots are gone) is
+// preserved; only the visible face values change. like generateDeal, the
+// resulting board is guaranteed to have *a* solution sequence.
+function shuffleRemaining(
+  slots: Slot[],
+  existingFaces: Map<number, Face>,
+  remainingIds: Set<number>,
+  rng: () => number,
+): Map<number, Face> | null {
+  const remainingSlots = slots.filter((s) => remainingIds.has(s.id));
+  if (remainingSlots.length === 0) return new Map(existingFaces);
+  if (remainingSlots.length % 2 !== 0) return null;
+
+  const inventory = remainingSlots.map((s) => existingFaces.get(s.id));
+  if (inventory.some((f) => f === undefined)) return null;
+  const faces = inventory as Face[];
+
+  // pair them up exactly the same way generateDeal would: ordinary tiles
+  // (suits / winds / dragons) go in same-face pairs, seasons + flowers
+  // group-pair within their kind since any season matches any season.
+  const used = new Array(faces.length).fill(false);
+  const pairs: Array<[Face, Face]> = [];
+
+  for (let i = 0; i < faces.length; i++) {
+    if (used[i]) continue;
+    const fi = faces[i];
+    if (fi.kind === 'season' || fi.kind === 'flower') continue;
+    for (let j = i + 1; j < faces.length; j++) {
+      if (used[j]) continue;
+      if (facesMatch(fi, faces[j])) {
+        pairs.push([fi, faces[j]]);
+        used[i] = true;
+        used[j] = true;
+        break;
+      }
+    }
+  }
+
+  for (const kind of ['season', 'flower'] as const) {
+    const idx: number[] = [];
+    for (let i = 0; i < faces.length; i++) if (!used[i] && faces[i].kind === kind) idx.push(i);
+    if (idx.length % 2 !== 0) return null;
+    for (let k = 0; k < idx.length; k += 2) {
+      pairs.push([faces[idx[k]], faces[idx[k + 1]]]);
+      used[idx[k]] = true;
+      used[idx[k + 1]] = true;
+    }
+  }
+  if (pairs.length * 2 !== faces.length) return null;
+
+  const shuffledPairs = shuffled(pairs, rng);
+
+  let order: Array<[Slot, Slot]> | null = null;
+  for (let attempt = 0; attempt < 50; attempt++) {
+    order = trySimulate(remainingSlots, rng);
+    if (order) break;
+  }
+  if (!order || order.length !== shuffledPairs.length) return null;
+
+  const out = new Map(existingFaces);
+  for (let k = 0; k < order.length; k++) {
+    const [a, b] = order[k];
+    out.set(a.id, shuffledPairs[k][0]);
+    out.set(b.id, shuffledPairs[k][1]);
+  }
+  return out;
+}
+
 // ─── tile geometry ───────────────────────────────────────────────────────────
 
 const TILE_W = 60;   // unit width of a tile face on the board grid
@@ -657,6 +726,10 @@ type Persisted = {
   removed: number[]; // slot ids
   startedAt: number;
   baseElapsed: number;
+  // shuffle is one-per-deal — saving the resulting face map means a reload
+  // can't be used to roll a different shuffle, and the board looks the
+  // same after refresh as before.
+  shuffle?: { faces: Array<[number, Face]> };
 };
 
 function loadPersisted(): Persisted | null {
@@ -707,9 +780,13 @@ export default function MahjongPage() {
   const gameId: GameId = `mahjong-${layoutId}`;
 
   // generated deal is a pure function of the seed.
-  const { slots, faces } = useMemo(() => generateDeal(seed), [seed]);
+  const { slots, faces: originalFaces } = useMemo(() => generateDeal(seed), [seed]);
 
   const [removed, setRemoved] = useState<Set<number>>(() => new Set());
+  // when the player uses their one shuffle, this overrides the original
+  // face map until the seed changes. null = shuffle still available.
+  const [shuffleFaces, setShuffleFaces] = useState<Map<number, Face> | null>(null);
+  const faces = shuffleFaces ?? originalFaces;
   const [selected, setSelected] = useState<number | null>(null);
   const [hintPair, setHintPair] = useState<[number, number] | null>(null);
   const [startedAt, setStartedAt] = useState<number>(() => Date.now());
@@ -752,6 +829,7 @@ export default function MahjongPage() {
         setRemoved(new Set(p.removed));
         setBaseElapsed(p.baseElapsed);
         setStartedAt(Date.now());
+        if (p.shuffle) setShuffleFaces(new Map(p.shuffle.faces));
         return;
       }
     }
@@ -764,6 +842,7 @@ export default function MahjongPage() {
     setPublishState('idle');
     setPublishError(null);
     setSeedInput('');
+    setShuffleFaces(null);
   }, [seed]);
 
   // present = slots still on the board, used by isFree.
@@ -823,8 +902,9 @@ export default function MahjongPage() {
       removed: Array.from(removed),
       startedAt,
       baseElapsed,
+      shuffle: shuffleFaces ? { faces: Array.from(shuffleFaces.entries()) } : undefined,
     });
-  }, [seed, removed, startedAt, baseElapsed]);
+  }, [seed, removed, startedAt, baseElapsed, shuffleFaces]);
 
   // a "new deal" stays in the same layout but rolls a new rng. layout
   // changes go through pickLayout instead so the user picks the shape.
@@ -865,7 +945,27 @@ export default function MahjongPage() {
     setWinElapsed(null);
     setPublishState('idle');
     setPublishError(null);
+    // restart returns the deal to its original face arrangement, which
+    // also restores the shuffle credit — restart is a fresh attempt.
+    setShuffleFaces(null);
   }, []);
+
+  const shuffleAvailable = shuffleFaces === null;
+  const onShuffle = useCallback(() => {
+    if (!shuffleAvailable) return;
+    if (won) return;
+    const remainingIds = new Set<number>();
+    for (const s of slots) if (!removed.has(s.id)) remainingIds.add(s.id);
+    if (remainingIds.size < 2) return;
+    // a wall-clock-derived rng so the shuffle is genuinely random; the
+    // outcome is then persisted, so reload can't roll it again.
+    const rng = rngFromSeed((((Math.random() * 0xffffffff) >>> 0) ^ Date.now()) >>> 0);
+    const result = shuffleRemaining(slots, faces, remainingIds, rng);
+    if (!result) return;
+    setShuffleFaces(result);
+    setSelected(null);
+    setHintPair(null);
+  }, [shuffleAvailable, won, slots, removed, faces]);
 
   const copyShareLink = useCallback(async () => {
     if (typeof window === 'undefined') return;
@@ -1065,6 +1165,17 @@ export default function MahjongPage() {
             >
               hint
             </button>
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={onShuffle}
+              disabled={won || !shuffleAvailable || present.size < 2}
+              title={shuffleAvailable
+                ? 'shuffle the remaining tile faces (one per deal)'
+                : 'shuffle already used — restart or start a new deal'}
+            >
+              {shuffleAvailable ? 'shuffle' : 'shuffle ✓'}
+            </button>
           </div>
         </section>
 
@@ -1190,9 +1301,21 @@ export default function MahjongPage() {
               <div className="ov-title">no moves.</div>
               <div className="ov-sub">
                 no remaining free tiles match. you got <b className="t-accent">{matchesMade}</b> pairs in.
+                {shuffleAvailable
+                  ? ' shuffle to re-pair the remaining tiles for one more attempt.'
+                  : ' shuffle already used.'}
               </div>
               <div className="ov-row">
-                <button className="ov-btn" type="button" onClick={restart}>restart this deal</button>
+                {shuffleAvailable ? (
+                  <button className="ov-btn" type="button" onClick={onShuffle}>shuffle</button>
+                ) : null}
+                <button
+                  className={shuffleAvailable ? 'ov-btn-ghost' : 'ov-btn'}
+                  type="button"
+                  onClick={restart}
+                >
+                  restart this deal
+                </button>
                 <button className="ov-btn-ghost" type="button" onClick={newGame}>new deal</button>
               </div>
             </div>
