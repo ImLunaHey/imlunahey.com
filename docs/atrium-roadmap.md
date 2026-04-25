@@ -214,6 +214,31 @@ the URL already supports.
       navigation without React re-runs. `portalsRef` similarly so the
       tick reads the current room's portals each frame.
 
+### v5.1 — per-room furniture (shipped)
+
+The themes from v4 only changed floor + wall colors. Every room had the
+same chairs/tables/rugs, which made the rooms feel like reskins of the
+lobby. Per-room furniture layouts fix that.
+
+- [x] Replaced the single `FURNITURE` constant with `ROOM_LAYOUTS:
+      Record<string, Furniture[]>` plus a `DEFAULT_LAYOUT` for custom
+      rooms (minimal so a fresh room doesn't look broken-empty).
+- [x] **Lobby** kept its existing arrangement (chairs + tables NW,
+      central rug, plants in two corners, lamp + crates).
+- [x] **Café** is four bistro triplets (chair-table-chair) scattered
+      around with warm-wood tones, two warm orange lamps on the
+      side walls, and one central brown rug.
+- [x] **Garden** has a plant border along the back + sides
+      (alternating shades) with a small chair-table-chair seating
+      cluster toward the front and a single accent lamp.
+- [x] Every layout deliberately keeps `[5,5]` (spawn) and the room's
+      portal tiles walkable.
+- [x] Furniture + walkability live behind refs (`furnitureRef`,
+      `walkableRef`) so the canvas effect doesn't tear down on a room
+      change. The room-change effect swaps both refs synchronously
+      before respawning the avatar, so the next click against the new
+      walkable grid uses the right blockers.
+
 ## v6+ — depth
 
 Once v5 is solid, the rest of the long tail.

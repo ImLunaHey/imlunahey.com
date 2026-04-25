@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   createAuthorizationUrl,
   deleteStoredSession,
@@ -462,23 +462,88 @@ function renderScene(
   for (const s of sprites) s.draw();
 }
 
-// --- room layout (v1: hand-placed) ------------------------------------------
+// --- room layouts (per-room hand-placed) ------------------------------------
 
-const FURNITURE: Furniture[] = [
-  { tile: [2, 2], kind: 'chair', color: '#ff8a8a' },
-  { tile: [3, 2], kind: 'chair', color: '#ff8a8a' },
-  { tile: [2, 3], kind: 'table', color: '#d2b48c' },
-  { tile: [3, 3], kind: 'table', color: '#d2b48c' },
-  { tile: [7, 1], kind: 'plant', color: '#88aa55' },
-  { tile: [1, 7], kind: 'plant', color: '#88aa55' },
-  { tile: [7, 7], kind: 'lamp', color: '#ffcc55' },
-  { tile: [4, 8], kind: 'crate', color: '#a07050' },
-  { tile: [5, 8], kind: 'crate', color: '#a07050' },
-  { tile: [4, 4], kind: 'rug', color: '#3a5a8a' },
-  { tile: [4, 5], kind: 'rug', color: '#3a5a8a' },
-  { tile: [5, 4], kind: 'rug', color: '#3a5a8a' },
-  { tile: [5, 5], kind: 'rug', color: '#3a5a8a' },
+/** Per-public-room furniture. Designed so each room has a distinct
+ *  spatial feel (lobby = central rug + crates, café = bistro
+ *  triplets, garden = perimeter plants + small seating cluster) and
+ *  so the spawn point [5,5] + portal tiles stay walkable in every
+ *  layout. Custom rooms (any URL outside this table) fall back to
+ *  DEFAULT_LAYOUT — minimal furnishings so a fresh room doesn't look
+ *  broken-empty. */
+const ROOM_LAYOUTS: Record<string, Furniture[]> = {
+  lobby: [
+    { tile: [2, 2], kind: 'chair', color: '#ff8a8a' },
+    { tile: [3, 2], kind: 'chair', color: '#ff8a8a' },
+    { tile: [2, 3], kind: 'table', color: '#d2b48c' },
+    { tile: [3, 3], kind: 'table', color: '#d2b48c' },
+    { tile: [7, 1], kind: 'plant', color: '#88aa55' },
+    { tile: [1, 7], kind: 'plant', color: '#88aa55' },
+    { tile: [7, 7], kind: 'lamp', color: '#ffcc55' },
+    { tile: [4, 8], kind: 'crate', color: '#a07050' },
+    { tile: [5, 8], kind: 'crate', color: '#a07050' },
+    { tile: [4, 4], kind: 'rug', color: '#3a5a8a' },
+    { tile: [4, 5], kind: 'rug', color: '#3a5a8a' },
+    { tile: [5, 4], kind: 'rug', color: '#3a5a8a' },
+    { tile: [5, 5], kind: 'rug', color: '#3a5a8a' },
+  ],
+  cafe: [
+    // four bistro triplets (chair + table + chair) scattered around the
+    // room with warm-wood tones; central single rug.
+    { tile: [2, 2], kind: 'chair', color: '#c98a6e' },
+    { tile: [3, 2], kind: 'table', color: '#7d4a30' },
+    { tile: [4, 2], kind: 'chair', color: '#c98a6e' },
+    { tile: [6, 2], kind: 'chair', color: '#c98a6e' },
+    { tile: [7, 2], kind: 'table', color: '#7d4a30' },
+    { tile: [8, 2], kind: 'chair', color: '#c98a6e' },
+    { tile: [2, 7], kind: 'chair', color: '#c98a6e' },
+    { tile: [3, 7], kind: 'table', color: '#7d4a30' },
+    { tile: [4, 7], kind: 'chair', color: '#c98a6e' },
+    { tile: [1, 4], kind: 'lamp', color: '#ffaa55' },
+    { tile: [8, 4], kind: 'lamp', color: '#ffaa55' },
+    { tile: [5, 5], kind: 'rug', color: '#5a3a18' },
+  ],
+  garden: [
+    // plant border along the back + sides, small seating cluster
+    // toward the front; one accent lamp. spawn [5,5] kept clear.
+    { tile: [1, 1], kind: 'plant', color: '#88aa55' },
+    { tile: [3, 1], kind: 'plant', color: '#aabb44' },
+    { tile: [5, 1], kind: 'plant', color: '#88aa55' },
+    { tile: [7, 1], kind: 'plant', color: '#aabb44' },
+    { tile: [9, 1], kind: 'plant', color: '#88aa55' },
+    { tile: [1, 3], kind: 'plant', color: '#5d8a3a' },
+    { tile: [1, 5], kind: 'plant', color: '#88aa55' },
+    { tile: [1, 7], kind: 'plant', color: '#5d8a3a' },
+    { tile: [9, 3], kind: 'plant', color: '#88aa55' },
+    { tile: [9, 7], kind: 'plant', color: '#5d8a3a' },
+    { tile: [3, 6], kind: 'chair', color: '#d4b08a' },
+    { tile: [4, 6], kind: 'table', color: '#8c5e30' },
+    { tile: [5, 6], kind: 'chair', color: '#d4b08a' },
+    { tile: [7, 7], kind: 'lamp', color: '#aaee88' },
+  ],
+};
+
+const DEFAULT_LAYOUT: Furniture[] = [
+  // minimal furnishings for custom rooms — feels less broken than empty
+  { tile: [3, 3], kind: 'chair', color: '#888888' },
+  { tile: [4, 3], kind: 'table', color: '#888888' },
+  { tile: [7, 7], kind: 'plant', color: '#88aa55' },
 ];
+
+function furnitureFor(roomId: string): Furniture[] {
+  return ROOM_LAYOUTS[roomId] ?? DEFAULT_LAYOUT;
+}
+
+function buildWalkable(furniture: Furniture[]): boolean[][] {
+  const grid: boolean[][] = Array.from({ length: ROOM_SIZE }, () =>
+    Array(ROOM_SIZE).fill(true),
+  );
+  for (const f of furniture) {
+    if (FURN_DEFS[f.kind].walkable) continue;
+    grid[f.tile[0]][f.tile[1]] = false;
+  }
+  return grid;
+}
 
 // --- identity (nickname + derived color) ------------------------------------
 
@@ -601,10 +666,18 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
     selfChat: null,
   });
 
-  // On room change, respawn the avatar at the room centre. Otherwise the
-  // user might land on a portal tile from the previous room and trigger
-  // an immediate re-warp (and lose their walk-in-progress).
+  // Per-room furniture + the matching walkability grid live behind refs
+  // so the canvas effect's closure stays stable across room switches.
+  // Updated synchronously alongside the theme/portals refs above.
+  const furnitureRef = useRef<Furniture[]>(furnitureFor(roomId));
+  const walkableRef = useRef<boolean[][]>(buildWalkable(furnitureRef.current));
+
+  // On room change, swap furniture + walkability and respawn the avatar
+  // at the room centre. Respawn prevents bouncing back through a portal
+  // we just used and avoids landing on a tile the new room blocks.
   useEffect(() => {
+    furnitureRef.current = furnitureFor(roomId);
+    walkableRef.current = buildWalkable(furnitureRef.current);
     const a = stateRef.current.avatar;
     a.tile = [5, 5];
     a.pos = [5, 5];
@@ -613,17 +686,6 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
     a.lastStep = performance.now();
     setHint('click any tile to walk.');
   }, [roomId]);
-
-  const walkable = useMemo(() => {
-    const grid: boolean[][] = Array.from({ length: ROOM_SIZE }, () =>
-      Array(ROOM_SIZE).fill(true),
-    );
-    for (const f of FURNITURE) {
-      if (FURN_DEFS[f.kind].walkable) continue;
-      grid[f.tile[0]][f.tile[1]] = false;
-    }
-    return grid;
-  }, []);
 
   // websocket lifecycle ------------------------------------------------------
 
@@ -875,7 +937,8 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
       const ti = Math.round(t.i);
       const tj = Math.round(t.j);
       if (ti < 0 || ti >= ROOM_SIZE || tj < 0 || tj >= ROOM_SIZE) return;
-      if (!walkable[ti][tj]) {
+      const w = walkableRef.current;
+      if (!w[ti][tj]) {
         setHint('that tile is blocked.');
         return;
       }
@@ -885,7 +948,7 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
         setHint("you're already there.");
         return;
       }
-      const path = findPath(walkable, start, [ti, tj]);
+      const path = findPath(w, start, [ti, tj]);
       if (!path) {
         setHint("can't reach that tile.");
         return;
@@ -974,7 +1037,7 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
         const hj = Math.round(hv.j);
         if (hi >= 0 && hi < ROOM_SIZE && hj >= 0 && hj < ROOM_SIZE) {
           s.hover = [hi, hj];
-          s.hoverBlocked = !walkable[hi][hj];
+          s.hoverBlocked = !walkableRef.current[hi][hj];
         } else {
           s.hover = null;
         }
@@ -982,7 +1045,7 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
         s.hover = null;
       }
 
-      renderScene(ctx, view, s, FURNITURE, themeRef.current, portalsRef.current);
+      renderScene(ctx, view, s, furnitureRef.current, themeRef.current, portalsRef.current);
 
       // position DOM overlays + expire stale chat bubbles
       const positionOverlay = (id: string, i: number, j: number) => {
@@ -1019,7 +1082,10 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
       canvas.removeEventListener('mouseleave', onLeave);
       canvas.removeEventListener('click', onClick);
     };
-  }, [walkable]);
+    // mount-once — the canvas, raf loop, and listeners outlive every
+    // room change. furniture / walkability / theme / portals are read
+    // from refs each frame.
+  }, []);
 
   // identity / figure persistence ------------------------------------------
 
