@@ -185,14 +185,38 @@ Ship criteria: open the page in two tabs, navigate one to `/cafe` and
 one to `/garden`, see live occupancy counts on both, see only your
 roommates in the canvas. ✓
 
-## v5+ — depth
+## v5 — portal tiles (shipped)
 
-Once v4 is solid, the door opens to the long tail of features.
+Goal: walk-through doors instead of a dropdown. The navigator from v4
+stays — portals just give the canvas an on-floor affordance for what
+the URL already supports.
 
-- [ ] **Portal tiles** — visual portals on the floor that warp you to
-      a different room when you walk onto them, instead of relying on
-      the navigator dropdown. (URL routing already exists; just needs
-      the on-canvas affordance.)
+- [x] **`Portal` type + per-room `PORTALS` table** — `lobby` has two
+      portals (south-east → café, south-west → garden); `cafe` and
+      `garden` each have one back to the lobby. Tiles are at room-edge
+      positions so they read visually as doors.
+- [x] **Render** — pulsing tinted infill (in the destination room's
+      wall colour, so you can read where you're going at a glance) +
+      pulsing accent rim. Drawn between the rugs and the hover/sprites
+      layers. Time read straight from `performance.now()` — no extra
+      state.
+- [x] **Arrival trigger** — fires only on the step-completion branch
+      of `advanceWalk`, never on initial spawn. Avoids a bounce-loop
+      where the avatar appears next to a portal in the destination room
+      and immediately walks back. Combined with always respawning at
+      `[5,5]` on `roomId` change for belt-and-braces.
+- [x] **Hint integration** — clicking a portal sets the hint to
+      "walking to → café (3 tiles)…"; arriving sets it to "warping to
+      café…"; the hover state still uses the existing walkable / blocked
+      colouring.
+- [x] **Stable nav** — `useNavigate` from tanstack-router is stashed
+      in a `navigateRef` so the long-lived tick callback can fire the
+      navigation without React re-runs. `portalsRef` similarly so the
+      tick reads the current room's portals each frame.
+
+## v6+ — depth
+
+Once v5 is solid, the rest of the long tail.
 - [ ] **Room editor** — click-drag to place / remove furniture from
       your inventory in a room you own. Persisted as a per-room layout
       record.

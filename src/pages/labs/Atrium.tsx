@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   createAuthorizationUrl,
@@ -60,6 +60,25 @@ const PUBLIC_ROOMS: PublicRoom[] = [
 function themeForRoom(roomId: string): RoomTheme {
   const found = PUBLIC_ROOMS.find((r) => r.id === roomId);
   return THEMES[found?.theme ?? 'phosphor'];
+}
+
+type Portal = { tile: Tile; dest: string; destLabel: string };
+
+/** Per-room portal layout. Walking onto a portal tile warps you to its
+ *  `dest` room. Portals are placed at room-edge positions so they read
+ *  visually as "doors" — and the tile itself stays walkable so
+ *  pathfinding doesn't avoid it. */
+const PORTALS: Record<string, Portal[]> = {
+  lobby: [
+    { tile: [9, 5], dest: 'cafe', destLabel: 'café' },
+    { tile: [5, 9], dest: 'garden', destLabel: 'garden' },
+  ],
+  cafe: [{ tile: [9, 5], dest: 'lobby', destLabel: 'lobby' }],
+  garden: [{ tile: [5, 9], dest: 'lobby', destLabel: 'lobby' }],
+};
+
+function portalsFor(roomId: string): Portal[] {
+  return PORTALS[roomId] ?? [];
 }
 
 // --- iso projection ----------------------------------------------------------
@@ -337,6 +356,7 @@ function renderScene(
   state: SceneState,
   furniture: Furniture[],
   theme: RoomTheme,
+  portals: Portal[],
 ) {
   const w = ctx.canvas.width / (window.devicePixelRatio || 1);
   const h = ctx.canvas.height / (window.devicePixelRatio || 1);
@@ -357,6 +377,33 @@ function renderScene(
   // rugs (still floor-level, draw on top of tiles but under hover)
   for (const f of furniture) {
     if (FURN_DEFS[f.kind].walkable) drawFurniture(ctx, view, f);
+  }
+
+  // portals — pulsing tinted floor tiles whose colour matches the
+  // destination room's theme so the user can read the doorway at a glance
+  if (portals.length > 0) {
+    const t = performance.now() * 0.003;
+    const pulse = 0.45 + 0.35 * (0.5 + 0.5 * Math.sin(t));
+    for (const p of portals) {
+      const destTheme = themeForRoom(p.dest);
+      const cx = view.cx + (p.tile[0] - p.tile[1]) * (TILE_W / 2);
+      const cy = view.cy + (p.tile[0] + p.tile[1]) * (TILE_H / 2);
+      // tinted infill (use destination's wall colour — brighter than the floor)
+      ctx.save();
+      ctx.globalAlpha = pulse;
+      drawTile(ctx, view, p.tile[0], p.tile[1], destTheme.wallNorth);
+      ctx.restore();
+      // pulsing rim
+      ctx.strokeStyle = `rgba(106, 234, 160, ${0.55 + 0.35 * Math.sin(t * 1.3)})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - TILE_H / 2);
+      ctx.lineTo(cx + TILE_W / 2, cy);
+      ctx.lineTo(cx, cy + TILE_H / 2);
+      ctx.lineTo(cx - TILE_W / 2, cy);
+      ctx.closePath();
+      ctx.stroke();
+    }
   }
 
   // path preview
@@ -503,12 +550,21 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectRef = useRef<(() => void) | null>(null);
   const overlayRefsMap = useRef<Map<string, OverlayRefs>>(new Map());
-  // Theme is per-room. Render loop reads from this ref each frame so a
-  // room change doesn't have to tear down the canvas effect.
+  // Theme + portals are per-room. Render loop and tick read from these
+  // refs each frame so a room change doesn't have to tear down the canvas
+  // effect — only the ws effect, which has roomId in its deps.
   const themeRef = useRef<RoomTheme>(themeForRoom(roomId));
+  const portalsRef = useRef<Portal[]>(portalsFor(roomId));
   useEffect(() => {
     themeRef.current = themeForRoom(roomId);
+    portalsRef.current = portalsFor(roomId);
   }, [roomId]);
+
+  const navigate = useNavigate();
+  const navigateRef = useRef(navigate);
+  useEffect(() => {
+    navigateRef.current = navigate;
+  }, [navigate]);
 
   const nicknameRef = useRef<string>('');
   const bodyColorRef = useRef<string>('#6aeaa0');
@@ -544,6 +600,19 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
     selfHeadColor: headColorRef.current,
     selfChat: null,
   });
+
+  // On room change, respawn the avatar at the room centre. Otherwise the
+  // user might land on a portal tile from the previous room and trigger
+  // an immediate re-warp (and lose their walk-in-progress).
+  useEffect(() => {
+    const a = stateRef.current.avatar;
+    a.tile = [5, 5];
+    a.pos = [5, 5];
+    a.path = [];
+    a.walking = false;
+    a.lastStep = performance.now();
+    setHint('click any tile to walk.');
+  }, [roomId]);
 
   const walkable = useMemo(() => {
     const grid: boolean[][] = Array.from({ length: ROOM_SIZE }, () =>
@@ -826,7 +895,12 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
       a.path = path.slice(1);
       a.walking = a.path.length > 0;
       a.lastStep = performance.now();
-      setHint(`walking ${a.path.length} tile${a.path.length === 1 ? '' : 's'}…`);
+      const target = portalsRef.current.find((p) => p.tile[0] === ti && p.tile[1] === tj);
+      if (target) {
+        setHint(`walking to → ${target.destLabel} (${a.path.length} tile${a.path.length === 1 ? '' : 's'})…`);
+      } else {
+        setHint(`walking ${a.path.length} tile${a.path.length === 1 ? '' : 's'}…`);
+      }
       // tell the server (and through it, every other client)
       const ws = wsRef.current;
       if (ws && ws.readyState === WebSocket.OPEN) {
@@ -869,8 +943,26 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
       const s = stateRef.current;
       const a = s.avatar;
 
-      if (advanceWalk(a, now) && !a.walking) {
-        setHint(`here. tile (${a.tile[0]}, ${a.tile[1]}).`);
+      const stepped = advanceWalk(a, now);
+      if (stepped) {
+        // Portal trigger fires only on a step boundary, never on the
+        // initial spawn — so we don't bounce-loop when respawning next
+        // to a portal in the destination room.
+        const here = portalsRef.current.find(
+          (p) => p.tile[0] === a.tile[0] && p.tile[1] === a.tile[1],
+        );
+        if (here) {
+          setHint(`warping to ${here.destLabel}…`);
+          a.path = [];
+          a.walking = false;
+          if (here.dest === 'lobby') {
+            navigateRef.current({ to: '/labs/atrium' });
+          } else {
+            navigateRef.current({ to: '/labs/atrium/$roomId', params: { roomId: here.dest } });
+          }
+        } else if (!a.walking) {
+          setHint(`here. tile (${a.tile[0]}, ${a.tile[1]}).`);
+        }
       }
       for (const peer of s.peers.values()) advanceWalk(peer, now);
 
@@ -890,7 +982,7 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
         s.hover = null;
       }
 
-      renderScene(ctx, view, s, FURNITURE, themeRef.current);
+      renderScene(ctx, view, s, FURNITURE, themeRef.current, portalsRef.current);
 
       // position DOM overlays + expire stale chat bubbles
       const positionOverlay = (id: string, i: number, j: number) => {
