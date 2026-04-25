@@ -475,9 +475,27 @@ no real reason to exist. Two fixes:
       Prevents teleporting from feeling like falling out of the sky
       into the centre.
 
-## v8+ — depth
+## v8 — walk-leg animation (shipped)
 
-Once v7 is solid, the rest of the long tail.
+The body-stretch bob from v1 was the cheapest "you're walking" cue we
+could get away with — it just made the body taller/shorter as you
+moved. Replaced it with actual legs.
+
+- [x] Two iso-box legs (`0.13 × 0.13 × 0.3`) at the avatar's base,
+      offset ±0.08 along the i axis. Body sits on top, head on top of
+      that. Identicon (face + hair) renders unchanged.
+- [x] Walking alternate-lifts the legs on a 540ms sin cycle (one full
+      cycle = two steps) by up to 0.1 tile units. The body rides up by
+      the smaller of the two leg lifts, giving a real footstep bob
+      without distorting the body shape.
+- [x] Sit pose hides the legs (tucked under the chair seat) — body +
+      head only.
+- [x] `AvatarDraw` swaps `bob: number` for `walking: boolean` —
+      drawAvatar now computes the phase from `performance.now()`
+      itself, so `state.bob` is dead and the per-tick body-stretch
+      math is gone too.
+- [x] Emote `ctx.translate` offsets compose cleanly with legs (the
+      whole avatar including legs translates together).
 - [ ] **Room editor** — click-drag to place / remove furniture from
       your inventory in a room you own. Persisted as a per-room layout
       record.

@@ -269,22 +269,29 @@ function drawFurniture(ctx: CanvasRenderingContext2D, view: View, f: Furniture) 
 type AvatarDraw = {
   i: number;
   j: number;
-  bob: number;
+  /** When true, the legs alternate-lift on a sin cycle and the body
+   *  rides slightly up + down with each step. False = standing still. */
+  walking: boolean;
   bodyColor: string;
   headColor: string;
   seed: string;
-  /** When set, draw at this chair tile in a sitting pose (smaller body
-   *  at chair-seat height) instead of the standing pose at i/j. */
+  /** When set, draw at this chair tile in a sitting pose (legs hidden,
+   *  body shrunk to chair-seat height) instead of the standing pose. */
   sitting: Tile | null;
 };
+
+const LEG_H = 0.3;
+const LEG_W = 0.13;
+const LEG_OFFSET = 0.08; // ± along i to spread the two legs side-by-side
+const STEP_PERIOD_MS = 540; // one leg cycle = 2 steps
 
 function drawAvatar(ctx: CanvasRenderingContext2D, view: View, av: AvatarDraw) {
   const ic = identiconFor(av.seed);
   if (av.sitting) {
     // Sitting pose: render at the chair tile, body shrunk to chair-seat
-    // height, head atop. No bob — they're sitting still.
+    // height, head atop. Legs hidden (tucked under the seat).
     const [si, sj] = av.sitting;
-    const bodyBaseZ = 0.5; // top of chair seat (chair body height = 0.4 + small lift)
+    const bodyBaseZ = 0.5;
     const bodyH = 0.4;
     const headBaseZ = bodyBaseZ + bodyH;
     const headH = 0.4;
@@ -294,13 +301,39 @@ function drawAvatar(ctx: CanvasRenderingContext2D, view: View, av: AvatarDraw) {
     drawFace(ctx, view, si, sj, headBaseZ, headH, ic);
     return;
   }
-  // Standing
-  drawIsoBox(ctx, view, av.i, av.j, 0.45, 0.45, 0.85 + av.bob, av.bodyColor);
-  const headBaseZ = 0.85 + av.bob;
-  const headHeight = 0.4;
-  drawIsoBox(ctx, view, av.i, av.j, 0.5, 0.5, headHeight, av.headColor, headBaseZ);
-  drawHair(ctx, view, av.i, av.j, headBaseZ + headHeight, ic);
-  drawFace(ctx, view, av.i, av.j, headBaseZ, headHeight, ic);
+
+  // Walk phase — drives leg lifts. When standing still both lifts are
+  // 0 so the legs sit flat on the floor.
+  let leftLift = 0;
+  let rightLift = 0;
+  if (av.walking) {
+    const phase = ((performance.now() % STEP_PERIOD_MS) / STEP_PERIOD_MS) * Math.PI * 2;
+    const wave = Math.sin(phase);
+    leftLift = Math.max(0, wave) * 0.1;
+    rightLift = Math.max(0, -wave) * 0.1;
+  }
+
+  // Two legs side-by-side along the i axis, lifted slightly off the
+  // floor when their phase is "up". Drawn before the body so the body
+  // composes over the leg tops. Sort by lift so the higher one renders
+  // on top of the lower (matters less for non-overlapping but cheap).
+  drawIsoBox(ctx, view, av.i - LEG_OFFSET, av.j, LEG_W, LEG_W, LEG_H, av.bodyColor, leftLift);
+  drawIsoBox(ctx, view, av.i + LEG_OFFSET, av.j, LEG_W, LEG_W, LEG_H, av.bodyColor, rightLift);
+
+  // Body sits on the legs. When walking, the body rides up by the
+  // smaller of the two lifts (so it follows the lower leg, like a real
+  // step) — that's a tiny vertical bob without distortion.
+  const bodyRide = Math.min(leftLift, rightLift);
+  const bodyBaseZ = LEG_H + bodyRide;
+  const bodyH = 0.55;
+  drawIsoBox(ctx, view, av.i, av.j, 0.45, 0.45, bodyH, av.bodyColor, bodyBaseZ);
+
+  // Head on top
+  const headBaseZ = bodyBaseZ + bodyH;
+  const headH = 0.4;
+  drawIsoBox(ctx, view, av.i, av.j, 0.5, 0.5, headH, av.headColor, headBaseZ);
+  drawHair(ctx, view, av.i, av.j, headBaseZ + headH, ic);
+  drawFace(ctx, view, av.i, av.j, headBaseZ, headH, ic);
 }
 
 /** Screen-space pixel offset for an active emote, used by the renderer
@@ -595,7 +628,6 @@ type SceneState = {
   avatar: Avatar;
   hover: Tile | null;
   hoverBlocked: boolean;
-  bob: number;
   peers: Map<string, Peer>;
   selfId: string | null;
   selfBodyColor: string;
@@ -742,7 +774,7 @@ function renderScene(
         drawAvatar(ctx, view, {
           i: peer.pos[0],
           j: peer.pos[1],
-          bob: peer.walking ? state.bob : 0,
+          walking: peer.walking,
           bodyColor: peer.bodyColor,
           headColor: peer.headColor,
           seed: peer.nickname,
@@ -765,7 +797,7 @@ function renderScene(
       drawAvatar(ctx, view, {
         i: a.pos[0],
         j: a.pos[1],
-        bob: a.walking ? state.bob : 0,
+        walking: a.walking,
         bodyColor: state.selfBodyColor,
         headColor: state.selfHeadColor,
         seed: state.selfNickname,
@@ -1075,7 +1107,6 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
     },
     hover: null,
     hoverBlocked: false,
-    bob: 0,
     peers: new Map(),
     selfId: null,
     selfBodyColor: bodyColorRef.current,
@@ -1588,8 +1619,6 @@ export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
       for (const peer of s.peers.values()) {
         if (peer.emote && now >= peer.emote.expires) peer.emote = null;
       }
-
-      s.bob = a.walking ? Math.sin(now * 0.012) * 0.04 : 0;
 
       if (mouseScreen.inside) {
         const hv = screenToTile(view, mouseScreen.x, mouseScreen.y);
