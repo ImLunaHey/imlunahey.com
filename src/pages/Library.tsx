@@ -33,6 +33,7 @@ type SortKey = 'title' | 'year' | 'added';
 
 export default function LibraryPage() {
   const [search, setSearch] = useState('');
+  const [kind, setKind] = useState<'movie' | 'tv' | 'all'>('all');
   const [format, setFormat] = useState<string | 'all'>('all');
   const [decade, setDecade] = useState<string | 'all'>('all');
   const [country, setCountry] = useState<string | 'all'>('all');
@@ -44,11 +45,13 @@ export default function LibraryPage() {
   // the list — otherwise stacked filters would hide options the user
   // could still combine.
   const facets = useMemo(() => {
+    const kinds = new Map<string, number>();
     const formats = new Map<string, number>();
     const decades = new Map<string, number>();
     const countries = new Map<string, number>();
     const genres = new Map<string, number>();
     for (const it of LIBRARY) {
+      if (it.mediaType) kinds.set(it.mediaType, (kinds.get(it.mediaType) ?? 0) + 1);
       formats.set(it.format, (formats.get(it.format) ?? 0) + 1);
       const dec = decadeOf(it.releaseYear);
       if (dec) decades.set(dec, (decades.get(dec) ?? 0) + 1);
@@ -56,6 +59,11 @@ export default function LibraryPage() {
       for (const g of it.genres) genres.set(g, (genres.get(g) ?? 0) + 1);
     }
     return {
+      // friendlier labels for the chip — 'tv' / 'movie' from tmdb
+      // become 'shows' / 'films' so the chip row reads as english.
+      kinds: [...kinds.entries()].map(
+        ([k, n]) => [k === 'movie' ? 'films' : 'shows', n, k] as const,
+      ),
       formats: [...formats.entries()].sort((a, b) => b[1] - a[1]),
       decades: [...decades.entries()].sort((a, b) => a[0].localeCompare(b[0])),
       // top-N to keep the chip row readable; the rest live behind the
@@ -79,6 +87,7 @@ export default function LibraryPage() {
   const groups = useMemo(() => {
     const q = search.trim().toLowerCase();
     const matching = LIBRARY.filter((it) => {
+      if (kind !== 'all' && it.mediaType !== kind) return false;
       if (format !== 'all' && it.format !== format) return false;
       if (decade !== 'all' && decadeOf(it.releaseYear) !== decade) return false;
       if (country !== 'all' && !it.countries.includes(country)) return false;
@@ -118,7 +127,7 @@ export default function LibraryPage() {
       arr.sort((a, b) => newest(b) - newest(a));
     }
     return arr;
-  }, [search, format, decade, country, genre, sortBy]);
+  }, [search, kind, format, decade, country, genre, sortBy]);
 
   const totalRows = LIBRARY.length;
   // unique titles — same dedup key as the shelf grouping (imdbId+title),
@@ -187,6 +196,31 @@ export default function LibraryPage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* kind has its own renderer because the chip label
+              ("films" / "shows") differs from the underlying value
+              ("movie" / "tv"); the generic ChipRow uses the same
+              string for both. */}
+          <div className="control-row">
+            <span className="control-label">kind</span>
+            <button
+              className={'chip' + (kind === 'all' ? ' on' : '')}
+              onClick={() => setKind('all')}
+              type="button"
+            >
+              all
+            </button>
+            {facets.kinds.map(([label, count, value]) => (
+              <button
+                key={value}
+                className={'chip' + (kind === value ? ' on' : '')}
+                onClick={() => setKind(value as 'movie' | 'tv')}
+                type="button"
+              >
+                {label} <span className="chip-n">{count}</span>
+              </button>
+            ))}
           </div>
 
           <ChipRow
