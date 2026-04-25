@@ -136,7 +136,8 @@ export type OgSlug =
   | 'lab/converter'
   | 'lab/twitch-live'
   | 'lab/shaders'
-  | 'lab/atrium';
+  | 'lab/atrium'
+  | 'lab/germ-card';
 
 type OgEntry = {
   title: string;
@@ -276,6 +277,7 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/twitch-live': { title: 'twitch live.', subtitle: 'top live streams right now, filter by game + language', description: 'top live streams on twitch right now — thumbnails, viewer counts, uptime. filter by game or language. polls every minute via the helix api.', glyph: '▶', slug: '/labs/twitch-live' },
   'lab/shaders': { title: 'shaders.', subtitle: 'live wgsl fragment shaders, on the gpu', description: 'live wgsl fragment-shader playground in webgpu — eight presets including plasma, raymarched spheres, mandelbrot, voronoi, kaleidoscope. edit + recompile live.', glyph: '◬', slug: '/labs/shaders' },
   'lab/atrium': { title: 'atrium.', subtitle: 'isometric pixel-art hangout, click to walk', description: 'isometric pixel-art hangout — a 10×10 room of procedurally-drawn furniture, click any tile to walk there with a* pathfinding around blockers. v1 is solo; multiplayer + atproto identity in later phases.', glyph: '◧', slug: '/labs/atrium' },
+  'lab/germ-card': { title: 'germ card.', subtitle: 'is this handle reachable on germ?', description: 'paste any bluesky handle — fetch its com.germnetwork.declaration record from the pds, see message-me policy, advertised mls keys, and the launch url germ apps use to start an e2ee dm.', glyph: '✉', slug: '/labs/germ-card' },
 };
 
 const W = 1200;

@@ -111,6 +111,14 @@ const LABS: Lab[] = [
     ready: true,
   },
   {
+    slug: 'germ-card',
+    title: 'germ card',
+    desc: 'paste a bluesky handle — fetch its com.germnetwork.declaration to see if it can be messaged on germ, who is allowed to, and the mls keys it advertises.',
+    tags: ['atproto', 'germ'],
+    year: '2026',
+    ready: true,
+  },
+  {
     slug: 'tid',
     title: 'tid',
     desc: 'live-generate atproto timestamp ids, or paste one to decode its timestamp + clock id.',

@@ -136,6 +136,7 @@ import { Route as MainLabsYearInReviewIndexRouteImport } from './routes/_main/la
 import { Route as MainLabsTwitchLiveIndexRouteImport } from './routes/_main/labs/twitch-live/index'
 import { Route as MainLabsPlcLogIndexRouteImport } from './routes/_main/labs/plc-log/index'
 import { Route as MainLabsLexiconIndexRouteImport } from './routes/_main/labs/lexicon/index'
+import { Route as MainLabsGermCardIndexRouteImport } from './routes/_main/labs/germ-card/index'
 import { Route as MainLabsFeedIndexRouteImport } from './routes/_main/labs/feed/index'
 import { Route as MainLabsCssBattlesIndexRouteImport } from './routes/_main/labs/css-battles/index'
 import { Route as MainLabsCryptoIndexRouteImport } from './routes/_main/labs/crypto/index'
@@ -146,6 +147,7 @@ import { Route as MainPokedexRkeyPokeIdRouteImport } from './routes/_main/pokede
 import { Route as MainLabsTwitchLiveLoginRouteImport } from './routes/_main/labs/twitch-live/$login'
 import { Route as MainLabsPlcLogSplatRouteImport } from './routes/_main/labs/plc-log/$'
 import { Route as MainLabsLexiconNsidRouteImport } from './routes/_main/labs/lexicon/$nsid'
+import { Route as MainLabsGermCardSplatRouteImport } from './routes/_main/labs/germ-card/$'
 import { Route as MainLabsFeedSplatRouteImport } from './routes/_main/labs/feed/$'
 import { Route as MainLabsCssBattlesDateRouteImport } from './routes/_main/labs/css-battles/$date'
 import { Route as MainLabsCryptoIdRouteImport } from './routes/_main/labs/crypto/$id'
@@ -792,6 +794,11 @@ const MainLabsLexiconIndexRoute = MainLabsLexiconIndexRouteImport.update({
   path: '/labs/lexicon/',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsGermCardIndexRoute = MainLabsGermCardIndexRouteImport.update({
+  id: '/labs/germ-card/',
+  path: '/labs/germ-card/',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsFeedIndexRoute = MainLabsFeedIndexRouteImport.update({
   id: '/labs/feed/',
   path: '/labs/feed/',
@@ -841,6 +848,11 @@ const MainLabsPlcLogSplatRoute = MainLabsPlcLogSplatRouteImport.update({
 const MainLabsLexiconNsidRoute = MainLabsLexiconNsidRouteImport.update({
   id: '/labs/lexicon/$nsid',
   path: '/labs/lexicon/$nsid',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLabsGermCardSplatRoute = MainLabsGermCardSplatRouteImport.update({
+  id: '/labs/germ-card/$',
+  path: '/labs/germ-card/$',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLabsFeedSplatRoute = MainLabsFeedSplatRouteImport.update({
@@ -1010,6 +1022,7 @@ export interface FileRoutesByFullPath {
   '/labs/crypto/$id': typeof MainLabsCryptoIdRoute
   '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
   '/labs/feed/$': typeof MainLabsFeedSplatRoute
+  '/labs/germ-card/$': typeof MainLabsGermCardSplatRoute
   '/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
   '/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
   '/labs/twitch-live/$login': typeof MainLabsTwitchLiveLoginRoute
@@ -1020,6 +1033,7 @@ export interface FileRoutesByFullPath {
   '/labs/crypto/': typeof MainLabsCryptoIndexRoute
   '/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
   '/labs/feed/': typeof MainLabsFeedIndexRoute
+  '/labs/germ-card/': typeof MainLabsGermCardIndexRoute
   '/labs/lexicon/': typeof MainLabsLexiconIndexRoute
   '/labs/plc-log/': typeof MainLabsPlcLogIndexRoute
   '/labs/twitch-live/': typeof MainLabsTwitchLiveIndexRoute
@@ -1155,6 +1169,7 @@ export interface FileRoutesByTo {
   '/labs/crypto/$id': typeof MainLabsCryptoIdRoute
   '/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
   '/labs/feed/$': typeof MainLabsFeedSplatRoute
+  '/labs/germ-card/$': typeof MainLabsGermCardSplatRoute
   '/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
   '/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
   '/labs/twitch-live/$login': typeof MainLabsTwitchLiveLoginRoute
@@ -1165,6 +1180,7 @@ export interface FileRoutesByTo {
   '/labs/crypto': typeof MainLabsCryptoIndexRoute
   '/labs/css-battles': typeof MainLabsCssBattlesIndexRoute
   '/labs/feed': typeof MainLabsFeedIndexRoute
+  '/labs/germ-card': typeof MainLabsGermCardIndexRoute
   '/labs/lexicon': typeof MainLabsLexiconIndexRoute
   '/labs/plc-log': typeof MainLabsPlcLogIndexRoute
   '/labs/twitch-live': typeof MainLabsTwitchLiveIndexRoute
@@ -1302,6 +1318,7 @@ export interface FileRoutesById {
   '/_main/labs/crypto/$id': typeof MainLabsCryptoIdRoute
   '/_main/labs/css-battles/$date': typeof MainLabsCssBattlesDateRoute
   '/_main/labs/feed/$': typeof MainLabsFeedSplatRoute
+  '/_main/labs/germ-card/$': typeof MainLabsGermCardSplatRoute
   '/_main/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
   '/_main/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
   '/_main/labs/twitch-live/$login': typeof MainLabsTwitchLiveLoginRoute
@@ -1312,6 +1329,7 @@ export interface FileRoutesById {
   '/_main/labs/crypto/': typeof MainLabsCryptoIndexRoute
   '/_main/labs/css-battles/': typeof MainLabsCssBattlesIndexRoute
   '/_main/labs/feed/': typeof MainLabsFeedIndexRoute
+  '/_main/labs/germ-card/': typeof MainLabsGermCardIndexRoute
   '/_main/labs/lexicon/': typeof MainLabsLexiconIndexRoute
   '/_main/labs/plc-log/': typeof MainLabsPlcLogIndexRoute
   '/_main/labs/twitch-live/': typeof MainLabsTwitchLiveIndexRoute
@@ -1449,6 +1467,7 @@ export interface FileRouteTypes {
     | '/labs/crypto/$id'
     | '/labs/css-battles/$date'
     | '/labs/feed/$'
+    | '/labs/germ-card/$'
     | '/labs/lexicon/$nsid'
     | '/labs/plc-log/$'
     | '/labs/twitch-live/$login'
@@ -1459,6 +1478,7 @@ export interface FileRouteTypes {
     | '/labs/crypto/'
     | '/labs/css-battles/'
     | '/labs/feed/'
+    | '/labs/germ-card/'
     | '/labs/lexicon/'
     | '/labs/plc-log/'
     | '/labs/twitch-live/'
@@ -1594,6 +1614,7 @@ export interface FileRouteTypes {
     | '/labs/crypto/$id'
     | '/labs/css-battles/$date'
     | '/labs/feed/$'
+    | '/labs/germ-card/$'
     | '/labs/lexicon/$nsid'
     | '/labs/plc-log/$'
     | '/labs/twitch-live/$login'
@@ -1604,6 +1625,7 @@ export interface FileRouteTypes {
     | '/labs/crypto'
     | '/labs/css-battles'
     | '/labs/feed'
+    | '/labs/germ-card'
     | '/labs/lexicon'
     | '/labs/plc-log'
     | '/labs/twitch-live'
@@ -1740,6 +1762,7 @@ export interface FileRouteTypes {
     | '/_main/labs/crypto/$id'
     | '/_main/labs/css-battles/$date'
     | '/_main/labs/feed/$'
+    | '/_main/labs/germ-card/$'
     | '/_main/labs/lexicon/$nsid'
     | '/_main/labs/plc-log/$'
     | '/_main/labs/twitch-live/$login'
@@ -1750,6 +1773,7 @@ export interface FileRouteTypes {
     | '/_main/labs/crypto/'
     | '/_main/labs/css-battles/'
     | '/_main/labs/feed/'
+    | '/_main/labs/germ-card/'
     | '/_main/labs/lexicon/'
     | '/_main/labs/plc-log/'
     | '/_main/labs/twitch-live/'
@@ -2659,6 +2683,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsLexiconIndexRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/germ-card/': {
+      id: '/_main/labs/germ-card/'
+      path: '/labs/germ-card'
+      fullPath: '/labs/germ-card/'
+      preLoaderRoute: typeof MainLabsGermCardIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/feed/': {
       id: '/_main/labs/feed/'
       path: '/labs/feed'
@@ -2727,6 +2758,13 @@ declare module '@tanstack/react-router' {
       path: '/labs/lexicon/$nsid'
       fullPath: '/labs/lexicon/$nsid'
       preLoaderRoute: typeof MainLabsLexiconNsidRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/labs/germ-card/$': {
+      id: '/_main/labs/germ-card/$'
+      path: '/labs/germ-card/$'
+      fullPath: '/labs/germ-card/$'
+      preLoaderRoute: typeof MainLabsGermCardSplatRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/labs/feed/$': {
@@ -2903,6 +2941,7 @@ interface MainRouteChildren {
   MainLabsCryptoIdRoute: typeof MainLabsCryptoIdRoute
   MainLabsCssBattlesDateRoute: typeof MainLabsCssBattlesDateRoute
   MainLabsFeedSplatRoute: typeof MainLabsFeedSplatRoute
+  MainLabsGermCardSplatRoute: typeof MainLabsGermCardSplatRoute
   MainLabsLexiconNsidRoute: typeof MainLabsLexiconNsidRoute
   MainLabsPlcLogSplatRoute: typeof MainLabsPlcLogSplatRoute
   MainLabsTwitchLiveLoginRoute: typeof MainLabsTwitchLiveLoginRoute
@@ -2913,6 +2952,7 @@ interface MainRouteChildren {
   MainLabsCryptoIndexRoute: typeof MainLabsCryptoIndexRoute
   MainLabsCssBattlesIndexRoute: typeof MainLabsCssBattlesIndexRoute
   MainLabsFeedIndexRoute: typeof MainLabsFeedIndexRoute
+  MainLabsGermCardIndexRoute: typeof MainLabsGermCardIndexRoute
   MainLabsLexiconIndexRoute: typeof MainLabsLexiconIndexRoute
   MainLabsPlcLogIndexRoute: typeof MainLabsPlcLogIndexRoute
   MainLabsTwitchLiveIndexRoute: typeof MainLabsTwitchLiveIndexRoute
@@ -3042,6 +3082,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsCryptoIdRoute: MainLabsCryptoIdRoute,
   MainLabsCssBattlesDateRoute: MainLabsCssBattlesDateRoute,
   MainLabsFeedSplatRoute: MainLabsFeedSplatRoute,
+  MainLabsGermCardSplatRoute: MainLabsGermCardSplatRoute,
   MainLabsLexiconNsidRoute: MainLabsLexiconNsidRoute,
   MainLabsPlcLogSplatRoute: MainLabsPlcLogSplatRoute,
   MainLabsTwitchLiveLoginRoute: MainLabsTwitchLiveLoginRoute,
@@ -3052,6 +3093,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsCryptoIndexRoute: MainLabsCryptoIndexRoute,
   MainLabsCssBattlesIndexRoute: MainLabsCssBattlesIndexRoute,
   MainLabsFeedIndexRoute: MainLabsFeedIndexRoute,
+  MainLabsGermCardIndexRoute: MainLabsGermCardIndexRoute,
   MainLabsLexiconIndexRoute: MainLabsLexiconIndexRoute,
   MainLabsPlcLogIndexRoute: MainLabsPlcLogIndexRoute,
   MainLabsTwitchLiveIndexRoute: MainLabsTwitchLiveIndexRoute,
