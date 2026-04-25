@@ -329,6 +329,33 @@ Verified end-to-end via two-client wire test: `sit` broadcasts the
 tile to peers, `emote` broadcasts kind + at, init payloads carry
 the `sitting` field. ✓
 
+### v7.3 — room as internal state, URL is initial-only (shipped)
+
+The "remount-safe" workaround in v7.2 was actually a symptom of the
+wrong design — the URL changing on every room walk meant the component
+remounted, which trashed every `useRef`, AND it meant typing a different
+URL silently teleported you (which contradicts "you can only change
+rooms by walking through portals").
+
+Pivoted to: **room is internal `useState`, the URL is only an initial
+hint**.
+
+- [x] AtriumPage takes `initialRoom` (was `roomId`) which seeds a
+      `useState<string>(initialRoom)`. The route files still pass the
+      URL-derived room as the initial value, so deep links still drop
+      you in the right room on first load.
+- [x] Walking onto a portal now calls `setRoomRef.current(here.dest)`
+      instead of `navigate()`. No URL change, no remount, just a
+      single state update.
+- [x] `useNavigate`, `navigateRef`, and the `if (here.dest === 'lobby')
+      navigate-to-index else navigate-to-$roomId` branching are all
+      gone.
+- [x] `lastVisitedRoom` (the module-level singleton from v7.2) is back
+      to being a normal `useRef` — safe now because the component
+      doesn't remount on room change. Initial mount still gets a `null`
+      previous room → fall back to `[5,5]`, which is the right
+      behaviour for "you arrived here from outside".
+
 ### v7.2 — portal label z-order + remount-safe previous room (shipped)
 
 Two follow-ups to v7.1:

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   createAuthorizationUrl,
@@ -85,17 +85,6 @@ function portalsFor(roomId: string): Portal[] {
  *  neighbour. West first since portals are mostly on east/south edges
  *  and "into the room" is west/north for those. Falls back to the
  *  caller's default if every neighbour is blocked or out of bounds. */
-/** The room we came from on the previous in-tab navigation. Hoisted to
- *  module scope (rather than `useRef`) because the AtriumPage component
- *  REMOUNTS when crossing the `/labs/atrium` ↔ `/labs/atrium/$roomId`
- *  route boundary — `useRef` would reset to null on every remount and
- *  the entrance-spawn lookup would always fall through to the room
- *  centre. A per-tab module singleton survives the remount.
- *
- *  Tab refresh / cold load still legitimately gets `null` here; that's
- *  the right semantics — there's no doorway to spawn at on a deep link. */
-let lastVisitedRoom: string | null = null;
-
 function findSpawnAdjacent(walkable: boolean[][], portal: Tile, fallback: Tile): Tile {
   const [pi, pj] = portal;
   const candidates: Tile[] = [
@@ -989,7 +978,12 @@ type OverlayRefs = { wrap: HTMLDivElement; label: HTMLDivElement; bubble: HTMLDi
 
 const DEFAULT_HEAD_COLOR = '#f3d7b0';
 
-export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
+export default function AtriumPage({ initialRoom = 'lobby' }: { initialRoom?: string }) {
+  // Room is internal state, not a route param. Walking onto a portal
+  // calls setRoom(dest) — no URL change, no remount. The URL only
+  // seeds the initial value via `initialRoom` (so deep links still
+  // land you in the right room), but afterwards URL ≠ current room.
+  const [roomId, setRoom] = useState<string>(initialRoom);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectRef = useRef<(() => void) | null>(null);
@@ -1004,11 +998,18 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
     portalsRef.current = portalsFor(roomId);
   }, [roomId]);
 
-  const navigate = useNavigate();
-  const navigateRef = useRef(navigate);
+  // Tracks the room we were just in (for entrance-portal spawn). useRef
+  // is safe here because the component no longer remounts on room
+  // change — room lives in state, not in the URL/route.
+  const previousRoomRef = useRef<string | null>(null);
+
+  // Stable callback for the tick loop to fire room changes without
+  // capturing setRoom in a closure that gets baked into the canvas
+  // effect.
+  const setRoomRef = useRef(setRoom);
   useEffect(() => {
-    navigateRef.current = navigate;
-  }, [navigate]);
+    setRoomRef.current = setRoom;
+  }, [setRoom]);
 
   const nicknameRef = useRef<string>('');
   const bodyColorRef = useRef<string>('#6aeaa0');
@@ -1072,17 +1073,17 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
 
     // Spawn next to the entrance portal — i.e. the portal in the new
     // room whose destination is the room we just came from. If we don't
-    // know where we came from (URL deep link / first mount of the tab),
+    // know where we came from (first time entering ANY room this mount),
     // fall back to the room centre.
     let spawn: Tile = [5, 5];
-    const prev = lastVisitedRoom;
+    const prev = previousRoomRef.current;
     if (prev && prev !== roomId) {
       const entrance = portalsRef.current.find((p) => p.dest === prev);
       if (entrance) {
         spawn = findSpawnAdjacent(walkableRef.current, entrance.tile, [5, 5]);
       }
     }
-    lastVisitedRoom = roomId;
+    previousRoomRef.current = roomId;
 
     const a = stateRef.current.avatar;
     a.tile = spawn;
@@ -1505,11 +1506,10 @@ export default function AtriumPage({ roomId = 'lobby' }: { roomId?: string }) {
           setHint(`warping to ${here.destLabel}…`);
           a.path = [];
           a.walking = false;
-          if (here.dest === 'lobby') {
-            navigateRef.current({ to: '/labs/atrium' });
-          } else {
-            navigateRef.current({ to: '/labs/atrium/$roomId', params: { roomId: here.dest } });
-          }
+          // Internal state change — no URL update, no remount. The
+          // room-change effect picks up the new value, swaps refs, and
+          // respawns the avatar next to the entrance portal.
+          setRoomRef.current(here.dest);
         } else if (!a.walking) {
           // Walk done — if we were heading toward a chair, sit on it.
           if (a.sitOnArrival) {
