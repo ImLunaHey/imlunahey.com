@@ -135,7 +135,8 @@ export type OgSlug =
   | 'lab/clipper'
   | 'lab/converter'
   | 'lab/twitch-live'
-  | 'lab/shaders';
+  | 'lab/shaders'
+  | 'lab/atrium';
 
 type OgEntry = {
   title: string;
@@ -274,6 +275,7 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   'lab/converter': { title: 'converter.', subtitle: 'mp4 / webm / mkv / mov / mp3 / wav / ogg / flac — in-browser', description: 'format converter — mp4 ↔ webm ↔ mkv ↔ mov for video, plus audio-only output to mp3 / wav / ogg / flac. re-muxes when codecs allow, re-encodes otherwise.', glyph: '↔', slug: '/labs/converter' },
   'lab/twitch-live': { title: 'twitch live.', subtitle: 'top live streams right now, filter by game + language', description: 'top live streams on twitch right now — thumbnails, viewer counts, uptime. filter by game or language. polls every minute via the helix api.', glyph: '▶', slug: '/labs/twitch-live' },
   'lab/shaders': { title: 'shaders.', subtitle: 'live wgsl fragment shaders, on the gpu', description: 'live wgsl fragment-shader playground in webgpu — eight presets including plasma, raymarched spheres, mandelbrot, voronoi, kaleidoscope. edit + recompile live.', glyph: '◬', slug: '/labs/shaders' },
+  'lab/atrium': { title: 'atrium.', subtitle: 'isometric pixel-art hangout, click to walk', description: 'isometric pixel-art hangout — a 10×10 room of procedurally-drawn furniture, click any tile to walk there with a* pathfinding around blockers. v1 is solo; multiplayer + atproto identity in later phases.', glyph: '◧', slug: '/labs/atrium' },
 };
 
 const W = 1200;

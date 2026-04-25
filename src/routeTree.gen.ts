@@ -128,6 +128,7 @@ import { Route as MainLabsBskyCardsRouteImport } from './routes/_main/labs/bsky-
 import { Route as MainLabsBrowserRouteImport } from './routes/_main/labs/browser'
 import { Route as MainLabsBacklinksRouteImport } from './routes/_main/labs/backlinks'
 import { Route as MainLabsAudioExtractorRouteImport } from './routes/_main/labs/audio-extractor'
+import { Route as MainLabsAtriumRouteImport } from './routes/_main/labs/atrium'
 import { Route as MainLabsAsciiRouteImport } from './routes/_main/labs/ascii'
 import { Route as MainLabsAicRouteImport } from './routes/_main/labs/aic'
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
@@ -749,6 +750,11 @@ const MainLabsAudioExtractorRoute = MainLabsAudioExtractorRouteImport.update({
   path: '/labs/audio-extractor',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLabsAtriumRoute = MainLabsAtriumRouteImport.update({
+  id: '/labs/atrium',
+  path: '/labs/atrium',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsAsciiRoute = MainLabsAsciiRouteImport.update({
   id: '/labs/ascii',
   path: '/labs/ascii',
@@ -893,6 +899,7 @@ export interface FileRoutesByFullPath {
   '/games/$rkey': typeof MainGamesRkeyRoute
   '/labs/aic': typeof MainLabsAicRoute
   '/labs/ascii': typeof MainLabsAsciiRoute
+  '/labs/atrium': typeof MainLabsAtriumRoute
   '/labs/audio-extractor': typeof MainLabsAudioExtractorRoute
   '/labs/backlinks': typeof MainLabsBacklinksRoute
   '/labs/browser': typeof MainLabsBrowserRoute
@@ -1036,6 +1043,7 @@ export interface FileRoutesByTo {
   '/games/$rkey': typeof MainGamesRkeyRoute
   '/labs/aic': typeof MainLabsAicRoute
   '/labs/ascii': typeof MainLabsAsciiRoute
+  '/labs/atrium': typeof MainLabsAtriumRoute
   '/labs/audio-extractor': typeof MainLabsAudioExtractorRoute
   '/labs/backlinks': typeof MainLabsBacklinksRoute
   '/labs/browser': typeof MainLabsBrowserRoute
@@ -1181,6 +1189,7 @@ export interface FileRoutesById {
   '/_main/games/$rkey': typeof MainGamesRkeyRoute
   '/_main/labs/aic': typeof MainLabsAicRoute
   '/_main/labs/ascii': typeof MainLabsAsciiRoute
+  '/_main/labs/atrium': typeof MainLabsAtriumRoute
   '/_main/labs/audio-extractor': typeof MainLabsAudioExtractorRoute
   '/_main/labs/backlinks': typeof MainLabsBacklinksRoute
   '/_main/labs/browser': typeof MainLabsBrowserRoute
@@ -1326,6 +1335,7 @@ export interface FileRouteTypes {
     | '/games/$rkey'
     | '/labs/aic'
     | '/labs/ascii'
+    | '/labs/atrium'
     | '/labs/audio-extractor'
     | '/labs/backlinks'
     | '/labs/browser'
@@ -1469,6 +1479,7 @@ export interface FileRouteTypes {
     | '/games/$rkey'
     | '/labs/aic'
     | '/labs/ascii'
+    | '/labs/atrium'
     | '/labs/audio-extractor'
     | '/labs/backlinks'
     | '/labs/browser'
@@ -1613,6 +1624,7 @@ export interface FileRouteTypes {
     | '/_main/games/$rkey'
     | '/_main/labs/aic'
     | '/_main/labs/ascii'
+    | '/_main/labs/atrium'
     | '/_main/labs/audio-extractor'
     | '/_main/labs/backlinks'
     | '/_main/labs/browser'
@@ -2579,6 +2591,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsAudioExtractorRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/labs/atrium': {
+      id: '/_main/labs/atrium'
+      path: '/labs/atrium'
+      fullPath: '/labs/atrium'
+      preLoaderRoute: typeof MainLabsAtriumRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/ascii': {
       id: '/_main/labs/ascii'
       path: '/labs/ascii'
@@ -2760,6 +2779,7 @@ interface MainRouteChildren {
   MainGamesRkeyRoute: typeof MainGamesRkeyRoute
   MainLabsAicRoute: typeof MainLabsAicRoute
   MainLabsAsciiRoute: typeof MainLabsAsciiRoute
+  MainLabsAtriumRoute: typeof MainLabsAtriumRoute
   MainLabsAudioExtractorRoute: typeof MainLabsAudioExtractorRoute
   MainLabsBacklinksRoute: typeof MainLabsBacklinksRoute
   MainLabsBrowserRoute: typeof MainLabsBrowserRoute
@@ -2897,6 +2917,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainGamesRkeyRoute: MainGamesRkeyRoute,
   MainLabsAicRoute: MainLabsAicRoute,
   MainLabsAsciiRoute: MainLabsAsciiRoute,
+  MainLabsAtriumRoute: MainLabsAtriumRoute,
   MainLabsAudioExtractorRoute: MainLabsAudioExtractorRoute,
   MainLabsBacklinksRoute: MainLabsBacklinksRoute,
   MainLabsBrowserRoute: MainLabsBrowserRoute,

@@ -311,6 +311,14 @@ const LABS: Lab[] = [
     ready: true,
   },
   {
+    slug: 'atrium',
+    title: 'atrium',
+    desc: 'isometric pixel-art hangout. 10×10 room of procedurally-drawn furniture, click any tile to walk there with a* pathfinding around blockers. v1 is solo — multiplayer + atproto identity arrive in later phases.',
+    tags: ['canvas', 'isometric', 'game'],
+    year: '2026',
+    ready: true,
+  },
+  {
     slug: 'terminal',
     title: 'terminal',
     desc: 'a fake shell for the site. cd /labs, ls, cat readme.txt, open /games. arrow-key history, neofetch, the whole thing.',
