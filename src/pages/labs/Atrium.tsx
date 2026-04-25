@@ -85,6 +85,23 @@ function portalsFor(roomId: string): Portal[] {
  *  neighbour. West first since portals are mostly on east/south edges
  *  and "into the room" is west/north for those. Falls back to the
  *  caller's default if every neighbour is blocked or out of bounds. */
+/** Resolve the starting room. URL wins when provided (so
+ *  /labs/atrium/garden always opens the garden). With no URL roomId
+ *  (bare /labs/atrium), restore the last room from localStorage so
+ *  a refresh doesn't dump you back in the lobby. Brand-new visitors
+ *  with no stored room land in the lobby. */
+function initialRoomFromStorage(initialRoom: string | undefined): string {
+  if (initialRoom) return initialRoom;
+  if (typeof localStorage === 'undefined') return 'lobby';
+  try {
+    const stored = localStorage.getItem('atrium-current-room');
+    if (stored && stored.trim()) return stored.trim();
+  } catch {
+    /* private browsing / quota — fall through */
+  }
+  return 'lobby';
+}
+
 function findSpawnAdjacent(walkable: boolean[][], portal: Tile, fallback: Tile): Tile {
   const [pi, pj] = portal;
   const candidates: Tile[] = [
@@ -978,12 +995,16 @@ type OverlayRefs = { wrap: HTMLDivElement; label: HTMLDivElement; bubble: HTMLDi
 
 const DEFAULT_HEAD_COLOR = '#f3d7b0';
 
-export default function AtriumPage({ initialRoom = 'lobby' }: { initialRoom?: string }) {
+export default function AtriumPage({ initialRoom }: { initialRoom?: string }) {
   // Room is internal state, not a route param. Walking onto a portal
-  // calls setRoom(dest) — no URL change, no remount. The URL only
-  // seeds the initial value via `initialRoom` (so deep links still
-  // land you in the right room), but afterwards URL ≠ current room.
-  const [roomId, setRoom] = useState<string>(initialRoom);
+  // calls setRoom(dest) — no URL change, no remount. URL semantics:
+  //   - explicit /labs/atrium/X  → start in X (URL wins for deep links)
+  //   - bare /labs/atrium        → restore last room from localStorage,
+  //                                 fall back to 'lobby' for first-time
+  //                                 visitors
+  // Walking through a portal also writes to localStorage so refresh
+  // keeps you where you were.
+  const [roomId, setRoom] = useState<string>(() => initialRoomFromStorage(initialRoom));
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectRef = useRef<(() => void) | null>(null);
@@ -996,6 +1017,16 @@ export default function AtriumPage({ initialRoom = 'lobby' }: { initialRoom?: st
   useEffect(() => {
     themeRef.current = themeForRoom(roomId);
     portalsRef.current = portalsFor(roomId);
+    // Persist current room so a refresh of /labs/atrium drops you back
+    // here instead of the lobby. /labs/atrium/<id> deep links still
+    // override on cold load (URL wins for explicit paths).
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('atrium-current-room', roomId);
+      } catch {
+        /* ignore — storage full / private mode */
+      }
+    }
   }, [roomId]);
 
   // Tracks the room we were just in (for entrance-portal spawn). useRef

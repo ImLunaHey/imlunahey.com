@@ -329,6 +329,23 @@ Verified end-to-end via two-client wire test: `sit` broadcasts the
 tile to peers, `emote` broadcasts kind + at, init payloads carry
 the `sitting` field. ✓
 
+### v7.4 — persist current room in localStorage (shipped)
+
+After v7.3, refreshing `/labs/atrium` always dropped you back in the
+lobby because the URL doesn't update as you walk. Added simple
+localStorage persistence so refresh keeps you where you were.
+
+- [x] On every room change, write `atrium-current-room` to
+      localStorage (folded into the existing theme/portals effect).
+- [x] On mount, `initialRoomFromStorage(initialRoom)` resolves the
+      starting room: URL wins for explicit paths
+      (`/labs/atrium/<id>`), then localStorage, then `'lobby'` for
+      brand-new visitors.
+- [x] Index route now passes no `initialRoom` prop, signalling "no
+      explicit room — let storage decide". The `$roomId` route still
+      passes the URL value, so deep links work and overwrite the
+      stored room.
+
 ### v7.3 — room as internal state, URL is initial-only (shipped)
 
 The "remount-safe" workaround in v7.2 was actually a symptom of the
