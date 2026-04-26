@@ -78,6 +78,41 @@ export default function HealthPage() {
   const sleepMetric = findMetric(metrics, ['sleep_analysis', 'sleep']);
   const energyMetric = findMetric(metrics, ['active_energy', 'active_energy_burned']);
   const heartRestMetric = findMetric(metrics, ['resting_heart_rate']);
+  const hrvMetric = findMetric(metrics, ['heart_rate_variability']);
+  const exerciseMetric = findMetric(metrics, ['apple_exercise_time']);
+  const standMetric = findMetric(metrics, ['apple_stand_hour', 'apple_stand_time']);
+  const daylightMetric = findMetric(metrics, ['time_in_daylight']);
+  const weightMetric = findMetric(metrics, ['weight_body_mass']);
+  const bmiMetric = findMetric(metrics, ['body_mass_index']);
+  const bodyFatMetric = findMetric(metrics, ['body_fat_percentage']);
+  const vo2Metric = findMetric(metrics, ['vo2_max']);
+  const mindfulMetric = findMetric(metrics, ['mindful_minutes']);
+  const flightsMetric = findMetric(metrics, ['flights_climbed']);
+  const walkRunMetric = findMetric(metrics, ['walking_running_distance']);
+  const cyclingMetric = findMetric(metrics, ['cycling_distance']);
+
+  // Pull the latest non-null value from a metric — used for body
+  // measurements which are sparse (e.g. weighed once a fortnight).
+  function latestOf(m: typeof metrics[number] | null): { value: number; day: string } | null {
+    if (!m) return null;
+    const sorted = m.data
+      .map((p) => ({ p, d: dateOf(p) }))
+      .filter((x): x is { p: HealthMetricPoint; d: Date } => x.d != null)
+      .sort((a, b) => b.d.getTime() - a.d.getTime());
+    const latest = sorted.find((x) => num(x.p.qty) != null);
+    if (!latest) return null;
+    return { value: num(latest.p.qty)!, day: fmtDay(latest.d) };
+  }
+  function todayTotalOf(m: typeof metrics[number] | null): number | null {
+    if (!m) return null;
+    const t = m.data
+      .filter((p) => {
+        const d = dateOf(p);
+        return d ? isToday(d) : false;
+      })
+      .reduce((sum, p) => sum + (num(p.qty) ?? 0), 0);
+    return t > 0 ? t : null;
+  }
 
   const todaySteps = useMemo(() => {
     if (!stepMetric) return null;
@@ -161,6 +196,24 @@ export default function HealthPage() {
       .reduce((sum, p) => sum + (num(p.qty) ?? 0), 0);
     return today > 0 ? Math.round(today) : null;
   }, [energyMetric]);
+
+  // workouts grouped by name → quick activity-mix breakdown that
+  // surfaces "I did 12 outdoor cycles + 4 walks this window" without
+  // making you scan the list. Sort by total duration desc.
+  const workoutsByType = useMemo(() => {
+    const by = new Map<string, { count: number; totalMinutes: number }>();
+    for (const w of snap?.workouts ?? []) {
+      const name = (typeof w.name === 'string' ? w.name : '?').toLowerCase();
+      const dur = typeof w.duration === 'number' ? w.duration : 0;
+      const e = by.get(name) ?? { count: 0, totalMinutes: 0 };
+      e.count++;
+      e.totalMinutes += dur;
+      by.set(name, e);
+    }
+    return [...by.entries()]
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.totalMinutes - a.totalMinutes);
+  }, [snap?.workouts]);
 
   if (!snap) {
     return (
@@ -326,15 +379,180 @@ export default function HealthPage() {
             <dl className="bk-dl">
               <dt>resting hr</dt>
               <dd>{restingHr != null ? <b>{Math.round(restingHr)} bpm</b> : '—'}</dd>
-              <dt>active energy</dt>
+              {(() => {
+                const hrv = latestOf(hrvMetric);
+                return hrv ? (
+                  <>
+                    <dt>hrv</dt>
+                    <dd><b>{Math.round(hrv.value)} ms</b></dd>
+                  </>
+                ) : null;
+              })()}
+              {(() => {
+                const vo2 = latestOf(vo2Metric);
+                return vo2 ? (
+                  <>
+                    <dt>vo₂ max</dt>
+                    <dd><b>{vo2.value.toFixed(1)}</b></dd>
+                  </>
+                ) : null;
+              })()}
+              <dt>active</dt>
               <dd>{todayEnergy != null ? <b>{todayEnergy} kcal</b> : '—'}</dd>
             </dl>
           </div>
         </section>
 
+        {/* second bento row — body, activity, exposure */}
+        <section className="bento">
+          <div className="panel c-body">
+            <div className="panel-hd">
+              <span className="ttl">body</span>
+              <span className="src-tag">latest</span>
+            </div>
+            <dl className="bk-dl">
+              {(() => {
+                const w = latestOf(weightMetric);
+                return w ? (
+                  <>
+                    <dt>weight</dt>
+                    <dd><b>{w.value.toFixed(1)} kg</b><span className="t-faint"> · {w.day}</span></dd>
+                  </>
+                ) : null;
+              })()}
+              {(() => {
+                const f = latestOf(bodyFatMetric);
+                return f ? (
+                  <>
+                    <dt>body fat</dt>
+                    <dd><b>{(f.value * 100).toFixed(1)}%</b></dd>
+                  </>
+                ) : null;
+              })()}
+              {(() => {
+                const b = latestOf(bmiMetric);
+                return b ? (
+                  <>
+                    <dt>bmi</dt>
+                    <dd><b>{b.value.toFixed(1)}</b></dd>
+                  </>
+                ) : null;
+              })()}
+              {!latestOf(weightMetric) && !latestOf(bodyFatMetric) && !latestOf(bmiMetric) ? (
+                <dt className="t-faint">no body measurements in window</dt>
+              ) : null}
+            </dl>
+          </div>
+
+          <div className="panel c-activity">
+            <div className="panel-hd">
+              <span className="ttl">activity</span>
+              <span className="src-tag">today</span>
+            </div>
+            <dl className="bk-dl">
+              {(() => {
+                const ex = todayTotalOf(exerciseMetric);
+                return (
+                  <>
+                    <dt>exercise</dt>
+                    <dd>{ex != null ? <b>{Math.round(ex)} min</b> : '—'}</dd>
+                  </>
+                );
+              })()}
+              {(() => {
+                const stand = todayTotalOf(standMetric);
+                return (
+                  <>
+                    <dt>stand</dt>
+                    <dd>{stand != null ? <b>{Math.round(stand)} hrs</b> : '—'}</dd>
+                  </>
+                );
+              })()}
+              {(() => {
+                const flights = todayTotalOf(flightsMetric);
+                return flights != null ? (
+                  <>
+                    <dt>flights</dt>
+                    <dd><b>{Math.round(flights)}</b></dd>
+                  </>
+                ) : null;
+              })()}
+              {(() => {
+                const mind = todayTotalOf(mindfulMetric);
+                return mind != null ? (
+                  <>
+                    <dt>mindful</dt>
+                    <dd><b>{Math.round(mind)} min</b></dd>
+                  </>
+                ) : null;
+              })()}
+            </dl>
+          </div>
+
+          <div className="panel c-exposure">
+            <div className="panel-hd">
+              <span className="ttl">distance</span>
+              <span className="src-tag">today</span>
+            </div>
+            <dl className="bk-dl">
+              {(() => {
+                const wr = todayTotalOf(walkRunMetric);
+                return (
+                  <>
+                    <dt>walk / run</dt>
+                    <dd>{wr != null ? <b>{wr.toFixed(2)} km</b> : '—'}</dd>
+                  </>
+                );
+              })()}
+              {(() => {
+                const c = todayTotalOf(cyclingMetric);
+                return c != null ? (
+                  <>
+                    <dt>cycle</dt>
+                    <dd><b>{c.toFixed(2)} km</b></dd>
+                  </>
+                ) : null;
+              })()}
+              {(() => {
+                const dl = todayTotalOf(daylightMetric);
+                return dl != null ? (
+                  <>
+                    <dt>daylight</dt>
+                    <dd><b>{Math.round(dl)} min</b></dd>
+                  </>
+                ) : null;
+              })()}
+            </dl>
+          </div>
+        </section>
+
+        {/* workout breakdown by type — quick activity-mix view */}
+        {workoutsByType.length > 0 ? (
+          <>
+            <div className="section-hd">
+              <h2>
+                <span className="num">02 //</span>activity mix.
+              </h2>
+              <span className="src">{workoutsByType.length} workout types in window</span>
+            </div>
+            <section className="workout-types">
+              {workoutsByType.map((t) => (
+                <div key={t.name} className="wt">
+                  <div className="wt-name">{t.name}</div>
+                  <div className="wt-stats">
+                    <span><b>{t.count}</b> sessions</span>
+                    <span className="dot">·</span>
+                    <span><b>{Math.round(t.totalMinutes)}</b> min total</span>
+                  </div>
+                </div>
+              ))}
+            </section>
+          </>
+        ) : null}
+
         <div className="section-hd">
           <h2>
-            <span className="num">02 //</span>workouts.
+            <span className="num">03 //</span>workouts.
           </h2>
           <span className="src">most recent first</span>
         </div>
@@ -366,6 +584,28 @@ function WorkoutRow({ w }: { w: HealthWorkout }) {
   const start = w.start ? new Date(w.start as string) : null;
   const km = w.distance?.qty ?? null;
   const kcal = w.activeEnergyBurned?.qty ?? null;
+  // workouts now ship a per-minute heartRateData array — render a tiny
+  // sparkline of the avg HR samples so the row carries a visual cue
+  // for intensity in addition to the duration / kcal numbers.
+  const hrSamples = Array.isArray(
+    (w as Record<string, unknown>).heartRateData,
+  )
+    ? ((w as { heartRateData: Array<Record<string, unknown>> }).heartRateData
+        .map((p) => Number((p as { Avg?: number }).Avg ?? (p as { avg?: number }).avg ?? 0))
+        .filter((n) => Number.isFinite(n) && n > 0))
+    : [];
+  const avgHr =
+    typeof (w as Record<string, unknown>).avgHeartRate === 'object'
+      ? Number(
+          ((w as { avgHeartRate?: { qty?: number } }).avgHeartRate?.qty ?? 0),
+        )
+      : 0;
+  const maxHr =
+    typeof (w as Record<string, unknown>).maxHeartRate === 'object'
+      ? Number(
+          ((w as { maxHeartRate?: { qty?: number } }).maxHeartRate?.qty ?? 0),
+        )
+      : 0;
   return (
     <article className="workout">
       <div className="workout-when">
@@ -387,9 +627,53 @@ function WorkoutRow({ w }: { w: HealthWorkout }) {
               <span>{Math.round(kcal)} kcal</span>
             </>
           ) : null}
+          {avgHr > 0 ? (
+            <>
+              <span className="dot">·</span>
+              <span>
+                {Math.round(avgHr)} avg
+                {maxHr > 0 ? <span className="t-faint"> / {Math.round(maxHr)} max</span> : null}
+                {' '}bpm
+              </span>
+            </>
+          ) : null}
         </div>
       </div>
+      <div className="workout-spark">
+        {hrSamples.length > 1 ? <HrSparkline samples={hrSamples} /> : null}
+      </div>
     </article>
+  );
+}
+
+/** Inline SVG line of heart-rate samples normalised to its own min/max
+ *  so each workout's curve fills the sparkline regardless of absolute
+ *  bpm range. ~120px wide, fixed height. */
+function HrSparkline({ samples }: { samples: number[] }) {
+  const W = 120;
+  const H = 28;
+  const min = Math.min(...samples);
+  const max = Math.max(...samples);
+  const span = max - min || 1;
+  const stepX = W / (samples.length - 1);
+  const points = samples
+    .map((v, i) => {
+      const x = i * stepX;
+      const y = H - ((v - min) / span) * H;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ');
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="hr-spark" aria-hidden="true">
+      <polyline
+        points={points}
+        fill="none"
+        stroke="var(--color-accent)"
+        strokeWidth="1.25"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
 
@@ -461,6 +745,9 @@ const CSS = `
   .c-sleep { grid-column: span 5; }
   .c-steps { grid-column: span 4; }
   .c-vitals { grid-column: span 3; }
+  .c-body { grid-column: span 4; }
+  .c-activity { grid-column: span 4; }
+  .c-exposure { grid-column: span 4; }
 
   .big-num { display: flex; align-items: baseline; gap: 6px; }
   .big-num .num-val {
@@ -505,18 +792,49 @@ const CSS = `
     text-transform: uppercase;
   }
 
+  /* workout types breakdown */
+  .workout-types {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--sp-3);
+    padding: 0 0 var(--sp-5);
+  }
+  .wt {
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-panel);
+    padding: var(--sp-3);
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .wt-name {
+    font-family: var(--font-display); font-size: 16px;
+    color: var(--color-fg);
+    text-transform: lowercase;
+    letter-spacing: -0.01em;
+  }
+  .wt-stats {
+    display: flex; gap: 6px; align-items: baseline;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--color-fg-faint);
+  }
+  .wt-stats b { color: var(--color-accent); font-weight: 400; }
+  .wt-stats .dot { color: var(--color-fg-ghost); }
+
   .workouts {
     display: flex; flex-direction: column;
     padding-bottom: var(--sp-8);
   }
   .workout {
     display: grid;
-    grid-template-columns: 80px 1fr;
+    grid-template-columns: 80px 1fr 130px;
     gap: var(--sp-3);
     padding: var(--sp-3) 0;
     border-bottom: 1px dashed var(--color-border);
-    align-items: baseline;
+    align-items: center;
   }
+  .workout-spark {
+    display: flex; align-items: center; justify-content: flex-end;
+  }
+  .hr-spark { display: block; }
   .workout-when {
     font-family: var(--font-mono); font-size: 10px;
     color: var(--color-fg-faint);
@@ -553,9 +871,12 @@ const CSS = `
 
   @media (max-width: 980px) {
     .bento { grid-template-columns: repeat(6, 1fr); }
-    .c-sleep { grid-column: span 6; }
-    .c-steps { grid-column: span 6; }
-    .c-vitals { grid-column: span 6; }
+    .c-sleep, .c-steps, .c-vitals,
+    .c-body, .c-activity, .c-exposure {
+      grid-column: span 6;
+    }
+    .workout { grid-template-columns: 70px 1fr; }
+    .workout-spark { display: none; }
     .h-footer { flex-direction: column; gap: var(--sp-3); }
   }
 `;
