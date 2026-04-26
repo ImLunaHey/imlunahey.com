@@ -35,10 +35,18 @@ type SortKey = 'title' | 'year' | 'added';
 type SeenKey = 'all' | 'seen' | 'unseen';
 
 export default function LibraryPage() {
-  const { reviewedImdbIds } = route.useLoaderData();
-  // Set lookups beat repeated array.includes(...) inside the filter +
-  // render loop; rebuild only when the loader data changes.
-  const seen = useMemo(() => new Set(reviewedImdbIds), [reviewedImdbIds]);
+  const { reviewedIds } = route.useLoaderData();
+  // Match on tmdb id OR imdb id — popfeed reviews carry tmdb id
+  // reliably (~99%) but imdb id only ~30%, so checking imdb alone
+  // misses most reviewed titles. The helper is captured once per
+  // loader-data change so we don't rebuild Sets on every render.
+  const isSeen = useMemo(() => {
+    const imdb = new Set(reviewedIds.imdbIds);
+    const tmdb = new Set(reviewedIds.tmdbIds);
+    return (it: { imdbId: string; tmdbId: number | null }) =>
+      imdb.has(it.imdbId) ||
+      (it.tmdbId != null && tmdb.has(String(it.tmdbId)));
+  }, [reviewedIds]);
 
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState<'movie' | 'tv' | 'all'>('all');
@@ -99,9 +107,9 @@ export default function LibraryPage() {
     const matching = LIBRARY.filter((it) => {
       if (kind !== 'all' && it.mediaType !== kind) return false;
       if (seenFilter !== 'all') {
-        const isSeen = seen.has(it.imdbId);
-        if (seenFilter === 'seen' && !isSeen) return false;
-        if (seenFilter === 'unseen' && isSeen) return false;
+        const watched = isSeen(it);
+        if (seenFilter === 'seen' && !watched) return false;
+        if (seenFilter === 'unseen' && watched) return false;
       }
       if (format !== 'all' && it.format !== format) return false;
       if (decade !== 'all' && decadeOf(it.releaseYear) !== decade) return false;
@@ -153,7 +161,7 @@ export default function LibraryPage() {
       arr.sort((a, b) => newest(b) - newest(a));
     }
     return arr;
-  }, [search, kind, seenFilter, seen, format, decade, country, genre, sortBy]);
+  }, [search, kind, seenFilter, isSeen, format, decade, country, genre, sortBy]);
 
   const totalRows = LIBRARY.length;
   // unique titles — same dedup key as the shelf grouping (imdbId+title),
@@ -168,10 +176,10 @@ export default function LibraryPage() {
     const unseenTitles = new Set<string>();
     for (const it of LIBRARY) {
       const key = `${it.imdbId}${it.title}`;
-      (seen.has(it.imdbId) ? seenTitles : unseenTitles).add(key);
+      (isSeen(it) ? seenTitles : unseenTitles).add(key);
     }
     return { seen: seenTitles.size, unseen: unseenTitles.size };
-  }, [seen]);
+  }, [isSeen]);
 
   return (
     <>
@@ -320,7 +328,7 @@ export default function LibraryPage() {
             <Volume
               key={`${group[0].imdbId}${group[0].title}`}
               group={group}
-              isSeen={seen.has(group[0].imdbId)}
+              isSeen={isSeen(group[0])}
             />
           ))}
           {groups.length === 0 ? (

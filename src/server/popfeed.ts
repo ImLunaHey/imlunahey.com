@@ -135,20 +135,29 @@ export const getPopfeedGames = createServerFn({ method: 'GET' }).handler((): Pro
   cached('popfeed:games', TTL.short, loadGames).catch(() => ({ items: [], thisYear: 0 })),
 );
 
-/** Flat list of every IMDb ID that has a popfeed review record. Used by
- *  /library to mark which titles on the shelf the owner has actually
- *  watched. Cheap because it shares the same per-page fetch as
- *  getPopfeedWatches/Games — both go through the same constellation
- *  walk and the cache layer dedupes. */
-export const getReviewedImdbIds = createServerFn({ method: 'GET' }).handler(
-  (): Promise<string[]> =>
-    cached('popfeed:reviewed-imdb', TTL.short, async () => {
+export type ReviewedIds = {
+  imdbIds: string[];
+  tmdbIds: string[];
+};
+
+/** Both IMDb and TMDB ids of every popfeed review record, used by
+ *  /library to mark which shelf titles have been watched. Both lists
+ *  are needed because popfeed records carry tmdbId reliably (~99% of
+ *  reviews) but imdbId only sometimes (~30%) — matching on either
+ *  catches everything. tmdb ids are emitted as strings to match how
+ *  the popfeed lexicon stores them; library.json holds the numeric
+ *  form, so the consumer coerces with String(item.tmdbId). */
+export const getReviewedIds = createServerFn({ method: 'GET' }).handler(
+  (): Promise<ReviewedIds> =>
+    cached('popfeed:reviewed-ids', TTL.short, async () => {
       const all = await fetchAllReviews();
-      const ids = new Set<string>();
+      const imdbIds = new Set<string>();
+      const tmdbIds = new Set<string>();
       for (const r of all) {
-        const id = r.value.identifiers?.imdbId;
-        if (id) ids.add(id);
+        const ids = r.value.identifiers ?? {};
+        if (ids.imdbId) imdbIds.add(ids.imdbId);
+        if (ids.tmdbId) tmdbIds.add(String(ids.tmdbId));
       }
-      return [...ids];
-    }).catch(() => [] as string[]),
+      return { imdbIds: [...imdbIds], tmdbIds: [...tmdbIds] };
+    }).catch(() => ({ imdbIds: [], tmdbIds: [] })),
 );
