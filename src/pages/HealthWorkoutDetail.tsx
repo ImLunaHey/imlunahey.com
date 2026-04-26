@@ -31,8 +31,11 @@ function fmtKm(km: number | null): string {
   return km < 10 ? km.toFixed(2) + ' km' : km.toFixed(1) + ' km';
 }
 
-function fmtDuration(min: number | null): string {
-  if (min == null || min <= 0) return '—';
+/** Takes seconds (HAE's native unit for workout duration) and renders
+ *  as 'Xh Ym' / 'Xh' / 'Y min' depending on size. */
+function fmtDuration(secs: number | null): string {
+  if (secs == null || secs <= 0) return '—';
+  const min = secs / 60;
   const h = Math.floor(min / 60);
   const m = Math.round(min % 60);
   if (h >= 1) return m > 0 ? `${h}h ${m}m` : `${h}h`;

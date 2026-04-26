@@ -836,7 +836,7 @@ function WorkoutRow({ w }: { w: HealthWorkout }) {
       <div className="workout-body">
         <div className="workout-name">{(w.name ?? 'workout').toLowerCase()}</div>
         <div className="workout-meta t-faint">
-          {w.duration ? <span>{Math.round(w.duration)} min</span> : null}
+          {w.duration ? <span>{fmtDuration(w.duration / 60)}</span> : null}
           {km != null ? (
             <>
               {w.duration ? <span className="dot">·</span> : null}
