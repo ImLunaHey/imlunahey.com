@@ -2,6 +2,7 @@ import { Link, useMatch } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import type {
   HealthIndex,
+  HealthLifetime,
   HealthMetric,
   HealthMetricPoint,
   HealthSnapshot,
@@ -12,6 +13,7 @@ type Scope = { type: 'recent' } | { type: 'month'; month: string };
 type LoaderData = {
   snap: HealthSnapshot | null;
   archive: HealthIndex | null;
+  lifetime: HealthLifetime | null;
   scope: Scope;
 };
 
@@ -95,6 +97,7 @@ export default function HealthPage() {
   const snap = data.snap;
   const scope = data.scope;
   const archive = data.archive;
+  const lifetime = data.lifetime;
 
   const metrics = snap?.metrics ?? [];
 
@@ -164,8 +167,22 @@ export default function HealthPage() {
     const latest = sorted[0];
     if (!latest) return null;
     const p = latest.p;
+    // Apple Watch's newer sleep-stage recordings set the legacy `asleep`
+    // field to 0 and put the time in `core`/`deep`/`rem` instead, with a
+    // `totalSleep` summary. Prefer totalSleep, then sum the stages, then
+    // fall back to the legacy field for older nights.
+    const stages = [num(p.core), num(p.deep), num(p.rem)].filter(
+      (v): v is number => v != null,
+    );
+    const stageSum = stages.length > 0 ? stages.reduce((a, b) => a + b, 0) : null;
+    const totalSleep = num(p.totalSleep);
+    const legacyAsleep = num(p.asleep);
+    const asleep =
+      (totalSleep != null && totalSleep > 0 && totalSleep) ||
+      (stageSum != null && stageSum > 0 && stageSum) ||
+      legacyAsleep;
     return {
-      asleep: num(p.asleep),
+      asleep,
       inBed: num(p.inBed),
       deep: num(p.deep),
       rem: num(p.rem),
@@ -321,10 +338,12 @@ export default function HealthPage() {
           </div>
         </header>
 
+        {lifetime ? <LifetimeStrip lifetime={lifetime} /> : null}
+
         <section className="bento">
           <div className="panel c-sleep">
             <div className="panel-hd">
-              <span className="ttl">sleep</span>
+              <Link to="/health/sleep" className="ttl ttl-link">sleep →</Link>
               <span className="src-tag">{lastSleep?.day ?? 'no data'}</span>
             </div>
             {lastSleep ? (
@@ -439,44 +458,40 @@ export default function HealthPage() {
 
         {/* second bento row — body, activity, exposure */}
         <section className="bento">
-          <div className="panel c-body">
-            <div className="panel-hd">
-              <span className="ttl">body</span>
-              <span className="src-tag">latest</span>
-            </div>
-            <dl className="bk-dl">
-              {(() => {
-                const w = latestOf(weightMetric);
-                return w ? (
-                  <>
-                    <dt>weight</dt>
-                    <dd><b>{w.value.toFixed(1)} kg</b><span className="t-faint"> · {w.day}</span></dd>
-                  </>
-                ) : null;
-              })()}
-              {(() => {
-                const f = latestOf(bodyFatMetric);
-                return f ? (
-                  <>
-                    <dt>body fat</dt>
-                    <dd><b>{(f.value * 100).toFixed(1)}%</b></dd>
-                  </>
-                ) : null;
-              })()}
-              {(() => {
-                const b = latestOf(bmiMetric);
-                return b ? (
-                  <>
-                    <dt>bmi</dt>
-                    <dd><b>{b.value.toFixed(1)}</b></dd>
-                  </>
-                ) : null;
-              })()}
-              {!latestOf(weightMetric) && !latestOf(bodyFatMetric) && !latestOf(bmiMetric) ? (
-                <dt className="t-faint">no body measurements in window</dt>
-              ) : null}
-            </dl>
-          </div>
+          {(() => {
+            const w = latestOf(weightMetric);
+            const f = latestOf(bodyFatMetric);
+            const b = latestOf(bmiMetric);
+            if (!w && !f && !b) return null;
+            return (
+              <div className="panel c-body">
+                <div className="panel-hd">
+                  <span className="ttl">body</span>
+                  <span className="src-tag">latest</span>
+                </div>
+                <dl className="bk-dl">
+                  {w ? (
+                    <>
+                      <dt>weight</dt>
+                      <dd><b>{w.value.toFixed(1)} kg</b><span className="t-faint"> · {w.day}</span></dd>
+                    </>
+                  ) : null}
+                  {f ? (
+                    <>
+                      <dt>body fat</dt>
+                      <dd><b>{(f.value * 100).toFixed(1)}%</b></dd>
+                    </>
+                  ) : null}
+                  {b ? (
+                    <>
+                      <dt>bmi</dt>
+                      <dd><b>{b.value.toFixed(1)}</b></dd>
+                    </>
+                  ) : null}
+                </dl>
+              </div>
+            );
+          })()}
 
           <div className="panel c-activity">
             <div className="panel-hd">
@@ -615,6 +630,66 @@ export default function HealthPage() {
         </footer>
       </main>
     </>
+  );
+}
+
+function LifetimeStrip({ lifetime }: { lifetime: HealthLifetime }) {
+  const t = lifetime.totals;
+  // friendly aggregate formatters
+  const fmtH = (mins: number) => {
+    const h = Math.round(mins / 60);
+    return h >= 1000 ? `${(h / 1000).toFixed(1)}k h` : `${h.toLocaleString()} h`;
+  };
+  const fmtSteps = (n: number) => {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+    return String(n);
+  };
+  const fmtKm = (km: number) => {
+    if (km >= 1000) return `${(km / 1000).toFixed(1)}k km`;
+    return `${Math.round(km).toLocaleString()} km`;
+  };
+  return (
+    <section className="lifetime-strip">
+      <div className="ls-hd">
+        <span className="ls-title">all-time</span>
+        <span className="ls-range">
+          {lifetime.earliest} → {lifetime.latest} · {lifetime.monthsCovered} months
+        </span>
+      </div>
+      <div className="ls-grid">
+        <div className="ls-cell">
+          <div className="ls-label">workouts</div>
+          <div className="ls-value">{t.workouts.toLocaleString()}</div>
+          <div className="ls-sub">{fmtH(t.workoutMinutes)} active</div>
+        </div>
+        <div className="ls-cell">
+          <div className="ls-label">distance</div>
+          <div className="ls-value">{fmtKm(t.workoutKm)}</div>
+          <div className="ls-sub">across all activities</div>
+        </div>
+        <div className="ls-cell">
+          <div className="ls-label">workout kcal</div>
+          <div className="ls-value">{Math.round(t.workoutKcal).toLocaleString()}</div>
+          <div className="ls-sub">burned</div>
+        </div>
+        <div className="ls-cell">
+          <div className="ls-label">sleep tracked</div>
+          <div className="ls-value">{Math.round(t.sleepHours).toLocaleString()} h</div>
+          <div className="ls-sub">{t.sleepNights.toLocaleString()} nights</div>
+        </div>
+        <div className="ls-cell">
+          <div className="ls-label">steps</div>
+          <div className="ls-value">{fmtSteps(t.steps)}</div>
+          <div className="ls-sub">total recorded</div>
+        </div>
+        <div className="ls-cell">
+          <div className="ls-label">flights</div>
+          <div className="ls-value">{Math.round(t.flightsClimbed).toLocaleString()}</div>
+          <div className="ls-sub">climbed</div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -868,7 +943,57 @@ const CSS = `
     border-bottom: 1px dashed var(--color-border);
   }
   .panel-hd .ttl { color: var(--color-accent); }
+  .panel-hd .ttl-link {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+  .panel-hd .ttl-link:hover { text-decoration: underline; }
   .panel-hd .src-tag { color: var(--color-fg-faint); }
+
+  /* lifetime strip — all-time aggregates across every month bucket */
+  .lifetime-strip {
+    margin: var(--sp-5) 0 0;
+    padding: var(--sp-4) var(--sp-4);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-panel);
+  }
+  .ls-hd {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: var(--sp-3);
+    font-family: var(--font-mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--color-fg-faint);
+  }
+  .ls-title { color: var(--color-accent); }
+  .ls-range { color: var(--color-fg-faint); }
+  .ls-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--sp-3);
+  }
+  .ls-cell {
+    display: flex; flex-direction: column; gap: 2px;
+    padding-right: var(--sp-3);
+    border-right: 1px dashed var(--color-border);
+  }
+  .ls-cell:last-child { border-right: none; }
+  .ls-label {
+    font-family: var(--font-mono); font-size: 9px;
+    color: var(--color-fg-faint);
+    text-transform: uppercase; letter-spacing: 0.12em;
+  }
+  .ls-value {
+    font-family: var(--font-display);
+    font-size: 28px; line-height: 1;
+    color: var(--color-fg);
+    letter-spacing: -0.02em;
+    margin-top: 4px;
+  }
+  .ls-sub {
+    font-family: var(--font-mono); font-size: 9px;
+    color: var(--color-fg-faint);
+    margin-top: 2px;
+  }
   .c-sleep { grid-column: span 5; }
   .c-steps { grid-column: span 4; }
   .c-vitals { grid-column: span 3; }
