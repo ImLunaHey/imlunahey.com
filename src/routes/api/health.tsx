@@ -2,9 +2,12 @@ import { createFileRoute } from '@tanstack/react-router';
 import { env } from 'cloudflare:workers';
 import {
   HEALTH_INDEX_KEY,
+  HEALTH_LATEST_KEY,
+  applyLatestUpdates,
   healthMonthKey,
   monthOf,
   type HealthIndex,
+  type HealthLatest,
   type HealthMetric,
   type HealthMetricPoint,
   type HealthWorkout,
@@ -167,6 +170,15 @@ async function ingest(
     lastUpdated: Date.now(),
   };
   writes.push(kv.put(HEALTH_INDEX_KEY, JSON.stringify(nextIdx)));
+
+  // Maintain health:latest — sparse metrics (weight/BMI/body-fat/etc.)
+  // get filed here on newest-date-wins so the page can render them
+  // without scanning every month.
+  const prevLatest = await kv.get<HealthLatest>(HEALTH_LATEST_KEY, { type: 'json' });
+  const { next: nextLatest, changed } = applyLatestUpdates(prevLatest, incomingMetrics);
+  if (changed) {
+    writes.push(kv.put(HEALTH_LATEST_KEY, JSON.stringify(nextLatest)));
+  }
 
   await Promise.all(writes);
 

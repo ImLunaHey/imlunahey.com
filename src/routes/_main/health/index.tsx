@@ -4,6 +4,7 @@ import { pageMeta } from '../../../lib/og-meta';
 import {
   getHealth,
   getHealthArchive,
+  getHealthLatest,
   getHealthLifetime,
 } from '../../../server/health';
 
@@ -15,6 +16,7 @@ export const Route = createFileRoute('/_main/health/')({
     snap: await getHealth(),
     archive: await getHealthArchive(),
     lifetime: await getHealthLifetime(),
+    latest: await getHealthLatest(),
     scope: { type: 'recent' as const },
   }),
   component: HealthPage,

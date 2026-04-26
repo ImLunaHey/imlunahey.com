@@ -187,6 +187,83 @@ export type HealthLifetime = {
   workoutsByType: Array<{ name: string; count: number; minutes: number }>;
 };
 
+/** Latest-known reading for each sparse metric, maintained by the
+ *  ingest endpoint on every push (newest-date-wins). Lets the page
+ *  display body measurements without scanning every month bucket
+ *  hunting for the most-recent value. */
+export type HealthLatest = {
+  weightKg: { value: number; date: string } | null;
+  bmi: { value: number; date: string } | null;
+  bodyFat: { value: number; date: string } | null;
+  heightM: { value: number; date: string } | null;
+  leanMassKg: { value: number; date: string } | null;
+  vo2Max: { value: number; date: string } | null;
+  lastUpdated: number;
+};
+
+export const HEALTH_LATEST_KEY = 'health:latest';
+
+/** Names of metrics whose newest reading is mirrored into health:latest. */
+export const HEALTH_LATEST_METRICS: Record<string, keyof Omit<HealthLatest, 'lastUpdated'>> = {
+  weight_body_mass: 'weightKg',
+  weight: 'weightKg',
+  body_mass_index: 'bmi',
+  bmi: 'bmi',
+  body_fat_percentage: 'bodyFat',
+  height: 'heightM',
+  lean_body_mass: 'leanMassKg',
+  vo2_max: 'vo2Max',
+};
+
+const EMPTY_LATEST: HealthLatest = {
+  weightKg: null,
+  bmi: null,
+  bodyFat: null,
+  heightM: null,
+  leanMassKg: null,
+  vo2Max: null,
+  lastUpdated: 0,
+};
+
+/** Apply incoming metric points to a HealthLatest, newest-date-wins.
+ *  Returns the (possibly mutated) input — caller decides whether to
+ *  persist based on whether anything changed. */
+export function applyLatestUpdates(
+  prev: HealthLatest | null,
+  metrics: Iterable<{ name?: string; data?: HealthMetricPoint[] }>,
+): { next: HealthLatest; changed: boolean } {
+  const next: HealthLatest = prev
+    ? { ...prev }
+    : { ...EMPTY_LATEST };
+  let changed = false;
+  for (const m of metrics) {
+    if (!m.name) continue;
+    const field = HEALTH_LATEST_METRICS[m.name.toLowerCase()];
+    if (!field) continue;
+    for (const p of m.data ?? []) {
+      const v = typeof p.qty === 'number' ? p.qty : Number(p.qty);
+      if (!Number.isFinite(v)) continue;
+      const date = typeof p.date === 'string' ? p.date : null;
+      if (!date) continue;
+      const cur = next[field];
+      if (!cur || Date.parse(date) > Date.parse(cur.date)) {
+        next[field] = { value: v, date };
+        changed = true;
+      }
+    }
+  }
+  if (changed) next.lastUpdated = Date.now();
+  return { next, changed };
+}
+
+export const getHealthLatest = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<HealthLatest | null> => {
+    const kv = env.HOMELAB;
+    if (!kv) return null;
+    return await kv.get<HealthLatest>(HEALTH_LATEST_KEY, { type: 'json' });
+  },
+);
+
 /** Cross-month aggregator — reads every month bucket, sums per-metric
  *  totals, and returns headline numbers for the page's stats strip.
  *  Heavy on first call (~N KV reads) but cached TTL.medium so it's

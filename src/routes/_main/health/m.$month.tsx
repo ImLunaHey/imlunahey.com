@@ -8,6 +8,7 @@ export const Route = createFileRoute('/_main/health/m/$month')({
     snap: await getHealthMonth({ data: { month: params.month } }),
     archive: await getHealthArchive(),
     lifetime: null,
+    latest: null,
     scope: { type: 'month' as const, month: params.month },
   }),
   component: HealthPage,

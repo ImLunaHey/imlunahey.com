@@ -2,6 +2,7 @@ import { Link, useMatch } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import type {
   HealthIndex,
+  HealthLatest,
   HealthLifetime,
   HealthMetric,
   HealthMetricPoint,
@@ -14,6 +15,7 @@ type LoaderData = {
   snap: HealthSnapshot | null;
   archive: HealthIndex | null;
   lifetime: HealthLifetime | null;
+  latest: HealthLatest | null;
   scope: Scope;
 };
 
@@ -98,6 +100,7 @@ export default function HealthPage() {
   const scope = data.scope;
   const archive = data.archive;
   const lifetime = data.lifetime;
+  const latest = data.latest;
 
   const metrics = snap?.metrics ?? [];
 
@@ -109,9 +112,6 @@ export default function HealthPage() {
   const exerciseMetric = findMetric(metrics, ['apple_exercise_time']);
   const standMetric = findMetric(metrics, ['apple_stand_hour', 'apple_stand_time']);
   const daylightMetric = findMetric(metrics, ['time_in_daylight']);
-  const weightMetric = findMetric(metrics, ['weight_body_mass']);
-  const bmiMetric = findMetric(metrics, ['body_mass_index']);
-  const bodyFatMetric = findMetric(metrics, ['body_fat_percentage']);
   const vo2Metric = findMetric(metrics, ['vo2_max']);
   const mindfulMetric = findMetric(metrics, ['mindful_minutes']);
   const flightsMetric = findMetric(metrics, ['flights_climbed']);
@@ -459,10 +459,19 @@ export default function HealthPage() {
         {/* second bento row — body, activity, exposure */}
         <section className="bento">
           {(() => {
-            const w = latestOf(weightMetric);
-            const f = latestOf(bodyFatMetric);
-            const b = latestOf(bmiMetric);
-            if (!w && !f && !b) return null;
+            // Body measurements come from the persistent health:latest
+            // bucket on the index route; per-month routes set
+            // latest=null and we fall back to whatever's in the month
+            // (typically nothing — body data is sparse).
+            const w = latest?.weightKg ?? null;
+            const f = latest?.bodyFat ?? null;
+            const b = latest?.bmi ?? null;
+            const h = latest?.heightM ?? null;
+            if (!w && !f && !b && !h) return null;
+            const fmtAsOf = (iso: string): string => {
+              const d = new Date(iso);
+              return Number.isFinite(d.getTime()) ? fmtDay(d) : iso;
+            };
             return (
               <div className="panel c-body">
                 <div className="panel-hd">
@@ -473,19 +482,25 @@ export default function HealthPage() {
                   {w ? (
                     <>
                       <dt>weight</dt>
-                      <dd><b>{w.value.toFixed(1)} kg</b><span className="t-faint"> · {w.day}</span></dd>
+                      <dd><b>{w.value.toFixed(1)} kg</b><span className="t-faint"> · {fmtAsOf(w.date)}</span></dd>
                     </>
                   ) : null}
                   {f ? (
                     <>
                       <dt>body fat</dt>
-                      <dd><b>{(f.value * 100).toFixed(1)}%</b></dd>
+                      <dd><b>{(f.value * 100).toFixed(1)}%</b><span className="t-faint"> · {fmtAsOf(f.date)}</span></dd>
                     </>
                   ) : null}
                   {b ? (
                     <>
                       <dt>bmi</dt>
                       <dd><b>{b.value.toFixed(1)}</b></dd>
+                    </>
+                  ) : null}
+                  {h ? (
+                    <>
+                      <dt>height</dt>
+                      <dd><b>{h.value.toFixed(2)} m</b></dd>
                     </>
                   ) : null}
                 </dl>
@@ -968,15 +983,29 @@ const CSS = `
   .ls-range { color: var(--color-fg-faint); }
   .ls-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: var(--sp-3);
   }
   .ls-cell {
     display: flex; flex-direction: column; gap: 2px;
+    min-width: 0;
     padding-right: var(--sp-3);
     border-right: 1px dashed var(--color-border);
   }
   .ls-cell:last-child { border-right: none; }
+  .ls-value, .ls-label, .ls-sub {
+    overflow-wrap: anywhere;
+  }
+  @media (max-width: 720px) {
+    .ls-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .ls-cell:nth-child(3n) { border-right: none; }
+    .ls-value { font-size: 22px; }
+  }
+  @media (max-width: 420px) {
+    .ls-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ls-cell:nth-child(3n) { border-right: 1px dashed var(--color-border); }
+    .ls-cell:nth-child(2n) { border-right: none; }
+  }
   .ls-label {
     font-family: var(--font-mono); font-size: 9px;
     color: var(--color-fg-faint);
