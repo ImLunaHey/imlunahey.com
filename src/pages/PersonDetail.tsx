@@ -232,16 +232,14 @@ function CreditsSection({
   credits: AnnotatedCredit[];
   roleField: 'character' | 'job';
 }) {
-  // Sort: shelf-owned first (most relevant to the visitor), then
-  // by year desc, then by vote_count desc as tiebreaker. Filters
-  // out empty roles upstream for cleanliness.
+  // Sort: newest first (matches the convention on tmdb's own person
+  // pages), with vote_count desc as a tiebreaker so a popular release
+  // outranks an obscurity from the same year. Items missing a year
+  // sort to the bottom.
   const sorted = [...credits].sort((a, b) => {
-    if ((a.ownedImdbId ? 1 : 0) !== (b.ownedImdbId ? 1 : 0)) {
-      return (b.ownedImdbId ? 1 : 0) - (a.ownedImdbId ? 1 : 0);
-    }
-    if ((a.releaseYear ?? 0) !== (b.releaseYear ?? 0)) {
-      return (b.releaseYear ?? 0) - (a.releaseYear ?? 0);
-    }
+    const ay = a.releaseYear ?? -Infinity;
+    const by = b.releaseYear ?? -Infinity;
+    if (ay !== by) return by - ay;
     return b.voteCount - a.voteCount;
   });
 
