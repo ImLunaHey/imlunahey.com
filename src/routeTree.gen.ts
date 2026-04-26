@@ -17,6 +17,7 @@ import { Route as MainIndexRouteImport } from './routes/_main/index'
 import { Route as OgSplatRouteImport } from './routes/og/$'
 import { Route as OauthClientMetadataDotjsonRouteImport } from './routes/oauth/client-metadata[.]json'
 import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
+import { Route as ApiStatusRouteImport } from './routes/api/status'
 import { Route as ApiMastodonStreamRouteImport } from './routes/api/mastodon-stream'
 import { Route as MainUsesRouteImport } from './routes/_main/uses'
 import { Route as MainTimelineRouteImport } from './routes/_main/timeline'
@@ -31,6 +32,7 @@ import { Route as MainBookmarksRouteImport } from './routes/_main/bookmarks'
 import { Route as MainAiRouteImport } from './routes/_main/ai'
 import { Route as MainWatchingIndexRouteImport } from './routes/_main/watching/index'
 import { Route as MainProjectsIndexRouteImport } from './routes/_main/projects/index'
+import { Route as MainPlaystationIndexRouteImport } from './routes/_main/playstation/index'
 import { Route as MainLibraryIndexRouteImport } from './routes/_main/library/index'
 import { Route as MainLabsIndexRouteImport } from './routes/_main/labs/index'
 import { Route as MainGamesIndexRouteImport } from './routes/_main/games/index'
@@ -38,6 +40,7 @@ import { Route as MainBlogIndexRouteImport } from './routes/_main/blog/index'
 import { Route as ApiHomelabIngestRouteImport } from './routes/api/homelab.ingest'
 import { Route as MainWatchingRkeyRouteImport } from './routes/_main/watching/$rkey'
 import { Route as MainProjectsNameRouteImport } from './routes/_main/projects/$name'
+import { Route as MainPlaystationIdRouteImport } from './routes/_main/playstation/$id'
 import { Route as MainLibraryImdbIdRouteImport } from './routes/_main/library/$imdbId'
 import { Route as MainLabsXkcdRouteImport } from './routes/_main/labs/xkcd'
 import { Route as MainLabsWordleRouteImport } from './routes/_main/labs/wordle'
@@ -200,6 +203,11 @@ const OauthCallbackRoute = OauthCallbackRouteImport.update({
   path: '/oauth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStatusRoute = ApiStatusRouteImport.update({
+  id: '/api/status',
+  path: '/api/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMastodonStreamRoute = ApiMastodonStreamRouteImport.update({
   id: '/api/mastodon-stream',
   path: '/api/mastodon-stream',
@@ -270,6 +278,11 @@ const MainProjectsIndexRoute = MainProjectsIndexRouteImport.update({
   path: '/projects/',
   getParentRoute: () => MainRoute,
 } as any)
+const MainPlaystationIndexRoute = MainPlaystationIndexRouteImport.update({
+  id: '/playstation/',
+  path: '/playstation/',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLibraryIndexRoute = MainLibraryIndexRouteImport.update({
   id: '/library/',
   path: '/library/',
@@ -303,6 +316,11 @@ const MainWatchingRkeyRoute = MainWatchingRkeyRouteImport.update({
 const MainProjectsNameRoute = MainProjectsNameRouteImport.update({
   id: '/projects/$name',
   path: '/projects/$name',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainPlaystationIdRoute = MainPlaystationIdRouteImport.update({
+  id: '/playstation/$id',
+  path: '/playstation/$id',
   getParentRoute: () => MainRoute,
 } as any)
 const MainLibraryImdbIdRoute = MainLibraryImdbIdRouteImport.update({
@@ -935,6 +953,7 @@ export interface FileRoutesByFullPath {
   '/timeline': typeof MainTimelineRoute
   '/uses': typeof MainUsesRoute
   '/api/mastodon-stream': typeof ApiMastodonStreamRoute
+  '/api/status': typeof ApiStatusRoute
   '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/client-metadata.json': typeof OauthClientMetadataDotjsonRoute
   '/og/$': typeof OgSplatRoute
@@ -1035,6 +1054,7 @@ export interface FileRoutesByFullPath {
   '/labs/wordle': typeof MainLabsWordleRoute
   '/labs/xkcd': typeof MainLabsXkcdRoute
   '/library/$imdbId': typeof MainLibraryImdbIdRoute
+  '/playstation/$id': typeof MainPlaystationIdRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
   '/api/homelab/ingest': typeof ApiHomelabIngestRoute
@@ -1042,6 +1062,7 @@ export interface FileRoutesByFullPath {
   '/games/': typeof MainGamesIndexRoute
   '/labs/': typeof MainLabsIndexRoute
   '/library/': typeof MainLibraryIndexRoute
+  '/playstation/': typeof MainPlaystationIndexRoute
   '/projects/': typeof MainProjectsIndexRoute
   '/watching/': typeof MainWatchingIndexRoute
   '/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
@@ -1085,6 +1106,7 @@ export interface FileRoutesByTo {
   '/timeline': typeof MainTimelineRoute
   '/uses': typeof MainUsesRoute
   '/api/mastodon-stream': typeof ApiMastodonStreamRoute
+  '/api/status': typeof ApiStatusRoute
   '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/client-metadata.json': typeof OauthClientMetadataDotjsonRoute
   '/og/$': typeof OgSplatRoute
@@ -1186,6 +1208,7 @@ export interface FileRoutesByTo {
   '/labs/wordle': typeof MainLabsWordleRoute
   '/labs/xkcd': typeof MainLabsXkcdRoute
   '/library/$imdbId': typeof MainLibraryImdbIdRoute
+  '/playstation/$id': typeof MainPlaystationIdRoute
   '/projects/$name': typeof MainProjectsNameRoute
   '/watching/$rkey': typeof MainWatchingRkeyRoute
   '/api/homelab/ingest': typeof ApiHomelabIngestRoute
@@ -1193,6 +1216,7 @@ export interface FileRoutesByTo {
   '/games': typeof MainGamesIndexRoute
   '/labs': typeof MainLabsIndexRoute
   '/library': typeof MainLibraryIndexRoute
+  '/playstation': typeof MainPlaystationIndexRoute
   '/projects': typeof MainProjectsIndexRoute
   '/watching': typeof MainWatchingIndexRoute
   '/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
@@ -1238,6 +1262,7 @@ export interface FileRoutesById {
   '/_main/timeline': typeof MainTimelineRoute
   '/_main/uses': typeof MainUsesRoute
   '/api/mastodon-stream': typeof ApiMastodonStreamRoute
+  '/api/status': typeof ApiStatusRoute
   '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/client-metadata.json': typeof OauthClientMetadataDotjsonRoute
   '/og/$': typeof OgSplatRoute
@@ -1339,6 +1364,7 @@ export interface FileRoutesById {
   '/_main/labs/wordle': typeof MainLabsWordleRoute
   '/_main/labs/xkcd': typeof MainLabsXkcdRoute
   '/_main/library/$imdbId': typeof MainLibraryImdbIdRoute
+  '/_main/playstation/$id': typeof MainPlaystationIdRoute
   '/_main/projects/$name': typeof MainProjectsNameRoute
   '/_main/watching/$rkey': typeof MainWatchingRkeyRoute
   '/api/homelab/ingest': typeof ApiHomelabIngestRoute
@@ -1346,6 +1372,7 @@ export interface FileRoutesById {
   '/_main/games/': typeof MainGamesIndexRoute
   '/_main/labs/': typeof MainLabsIndexRoute
   '/_main/library/': typeof MainLibraryIndexRoute
+  '/_main/playstation/': typeof MainPlaystationIndexRoute
   '/_main/projects/': typeof MainProjectsIndexRoute
   '/_main/watching/': typeof MainWatchingIndexRoute
   '/_main/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
@@ -1392,6 +1419,7 @@ export interface FileRouteTypes {
     | '/timeline'
     | '/uses'
     | '/api/mastodon-stream'
+    | '/api/status'
     | '/oauth/callback'
     | '/oauth/client-metadata.json'
     | '/og/$'
@@ -1492,6 +1520,7 @@ export interface FileRouteTypes {
     | '/labs/wordle'
     | '/labs/xkcd'
     | '/library/$imdbId'
+    | '/playstation/$id'
     | '/projects/$name'
     | '/watching/$rkey'
     | '/api/homelab/ingest'
@@ -1499,6 +1528,7 @@ export interface FileRouteTypes {
     | '/games/'
     | '/labs/'
     | '/library/'
+    | '/playstation/'
     | '/projects/'
     | '/watching/'
     | '/labs/at-uri/$'
@@ -1542,6 +1572,7 @@ export interface FileRouteTypes {
     | '/timeline'
     | '/uses'
     | '/api/mastodon-stream'
+    | '/api/status'
     | '/oauth/callback'
     | '/oauth/client-metadata.json'
     | '/og/$'
@@ -1643,6 +1674,7 @@ export interface FileRouteTypes {
     | '/labs/wordle'
     | '/labs/xkcd'
     | '/library/$imdbId'
+    | '/playstation/$id'
     | '/projects/$name'
     | '/watching/$rkey'
     | '/api/homelab/ingest'
@@ -1650,6 +1682,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/labs'
     | '/library'
+    | '/playstation'
     | '/projects'
     | '/watching'
     | '/labs/at-uri/$'
@@ -1694,6 +1727,7 @@ export interface FileRouteTypes {
     | '/_main/timeline'
     | '/_main/uses'
     | '/api/mastodon-stream'
+    | '/api/status'
     | '/oauth/callback'
     | '/oauth/client-metadata.json'
     | '/og/$'
@@ -1795,6 +1829,7 @@ export interface FileRouteTypes {
     | '/_main/labs/wordle'
     | '/_main/labs/xkcd'
     | '/_main/library/$imdbId'
+    | '/_main/playstation/$id'
     | '/_main/projects/$name'
     | '/_main/watching/$rkey'
     | '/api/homelab/ingest'
@@ -1802,6 +1837,7 @@ export interface FileRouteTypes {
     | '/_main/games/'
     | '/_main/labs/'
     | '/_main/library/'
+    | '/_main/playstation/'
     | '/_main/projects/'
     | '/_main/watching/'
     | '/_main/labs/at-uri/$'
@@ -1836,6 +1872,7 @@ export interface RootRouteChildren {
   RssDotxmlRoute: typeof RssDotxmlRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiMastodonStreamRoute: typeof ApiMastodonStreamRoute
+  ApiStatusRoute: typeof ApiStatusRoute
   OauthCallbackRoute: typeof OauthCallbackRoute
   OauthClientMetadataDotjsonRoute: typeof OauthClientMetadataDotjsonRoute
   OgSplatRoute: typeof OgSplatRoute
@@ -1898,6 +1935,13 @@ declare module '@tanstack/react-router' {
       path: '/oauth/callback'
       fullPath: '/oauth/callback'
       preLoaderRoute: typeof OauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/status': {
+      id: '/api/status'
+      path: '/api/status'
+      fullPath: '/api/status'
+      preLoaderRoute: typeof ApiStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/mastodon-stream': {
@@ -1998,6 +2042,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainProjectsIndexRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/playstation/': {
+      id: '/_main/playstation/'
+      path: '/playstation'
+      fullPath: '/playstation/'
+      preLoaderRoute: typeof MainPlaystationIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/library/': {
       id: '/_main/library/'
       path: '/library'
@@ -2045,6 +2096,13 @@ declare module '@tanstack/react-router' {
       path: '/projects/$name'
       fullPath: '/projects/$name'
       preLoaderRoute: typeof MainProjectsNameRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/playstation/$id': {
+      id: '/_main/playstation/$id'
+      path: '/playstation/$id'
+      fullPath: '/playstation/$id'
+      preLoaderRoute: typeof MainPlaystationIdRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/library/$imdbId': {
@@ -3007,12 +3065,14 @@ interface MainRouteChildren {
   MainLabsWordleRoute: typeof MainLabsWordleRoute
   MainLabsXkcdRoute: typeof MainLabsXkcdRoute
   MainLibraryImdbIdRoute: typeof MainLibraryImdbIdRoute
+  MainPlaystationIdRoute: typeof MainPlaystationIdRoute
   MainProjectsNameRoute: typeof MainProjectsNameRoute
   MainWatchingRkeyRoute: typeof MainWatchingRkeyRoute
   MainBlogIndexRoute: typeof MainBlogIndexRoute
   MainGamesIndexRoute: typeof MainGamesIndexRoute
   MainLabsIndexRoute: typeof MainLabsIndexRoute
   MainLibraryIndexRoute: typeof MainLibraryIndexRoute
+  MainPlaystationIndexRoute: typeof MainPlaystationIndexRoute
   MainProjectsIndexRoute: typeof MainProjectsIndexRoute
   MainWatchingIndexRoute: typeof MainWatchingIndexRoute
   MainLabsAtUriSplatRoute: typeof MainLabsAtUriSplatRoute
@@ -3151,12 +3211,14 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsWordleRoute: MainLabsWordleRoute,
   MainLabsXkcdRoute: MainLabsXkcdRoute,
   MainLibraryImdbIdRoute: MainLibraryImdbIdRoute,
+  MainPlaystationIdRoute: MainPlaystationIdRoute,
   MainProjectsNameRoute: MainProjectsNameRoute,
   MainWatchingRkeyRoute: MainWatchingRkeyRoute,
   MainBlogIndexRoute: MainBlogIndexRoute,
   MainGamesIndexRoute: MainGamesIndexRoute,
   MainLabsIndexRoute: MainLabsIndexRoute,
   MainLibraryIndexRoute: MainLibraryIndexRoute,
+  MainPlaystationIndexRoute: MainPlaystationIndexRoute,
   MainProjectsIndexRoute: MainProjectsIndexRoute,
   MainWatchingIndexRoute: MainWatchingIndexRoute,
   MainLabsAtUriSplatRoute: MainLabsAtUriSplatRoute,
@@ -3193,6 +3255,7 @@ const rootRouteChildren: RootRouteChildren = {
   RssDotxmlRoute: RssDotxmlRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiMastodonStreamRoute: ApiMastodonStreamRoute,
+  ApiStatusRoute: ApiStatusRoute,
   OauthCallbackRoute: OauthCallbackRoute,
   OauthClientMetadataDotjsonRoute: OauthClientMetadataDotjsonRoute,
   OgSplatRoute: OgSplatRoute,

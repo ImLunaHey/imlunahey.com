@@ -7,7 +7,9 @@ import { getBskyPosts } from '../server/bluesky';
 import { getContributions } from '../server/contributions';
 import { getRecentTrack, LASTFM_PROFILE_URL } from '../server/lastfm';
 import { getPopfeedWatches } from '../server/popfeed';
+import { getPlaystationPresence } from '../server/playstation';
 import { getAllRepos } from '../server/repos';
+import { getSiteStatus } from '../server/site-status';
 import { getWeather } from '../server/weather';
 import { getBlogEntries } from '../server/whitewind';
 
@@ -126,6 +128,22 @@ export default function HomePage() {
   const { data: blog } = useQuery({ queryKey: ['blog'], queryFn: () => getBlogEntries() });
   const { data: weather } = useQuery({ queryKey: ['weather'], queryFn: () => getWeather() });
   const { data: watches } = useQuery({ queryKey: ['popfeed', 'watches'], queryFn: () => getPopfeedWatches() });
+  // PSN presence is only meaningful when actively in a game — refetch
+  // every 60s while the page is open so the row appears / disappears
+  // without a manual reload.
+  const { data: psn } = useQuery({
+    queryKey: ['psn', 'presence'],
+    queryFn: () => getPlaystationPresence(),
+    refetchInterval: 60_000,
+  });
+  // pushed by an iOS Shortcut on focus / sleep / DND transitions —
+  // refresh every 60s so the cell flips in/out without a reload when
+  // the phone changes mode.
+  const { data: liveStatus } = useQuery({
+    queryKey: ['site', 'status'],
+    queryFn: () => getSiteStatus(),
+    refetchInterval: 60_000,
+  });
 
   const latestActive = repoData
     ? repoData.repos
@@ -285,6 +303,17 @@ export default function HomePage() {
                       </dd>
                     </div>
                   ) : null}
+                  {psn?.game ? (
+                    <div style={{ display: 'contents' }}>
+                      <dt>// playing</dt>
+                      <dd>
+                        <span className="bullet">→</span>
+                        <Link to="/playstation" className="glow-link">
+                          {psn.game.name.toLowerCase()}
+                        </Link>
+                      </dd>
+                    </div>
+                  ) : null}
                   {watches?.items[0] ? (
                     <div style={{ display: 'contents' }}>
                       <dt>// watching</dt>
@@ -333,11 +362,27 @@ export default function HomePage() {
                 )}
               </div>
               <div className="vitals-cell">
-                <div>
-                  <span className="lb">do not disturb</span>
-                  <div className="big">{STATUS.backAt}</div>
-                </div>
-                <span className="sub">back online at</span>
+                {liveStatus?.dnd ? (
+                  <>
+                    <div>
+                      <span className="lb">{liveStatus.focus ?? 'do not disturb'}</span>
+                      <div className="big">{liveStatus.backAt ?? '—'}</div>
+                    </div>
+                    <span className="sub">
+                      {liveStatus.backAt ? 'back online at' : 'no eta · pushed from phone'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <span className="lb">availability</span>
+                      <div className="big accent">online</div>
+                    </div>
+                    <span className="sub">
+                      {liveStatus ? 'phone says active' : 'no live status pushed'}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
