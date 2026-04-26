@@ -138,3 +138,32 @@ export const getHealth = createServerFn({ method: 'GET' }).handler(
     return mergeMonthBuckets(buckets, months);
   },
 );
+
+/** Return the snapshot for a specific YYYY-MM bucket, or null if that
+ *  month has no data. The `months` field on the returned snapshot is
+ *  just the single requested month so the page can render its
+ *  "viewing april 2024" banner consistently. */
+export const getHealthMonth = createServerFn({ method: 'GET' })
+  .inputValidator((input: { month: string }) => input)
+  .handler(async ({ data }): Promise<HealthSnapshot | null> => {
+    const kv = env.HOMELAB;
+    if (!kv) return null;
+    if (!/^\d{4}-\d{2}$/.test(data.month)) return null;
+    const bucket = await kv.get<{
+      ts: number;
+      metrics: HealthMetric[];
+      workouts: HealthWorkout[];
+    }>(healthMonthKey(data.month), { type: 'json' });
+    if (!bucket) return null;
+    return mergeMonthBuckets([bucket], [data.month]);
+  });
+
+/** Just the index — list of every month with data. /health uses it
+ *  for the archive section without needing to read all the buckets. */
+export const getHealthArchive = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<HealthIndex | null> => {
+    const kv = env.HOMELAB;
+    if (!kv) return null;
+    return await kv.get<HealthIndex>(HEALTH_INDEX_KEY, { type: 'json' });
+  },
+);

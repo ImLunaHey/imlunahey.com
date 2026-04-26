@@ -24,7 +24,6 @@ import { Route as MainUsesRouteImport } from './routes/_main/uses'
 import { Route as MainTimelineRouteImport } from './routes/_main/timeline'
 import { Route as MainMusicRouteImport } from './routes/_main/music'
 import { Route as MainHomelabRouteImport } from './routes/_main/homelab'
-import { Route as MainHealthRouteImport } from './routes/_main/health'
 import { Route as MainGuestbookRouteImport } from './routes/_main/guestbook'
 import { Route as MainGlobeRouteImport } from './routes/_main/globe'
 import { Route as MainGalleryRouteImport } from './routes/_main/gallery'
@@ -36,6 +35,7 @@ import { Route as MainProjectsIndexRouteImport } from './routes/_main/projects/i
 import { Route as MainPlaystationIndexRouteImport } from './routes/_main/playstation/index'
 import { Route as MainLibraryIndexRouteImport } from './routes/_main/library/index'
 import { Route as MainLabsIndexRouteImport } from './routes/_main/labs/index'
+import { Route as MainHealthIndexRouteImport } from './routes/_main/health/index'
 import { Route as MainGamesIndexRouteImport } from './routes/_main/games/index'
 import { Route as MainBlogIndexRouteImport } from './routes/_main/blog/index'
 import { Route as ApiHomelabIngestRouteImport } from './routes/api/homelab.ingest'
@@ -137,6 +137,7 @@ import { Route as MainLabsBacklinksRouteImport } from './routes/_main/labs/backl
 import { Route as MainLabsAudioExtractorRouteImport } from './routes/_main/labs/audio-extractor'
 import { Route as MainLabsAsciiRouteImport } from './routes/_main/labs/ascii'
 import { Route as MainLabsAicRouteImport } from './routes/_main/labs/aic'
+import { Route as MainHealthSleepRouteImport } from './routes/_main/health/sleep'
 import { Route as MainGamesRkeyRouteImport } from './routes/_main/games/$rkey'
 import { Route as MainBlogRkeyRouteImport } from './routes/_main/blog/$rkey'
 import { Route as MainLabsYearInReviewIndexRouteImport } from './routes/_main/labs/year-in-review/index'
@@ -162,6 +163,8 @@ import { Route as MainLabsCryptoIdRouteImport } from './routes/_main/labs/crypto
 import { Route as MainLabsCarExplorerSplatRouteImport } from './routes/_main/labs/car-explorer/$'
 import { Route as MainLabsAtriumRoomIdRouteImport } from './routes/_main/labs/atrium/$roomId'
 import { Route as MainLabsAtUriSplatRouteImport } from './routes/_main/labs/at-uri/$'
+import { Route as MainHealthWorkoutsIdRouteImport } from './routes/_main/health/workouts/$id'
+import { Route as MainHealthMMonthRouteImport } from './routes/_main/health/m.$month'
 import { Route as MainLabsYearInReviewHandleYearRouteImport } from './routes/_main/labs/year-in-review/$handle/$year'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -239,11 +242,6 @@ const MainHomelabRoute = MainHomelabRouteImport.update({
   path: '/homelab',
   getParentRoute: () => MainRoute,
 } as any)
-const MainHealthRoute = MainHealthRouteImport.update({
-  id: '/health',
-  path: '/health',
-  getParentRoute: () => MainRoute,
-} as any)
 const MainGuestbookRoute = MainGuestbookRouteImport.update({
   id: '/guestbook',
   path: '/guestbook',
@@ -297,6 +295,11 @@ const MainLibraryIndexRoute = MainLibraryIndexRouteImport.update({
 const MainLabsIndexRoute = MainLabsIndexRouteImport.update({
   id: '/labs/',
   path: '/labs/',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainHealthIndexRoute = MainHealthIndexRouteImport.update({
+  id: '/health/',
+  path: '/health/',
   getParentRoute: () => MainRoute,
 } as any)
 const MainGamesIndexRoute = MainGamesIndexRouteImport.update({
@@ -806,6 +809,11 @@ const MainLabsAicRoute = MainLabsAicRouteImport.update({
   path: '/labs/aic',
   getParentRoute: () => MainRoute,
 } as any)
+const MainHealthSleepRoute = MainHealthSleepRouteImport.update({
+  id: '/health/sleep',
+  path: '/health/sleep',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainGamesRkeyRoute = MainGamesRkeyRouteImport.update({
   id: '/games/$rkey',
   path: '/games/$rkey',
@@ -935,6 +943,16 @@ const MainLabsAtUriSplatRoute = MainLabsAtUriSplatRouteImport.update({
   path: '/labs/at-uri/$',
   getParentRoute: () => MainRoute,
 } as any)
+const MainHealthWorkoutsIdRoute = MainHealthWorkoutsIdRouteImport.update({
+  id: '/health/workouts/$id',
+  path: '/health/workouts/$id',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainHealthMMonthRoute = MainHealthMMonthRouteImport.update({
+  id: '/health/m/$month',
+  path: '/health/m/$month',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainLabsYearInReviewHandleYearRoute =
   MainLabsYearInReviewHandleYearRouteImport.update({
     id: '/labs/year-in-review/$handle/$year',
@@ -953,7 +971,6 @@ export interface FileRoutesByFullPath {
   '/gallery': typeof MainGalleryRoute
   '/globe': typeof MainGlobeRoute
   '/guestbook': typeof MainGuestbookRoute
-  '/health': typeof MainHealthRoute
   '/homelab': typeof MainHomelabRoute
   '/music': typeof MainMusicRoute
   '/timeline': typeof MainTimelineRoute
@@ -966,6 +983,7 @@ export interface FileRoutesByFullPath {
   '/og/$': typeof OgSplatRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
+  '/health/sleep': typeof MainHealthSleepRoute
   '/labs/aic': typeof MainLabsAicRoute
   '/labs/ascii': typeof MainLabsAsciiRoute
   '/labs/audio-extractor': typeof MainLabsAudioExtractorRoute
@@ -1067,11 +1085,14 @@ export interface FileRoutesByFullPath {
   '/api/homelab/ingest': typeof ApiHomelabIngestRoute
   '/blog/': typeof MainBlogIndexRoute
   '/games/': typeof MainGamesIndexRoute
+  '/health/': typeof MainHealthIndexRoute
   '/labs/': typeof MainLabsIndexRoute
   '/library/': typeof MainLibraryIndexRoute
   '/playstation/': typeof MainPlaystationIndexRoute
   '/projects/': typeof MainProjectsIndexRoute
   '/watching/': typeof MainWatchingIndexRoute
+  '/health/m/$month': typeof MainHealthMMonthRoute
+  '/health/workouts/$id': typeof MainHealthWorkoutsIdRoute
   '/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
   '/labs/atrium/$roomId': typeof MainLabsAtriumRoomIdRoute
   '/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
@@ -1107,7 +1128,6 @@ export interface FileRoutesByTo {
   '/gallery': typeof MainGalleryRoute
   '/globe': typeof MainGlobeRoute
   '/guestbook': typeof MainGuestbookRoute
-  '/health': typeof MainHealthRoute
   '/homelab': typeof MainHomelabRoute
   '/music': typeof MainMusicRoute
   '/timeline': typeof MainTimelineRoute
@@ -1121,6 +1141,7 @@ export interface FileRoutesByTo {
   '/': typeof MainIndexRoute
   '/blog/$rkey': typeof MainBlogRkeyRoute
   '/games/$rkey': typeof MainGamesRkeyRoute
+  '/health/sleep': typeof MainHealthSleepRoute
   '/labs/aic': typeof MainLabsAicRoute
   '/labs/ascii': typeof MainLabsAsciiRoute
   '/labs/audio-extractor': typeof MainLabsAudioExtractorRoute
@@ -1222,11 +1243,14 @@ export interface FileRoutesByTo {
   '/api/homelab/ingest': typeof ApiHomelabIngestRoute
   '/blog': typeof MainBlogIndexRoute
   '/games': typeof MainGamesIndexRoute
+  '/health': typeof MainHealthIndexRoute
   '/labs': typeof MainLabsIndexRoute
   '/library': typeof MainLibraryIndexRoute
   '/playstation': typeof MainPlaystationIndexRoute
   '/projects': typeof MainProjectsIndexRoute
   '/watching': typeof MainWatchingIndexRoute
+  '/health/m/$month': typeof MainHealthMMonthRoute
+  '/health/workouts/$id': typeof MainHealthWorkoutsIdRoute
   '/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
   '/labs/atrium/$roomId': typeof MainLabsAtriumRoomIdRoute
   '/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
@@ -1264,7 +1288,6 @@ export interface FileRoutesById {
   '/_main/gallery': typeof MainGalleryRoute
   '/_main/globe': typeof MainGlobeRoute
   '/_main/guestbook': typeof MainGuestbookRoute
-  '/_main/health': typeof MainHealthRoute
   '/_main/homelab': typeof MainHomelabRoute
   '/_main/music': typeof MainMusicRoute
   '/_main/timeline': typeof MainTimelineRoute
@@ -1278,6 +1301,7 @@ export interface FileRoutesById {
   '/_main/': typeof MainIndexRoute
   '/_main/blog/$rkey': typeof MainBlogRkeyRoute
   '/_main/games/$rkey': typeof MainGamesRkeyRoute
+  '/_main/health/sleep': typeof MainHealthSleepRoute
   '/_main/labs/aic': typeof MainLabsAicRoute
   '/_main/labs/ascii': typeof MainLabsAsciiRoute
   '/_main/labs/audio-extractor': typeof MainLabsAudioExtractorRoute
@@ -1379,11 +1403,14 @@ export interface FileRoutesById {
   '/api/homelab/ingest': typeof ApiHomelabIngestRoute
   '/_main/blog/': typeof MainBlogIndexRoute
   '/_main/games/': typeof MainGamesIndexRoute
+  '/_main/health/': typeof MainHealthIndexRoute
   '/_main/labs/': typeof MainLabsIndexRoute
   '/_main/library/': typeof MainLibraryIndexRoute
   '/_main/playstation/': typeof MainPlaystationIndexRoute
   '/_main/projects/': typeof MainProjectsIndexRoute
   '/_main/watching/': typeof MainWatchingIndexRoute
+  '/_main/health/m/$month': typeof MainHealthMMonthRoute
+  '/_main/health/workouts/$id': typeof MainHealthWorkoutsIdRoute
   '/_main/labs/at-uri/$': typeof MainLabsAtUriSplatRoute
   '/_main/labs/atrium/$roomId': typeof MainLabsAtriumRoomIdRoute
   '/_main/labs/car-explorer/$': typeof MainLabsCarExplorerSplatRoute
@@ -1422,7 +1449,6 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/globe'
     | '/guestbook'
-    | '/health'
     | '/homelab'
     | '/music'
     | '/timeline'
@@ -1435,6 +1461,7 @@ export interface FileRouteTypes {
     | '/og/$'
     | '/blog/$rkey'
     | '/games/$rkey'
+    | '/health/sleep'
     | '/labs/aic'
     | '/labs/ascii'
     | '/labs/audio-extractor'
@@ -1536,11 +1563,14 @@ export interface FileRouteTypes {
     | '/api/homelab/ingest'
     | '/blog/'
     | '/games/'
+    | '/health/'
     | '/labs/'
     | '/library/'
     | '/playstation/'
     | '/projects/'
     | '/watching/'
+    | '/health/m/$month'
+    | '/health/workouts/$id'
     | '/labs/at-uri/$'
     | '/labs/atrium/$roomId'
     | '/labs/car-explorer/$'
@@ -1576,7 +1606,6 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/globe'
     | '/guestbook'
-    | '/health'
     | '/homelab'
     | '/music'
     | '/timeline'
@@ -1590,6 +1619,7 @@ export interface FileRouteTypes {
     | '/'
     | '/blog/$rkey'
     | '/games/$rkey'
+    | '/health/sleep'
     | '/labs/aic'
     | '/labs/ascii'
     | '/labs/audio-extractor'
@@ -1691,11 +1721,14 @@ export interface FileRouteTypes {
     | '/api/homelab/ingest'
     | '/blog'
     | '/games'
+    | '/health'
     | '/labs'
     | '/library'
     | '/playstation'
     | '/projects'
     | '/watching'
+    | '/health/m/$month'
+    | '/health/workouts/$id'
     | '/labs/at-uri/$'
     | '/labs/atrium/$roomId'
     | '/labs/car-explorer/$'
@@ -1732,7 +1765,6 @@ export interface FileRouteTypes {
     | '/_main/gallery'
     | '/_main/globe'
     | '/_main/guestbook'
-    | '/_main/health'
     | '/_main/homelab'
     | '/_main/music'
     | '/_main/timeline'
@@ -1746,6 +1778,7 @@ export interface FileRouteTypes {
     | '/_main/'
     | '/_main/blog/$rkey'
     | '/_main/games/$rkey'
+    | '/_main/health/sleep'
     | '/_main/labs/aic'
     | '/_main/labs/ascii'
     | '/_main/labs/audio-extractor'
@@ -1847,11 +1880,14 @@ export interface FileRouteTypes {
     | '/api/homelab/ingest'
     | '/_main/blog/'
     | '/_main/games/'
+    | '/_main/health/'
     | '/_main/labs/'
     | '/_main/library/'
     | '/_main/playstation/'
     | '/_main/projects/'
     | '/_main/watching/'
+    | '/_main/health/m/$month'
+    | '/_main/health/workouts/$id'
     | '/_main/labs/at-uri/$'
     | '/_main/labs/atrium/$roomId'
     | '/_main/labs/car-explorer/$'
@@ -1999,13 +2035,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainHomelabRouteImport
       parentRoute: typeof MainRoute
     }
-    '/_main/health': {
-      id: '/_main/health'
-      path: '/health'
-      fullPath: '/health'
-      preLoaderRoute: typeof MainHealthRouteImport
-      parentRoute: typeof MainRoute
-    }
     '/_main/guestbook': {
       id: '/_main/guestbook'
       path: '/guestbook'
@@ -2081,6 +2110,13 @@ declare module '@tanstack/react-router' {
       path: '/labs'
       fullPath: '/labs/'
       preLoaderRoute: typeof MainLabsIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/health/': {
+      id: '/_main/health/'
+      path: '/health'
+      fullPath: '/health/'
+      preLoaderRoute: typeof MainHealthIndexRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/games/': {
@@ -2790,6 +2826,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsAicRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/health/sleep': {
+      id: '/_main/health/sleep'
+      path: '/health/sleep'
+      fullPath: '/health/sleep'
+      preLoaderRoute: typeof MainHealthSleepRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/games/$rkey': {
       id: '/_main/games/$rkey'
       path: '/games/$rkey'
@@ -2965,6 +3008,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLabsAtUriSplatRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/health/workouts/$id': {
+      id: '/_main/health/workouts/$id'
+      path: '/health/workouts/$id'
+      fullPath: '/health/workouts/$id'
+      preLoaderRoute: typeof MainHealthWorkoutsIdRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/health/m/$month': {
+      id: '/_main/health/m/$month'
+      path: '/health/m/$month'
+      fullPath: '/health/m/$month'
+      preLoaderRoute: typeof MainHealthMMonthRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/year-in-review/$handle/$year': {
       id: '/_main/labs/year-in-review/$handle/$year'
       path: '/labs/year-in-review/$handle/$year'
@@ -2982,7 +3039,6 @@ interface MainRouteChildren {
   MainGalleryRoute: typeof MainGalleryRoute
   MainGlobeRoute: typeof MainGlobeRoute
   MainGuestbookRoute: typeof MainGuestbookRoute
-  MainHealthRoute: typeof MainHealthRoute
   MainHomelabRoute: typeof MainHomelabRoute
   MainMusicRoute: typeof MainMusicRoute
   MainTimelineRoute: typeof MainTimelineRoute
@@ -2990,6 +3046,7 @@ interface MainRouteChildren {
   MainIndexRoute: typeof MainIndexRoute
   MainBlogRkeyRoute: typeof MainBlogRkeyRoute
   MainGamesRkeyRoute: typeof MainGamesRkeyRoute
+  MainHealthSleepRoute: typeof MainHealthSleepRoute
   MainLabsAicRoute: typeof MainLabsAicRoute
   MainLabsAsciiRoute: typeof MainLabsAsciiRoute
   MainLabsAudioExtractorRoute: typeof MainLabsAudioExtractorRoute
@@ -3090,11 +3147,14 @@ interface MainRouteChildren {
   MainWatchingRkeyRoute: typeof MainWatchingRkeyRoute
   MainBlogIndexRoute: typeof MainBlogIndexRoute
   MainGamesIndexRoute: typeof MainGamesIndexRoute
+  MainHealthIndexRoute: typeof MainHealthIndexRoute
   MainLabsIndexRoute: typeof MainLabsIndexRoute
   MainLibraryIndexRoute: typeof MainLibraryIndexRoute
   MainPlaystationIndexRoute: typeof MainPlaystationIndexRoute
   MainProjectsIndexRoute: typeof MainProjectsIndexRoute
   MainWatchingIndexRoute: typeof MainWatchingIndexRoute
+  MainHealthMMonthRoute: typeof MainHealthMMonthRoute
+  MainHealthWorkoutsIdRoute: typeof MainHealthWorkoutsIdRoute
   MainLabsAtUriSplatRoute: typeof MainLabsAtUriSplatRoute
   MainLabsAtriumRoomIdRoute: typeof MainLabsAtriumRoomIdRoute
   MainLabsCarExplorerSplatRoute: typeof MainLabsCarExplorerSplatRoute
@@ -3128,7 +3188,6 @@ const MainRouteChildren: MainRouteChildren = {
   MainGalleryRoute: MainGalleryRoute,
   MainGlobeRoute: MainGlobeRoute,
   MainGuestbookRoute: MainGuestbookRoute,
-  MainHealthRoute: MainHealthRoute,
   MainHomelabRoute: MainHomelabRoute,
   MainMusicRoute: MainMusicRoute,
   MainTimelineRoute: MainTimelineRoute,
@@ -3136,6 +3195,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainIndexRoute: MainIndexRoute,
   MainBlogRkeyRoute: MainBlogRkeyRoute,
   MainGamesRkeyRoute: MainGamesRkeyRoute,
+  MainHealthSleepRoute: MainHealthSleepRoute,
   MainLabsAicRoute: MainLabsAicRoute,
   MainLabsAsciiRoute: MainLabsAsciiRoute,
   MainLabsAudioExtractorRoute: MainLabsAudioExtractorRoute,
@@ -3236,11 +3296,14 @@ const MainRouteChildren: MainRouteChildren = {
   MainWatchingRkeyRoute: MainWatchingRkeyRoute,
   MainBlogIndexRoute: MainBlogIndexRoute,
   MainGamesIndexRoute: MainGamesIndexRoute,
+  MainHealthIndexRoute: MainHealthIndexRoute,
   MainLabsIndexRoute: MainLabsIndexRoute,
   MainLibraryIndexRoute: MainLibraryIndexRoute,
   MainPlaystationIndexRoute: MainPlaystationIndexRoute,
   MainProjectsIndexRoute: MainProjectsIndexRoute,
   MainWatchingIndexRoute: MainWatchingIndexRoute,
+  MainHealthMMonthRoute: MainHealthMMonthRoute,
+  MainHealthWorkoutsIdRoute: MainHealthWorkoutsIdRoute,
   MainLabsAtUriSplatRoute: MainLabsAtUriSplatRoute,
   MainLabsAtriumRoomIdRoute: MainLabsAtriumRoomIdRoute,
   MainLabsCarExplorerSplatRoute: MainLabsCarExplorerSplatRoute,

@@ -1,13 +1,34 @@
-import { Link, getRouteApi } from '@tanstack/react-router';
+import { Link, useMatch } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import type {
+  HealthIndex,
   HealthMetric,
   HealthMetricPoint,
   HealthSnapshot,
   HealthWorkout,
 } from '../server/health';
 
-const route = getRouteApi('/_main/health');
+type Scope = { type: 'recent' } | { type: 'month'; month: string };
+type LoaderData = {
+  snap: HealthSnapshot | null;
+  archive: HealthIndex | null;
+  scope: Scope;
+};
+
+// Both /health and /health/m/$month use this same component — read
+// loader data via useMatch so we don't have to duplicate the page for
+// the two routes.
+function useHealthLoaderData(): LoaderData {
+  const match = useMatch({ strict: false });
+  return match.loaderData as LoaderData;
+}
+
+function fmtMonthLabel(m: string): string {
+  // 'YYYY-MM' → 'April 2024'
+  const [y, mm] = m.split('-');
+  const d = new Date(Number(y), Number(mm) - 1, 1);
+  return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+}
 
 // Renderer is intentionally tolerant of HAE's many possible metric
 // names — the user picks which metrics to enable in the iOS app, so
@@ -70,7 +91,10 @@ function fmtDay(d: Date): string {
 }
 
 export default function HealthPage() {
-  const snap = route.useLoaderData() as HealthSnapshot | null;
+  const data = useHealthLoaderData();
+  const snap = data.snap;
+  const scope = data.scope;
+  const archive = data.archive;
 
   const metrics = snap?.metrics ?? [];
 
@@ -283,6 +307,16 @@ export default function HealthPage() {
             </span>
             <span className="t-faint">
               snapshot <b>{fmtAge(snap.ts)}</b>
+            </span>
+            <span className="scope-tag">
+              {scope.type === 'month' ? (
+                <>
+                  scope: <b className="t-accent">{fmtMonthLabel(scope.month)}</b>{' '}
+                  <Link to="/health" className="t-faint">(clear)</Link>
+                </>
+              ) : (
+                <>scope: <b>last {snap.months.length} months</b></>
+              )}
             </span>
           </div>
         </header>
@@ -564,6 +598,10 @@ export default function HealthPage() {
           )}
         </section>
 
+        {archive && archive.months.length > 0 ? (
+          <ArchiveSection months={archive.months} currentScope={scope} />
+        ) : null}
+
         <footer className="h-footer">
           <span>
             src: <span className="t-accent">health auto export → kv → this page</span>
@@ -580,10 +618,87 @@ export default function HealthPage() {
   );
 }
 
+function ArchiveSection({
+  months,
+  currentScope,
+}: {
+  months: string[];
+  currentScope: Scope;
+}) {
+  // Group months by year so the archive reads as a year-by-year
+  // calendar rather than 89 sibling chips. Each year row shows the
+  // 12 months as buttons; months without data show as faint
+  // placeholders so visitors can see the coverage gaps.
+  const byYear = new Map<string, Set<string>>();
+  for (const m of months) {
+    const [y, mm] = m.split('-');
+    let set = byYear.get(y);
+    if (!set) {
+      set = new Set<string>();
+      byYear.set(y, set);
+    }
+    set.add(mm);
+  }
+  const years = [...byYear.keys()].sort().reverse();
+  const monthLabels = ['j', 'f', 'm', 'a', 'm', 'j', 'j', 'a', 's', 'o', 'n', 'd'];
+
+  const activeMonth = currentScope.type === 'month' ? currentScope.month : null;
+
+  return (
+    <>
+      <div className="section-hd">
+        <h2>
+          <span className="num">04 //</span>archive.
+        </h2>
+        <span className="src">
+          {months.length} months · {years[years.length - 1]} → {years[0]}
+        </span>
+      </div>
+      <section className="archive">
+        {years.map((year) => {
+          const present = byYear.get(year) ?? new Set<string>();
+          return (
+            <div key={year} className="archive-row">
+              <span className="archive-year">{year}</span>
+              <div className="archive-months">
+                {monthLabels.map((label, i) => {
+                  const mm = String(i + 1).padStart(2, '0');
+                  const month = `${year}-${mm}`;
+                  const has = present.has(mm);
+                  const isActive = activeMonth === month;
+                  if (!has) {
+                    return (
+                      <span key={month} className="archive-cell archive-empty" title={`no data for ${month}`}>
+                        {label}
+                      </span>
+                    );
+                  }
+                  return (
+                    <Link
+                      key={month}
+                      to="/health/m/$month"
+                      params={{ month }}
+                      className={'archive-cell archive-has' + (isActive ? ' archive-active' : '')}
+                      title={`view ${fmtMonthLabel(month)}`}
+                    >
+                      {label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </section>
+    </>
+  );
+}
+
 function WorkoutRow({ w }: { w: HealthWorkout }) {
   const start = w.start ? new Date(w.start as string) : null;
   const km = w.distance?.qty ?? null;
   const kcal = w.activeEnergyBurned?.qty ?? null;
+  const id = typeof (w as { id?: unknown }).id === 'string' ? (w as { id: string }).id : null;
   // workouts now ship a per-minute heartRateData array — render a tiny
   // sparkline of the avg HR samples so the row carries a visual cue
   // for intensity in addition to the duration / kcal numbers.
@@ -606,8 +721,8 @@ function WorkoutRow({ w }: { w: HealthWorkout }) {
           ((w as { maxHeartRate?: { qty?: number } }).maxHeartRate?.qty ?? 0),
         )
       : 0;
-  return (
-    <article className="workout">
+  const inner = (
+    <>
       <div className="workout-when">
         {start ? start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}
       </div>
@@ -642,8 +757,20 @@ function WorkoutRow({ w }: { w: HealthWorkout }) {
       <div className="workout-spark">
         {hrSamples.length > 1 ? <HrSparkline samples={hrSamples} /> : null}
       </div>
-    </article>
+    </>
   );
+  if (id) {
+    return (
+      <Link
+        to="/health/workouts/$id"
+        params={{ id }}
+        className="workout workout-link"
+      >
+        {inner}
+      </Link>
+    );
+  }
+  return <article className="workout">{inner}</article>;
 }
 
 /** Inline SVG line of heart-rate samples normalised to its own min/max
@@ -835,6 +962,67 @@ const CSS = `
     display: flex; align-items: center; justify-content: flex-end;
   }
   .hr-spark { display: block; }
+  .workout-link {
+    text-decoration: none; color: inherit;
+  }
+  .workout-link:hover { text-decoration: none; background: var(--color-bg-panel); }
+  .workout-link:hover .workout-name { color: var(--color-accent); }
+
+  /* scope tag */
+  .scope-tag {
+    color: var(--color-fg-faint);
+    text-transform: lowercase; letter-spacing: 0.06em;
+  }
+  .scope-tag b.t-accent { color: var(--color-accent); font-weight: 400; }
+  .scope-tag b { color: var(--color-fg); font-weight: 400; }
+  .scope-tag a { color: var(--color-fg-faint); text-decoration: underline; }
+  .scope-tag a:hover { color: var(--color-accent); }
+
+  /* archive — year x month grid for browsing past data */
+  .archive {
+    display: flex; flex-direction: column;
+    gap: 6px;
+    padding-bottom: var(--sp-8);
+  }
+  .archive-row {
+    display: flex; align-items: center; gap: var(--sp-3);
+    padding: 4px 0;
+    border-bottom: 1px dashed var(--color-border);
+  }
+  .archive-year {
+    font-family: var(--font-mono); font-size: var(--fs-xs);
+    color: var(--color-fg-faint);
+    min-width: 48px;
+  }
+  .archive-months { display: flex; gap: 2px; flex: 1; }
+  .archive-cell {
+    flex: 1;
+    text-align: center;
+    padding: 6px 0;
+    font-family: var(--font-mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    text-decoration: none;
+    border: 1px solid transparent;
+  }
+  .archive-empty {
+    color: var(--color-fg-ghost);
+    background: transparent;
+  }
+  .archive-has {
+    color: var(--color-accent);
+    background: color-mix(in oklch, var(--color-accent) 8%, transparent);
+    border-color: var(--color-accent-dim);
+  }
+  .archive-has:hover {
+    background: color-mix(in oklch, var(--color-accent) 18%, transparent);
+    text-decoration: none;
+  }
+  .archive-active {
+    color: var(--color-bg);
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 6px var(--accent-glow);
+  }
   .workout-when {
     font-family: var(--font-mono); font-size: 10px;
     color: var(--color-fg-faint);
