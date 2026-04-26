@@ -94,6 +94,21 @@ function fmtDay(d: Date): string {
   return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
+/** Friendly duration formatter for a value in *minutes*. Collapses
+ *  >= 60 min into 'Xh Ym' / 'Xh', and >= 24h into 'Xd Yh'. Used in the
+ *  activity-mix breakdown where totals can range from a single session
+ *  (~30 min) to lifetime aggregates (hundreds of hours). */
+function fmtDuration(mins: number): string {
+  const total = Math.round(mins);
+  if (total < 60) return `${total} min`;
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  if (h < 24) return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  const d = Math.floor(h / 24);
+  const remH = h % 24;
+  return remH > 0 ? `${d}d ${remH}h` : `${d}d`;
+}
+
 export default function HealthPage() {
   const data = useHealthLoaderData();
   const snap = data.snap;
@@ -245,10 +260,12 @@ export default function HealthPage() {
     const by = new Map<string, { count: number; totalMinutes: number }>();
     for (const w of snap?.workouts ?? []) {
       const name = (typeof w.name === 'string' ? w.name : '?').toLowerCase();
-      const dur = typeof w.duration === 'number' ? w.duration : 0;
+      // HAE encodes workout duration in seconds — convert to minutes
+      // so the display unit matches the label.
+      const durMin = (typeof w.duration === 'number' ? w.duration : 0) / 60;
       const e = by.get(name) ?? { count: 0, totalMinutes: 0 };
       e.count++;
-      e.totalMinutes += dur;
+      e.totalMinutes += durMin;
       by.set(name, e);
     }
     return [...by.entries()]
@@ -606,7 +623,7 @@ export default function HealthPage() {
                   <div className="wt-stats">
                     <span><b>{t.count}</b> sessions</span>
                     <span className="dot">·</span>
-                    <span><b>{Math.round(t.totalMinutes)}</b> min total</span>
+                    <span><b>{fmtDuration(t.totalMinutes)}</b> total</span>
                   </div>
                 </div>
               ))}

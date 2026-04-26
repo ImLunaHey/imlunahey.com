@@ -264,113 +264,174 @@ export const getHealthLatest = createServerFn({ method: 'GET' }).handler(
   },
 );
 
-/** Cross-month aggregator — reads every month bucket, sums per-metric
- *  totals, and returns headline numbers for the page's stats strip.
- *  Heavy on first call (~N KV reads) but cached TTL.medium so it's
- *  rebuilt at most twice an hour. */
+/** Per-month rolled-up aggregate, stored on the `health:lifetime`
+ *  bucket. Maintained incrementally by the ingest endpoint — when a
+ *  month's bucket changes, we re-aggregate just that month and slot
+ *  the new value into the map, then sum on read. Avoids the N-bucket
+ *  scan that used to happen on every page load. */
+export type MonthAggregate = {
+  workouts: number;
+  workoutMinutes: number;
+  workoutKm: number;
+  workoutKcal: number;
+  sleepHours: number;
+  sleepNights: number;
+  steps: number;
+  flightsClimbed: number;
+  mindfulMinutes: number;
+  daylightMinutes: number;
+  byType: Record<string, { count: number; minutes: number }>;
+};
+
+export type LifetimeStore = {
+  perMonth: Record<string, MonthAggregate>;
+  lastUpdated: number;
+};
+
+export const HEALTH_LIFETIME_KEY = 'health:lifetime';
+
+/** Pure: roll a single month's bucket into a MonthAggregate. Workout
+ *  durations from HAE come in seconds — convert to minutes here so
+ *  every downstream consumer sees consistent units. */
+export function aggregateMonth(bucket: {
+  metrics?: HealthMetric[];
+  workouts?: HealthWorkout[];
+}): MonthAggregate {
+  let workouts = 0;
+  let workoutMinutes = 0;
+  let workoutKm = 0;
+  let workoutKcal = 0;
+  let sleepHours = 0;
+  let sleepNights = 0;
+  let steps = 0;
+  let flightsClimbed = 0;
+  let mindfulMinutes = 0;
+  let daylightMinutes = 0;
+  const byType: Record<string, { count: number; minutes: number }> = {};
+
+  for (const w of bucket.workouts ?? []) {
+    workouts++;
+    const durSec = typeof w.duration === 'number' ? w.duration : 0;
+    const durMin = durSec / 60;
+    workoutMinutes += durMin;
+    const km = (w.distance as { qty?: number } | undefined)?.qty;
+    if (typeof km === 'number') workoutKm += km;
+    const kcal = (w.activeEnergyBurned as { qty?: number } | undefined)?.qty;
+    if (typeof kcal === 'number') workoutKcal += kcal;
+    const name = (typeof w.name === 'string' ? w.name : 'workout').toLowerCase();
+    const e = byType[name] ?? { count: 0, minutes: 0 };
+    e.count++;
+    e.minutes += durMin;
+    byType[name] = e;
+  }
+  for (const m of bucket.metrics ?? []) {
+    const name = m.name.toLowerCase();
+    for (const p of m.data ?? []) {
+      const q = typeof p.qty === 'number' ? p.qty : Number(p.qty);
+      if (name === 'sleep_analysis' || name === 'sleep') {
+        // newer Apple Watch recordings put 0 in legacy `asleep` and
+        // split the time across `core`/`deep`/`rem` — prefer
+        // totalSleep, then stage sum, then legacy field.
+        const total = typeof p.totalSleep === 'number' ? p.totalSleep : Number(p.totalSleep);
+        const core = typeof p.core === 'number' ? p.core : Number(p.core);
+        const deep = typeof p.deep === 'number' ? p.deep : Number(p.deep);
+        const rem = typeof p.rem === 'number' ? p.rem : Number(p.rem);
+        const legacy = typeof p.asleep === 'number' ? p.asleep : Number(p.asleep);
+        const stageSum = [core, deep, rem]
+          .filter((v) => Number.isFinite(v) && v > 0)
+          .reduce((a, b) => a + b, 0);
+        const a =
+          (Number.isFinite(total) && total > 0 && total) ||
+          (stageSum > 0 && stageSum) ||
+          legacy;
+        if (Number.isFinite(a) && a > 0) {
+          sleepHours += a;
+          sleepNights++;
+        }
+      } else if (name === 'step_count' || name === 'steps') {
+        if (Number.isFinite(q)) steps += q;
+      } else if (name === 'flights_climbed') {
+        if (Number.isFinite(q)) flightsClimbed += q;
+      } else if (name === 'mindful_minutes') {
+        if (Number.isFinite(q)) mindfulMinutes += q;
+      } else if (name === 'time_in_daylight') {
+        if (Number.isFinite(q)) daylightMinutes += q;
+      }
+    }
+  }
+
+  return {
+    workouts,
+    workoutMinutes,
+    workoutKm,
+    workoutKcal,
+    sleepHours,
+    sleepNights,
+    steps,
+    flightsClimbed,
+    mindfulMinutes,
+    daylightMinutes,
+    byType,
+  };
+}
+
+/** Pure: roll a perMonth map into the public HealthLifetime shape. */
+export function rollUpLifetime(
+  perMonth: Record<string, MonthAggregate>,
+): HealthLifetime | null {
+  const months = Object.keys(perMonth).sort();
+  if (months.length === 0) return null;
+  const totals = {
+    workouts: 0,
+    workoutMinutes: 0,
+    workoutKm: 0,
+    workoutKcal: 0,
+    sleepHours: 0,
+    sleepNights: 0,
+    steps: 0,
+    flightsClimbed: 0,
+    mindfulMinutes: 0,
+    daylightMinutes: 0,
+  };
+  const byType = new Map<string, { count: number; minutes: number }>();
+  for (const m of months) {
+    const a = perMonth[m];
+    if (!a) continue;
+    totals.workouts += a.workouts;
+    totals.workoutMinutes += a.workoutMinutes;
+    totals.workoutKm += a.workoutKm;
+    totals.workoutKcal += a.workoutKcal;
+    totals.sleepHours += a.sleepHours;
+    totals.sleepNights += a.sleepNights;
+    totals.steps += a.steps;
+    totals.flightsClimbed += a.flightsClimbed;
+    totals.mindfulMinutes += a.mindfulMinutes;
+    totals.daylightMinutes += a.daylightMinutes;
+    for (const [name, t] of Object.entries(a.byType)) {
+      const e = byType.get(name) ?? { count: 0, minutes: 0 };
+      e.count += t.count;
+      e.minutes += t.minutes;
+      byType.set(name, e);
+    }
+  }
+  const workoutsByType = [...byType.entries()]
+    .map(([name, v]) => ({ name, ...v }))
+    .sort((a, b) => b.minutes - a.minutes);
+  return {
+    monthsCovered: months.length,
+    earliest: months[0] ?? null,
+    latest: months[months.length - 1] ?? null,
+    totals,
+    workoutsByType,
+  };
+}
+
 export const getHealthLifetime = createServerFn({ method: 'GET' }).handler(
   async (): Promise<HealthLifetime | null> => {
     const kv = env.HOMELAB;
     if (!kv) return null;
-    const idx = await kv.get<HealthIndex>(HEALTH_INDEX_KEY, { type: 'json' });
-    const months = (idx?.months ?? []).sort();
-    if (months.length === 0) return null;
-
-    const buckets = await Promise.all(
-      months.map((m) =>
-        kv.get<{ ts: number; metrics: HealthMetric[]; workouts: HealthWorkout[] }>(
-          healthMonthKey(m),
-          { type: 'json' },
-        ),
-      ),
-    );
-
-    let workouts = 0;
-    let workoutMinutes = 0;
-    let workoutKm = 0;
-    let workoutKcal = 0;
-    let sleepHours = 0;
-    let sleepNights = 0;
-    let steps = 0;
-    let flightsClimbed = 0;
-    let mindfulMinutes = 0;
-    let daylightMinutes = 0;
-    const byType = new Map<string, { count: number; minutes: number }>();
-
-    for (const b of buckets) {
-      if (!b) continue;
-      for (const w of b.workouts ?? []) {
-        workouts++;
-        const dur = typeof w.duration === 'number' ? w.duration : 0;
-        workoutMinutes += dur;
-        const km = (w.distance as { qty?: number } | undefined)?.qty;
-        if (typeof km === 'number') workoutKm += km;
-        const kcal = (w.activeEnergyBurned as { qty?: number } | undefined)?.qty;
-        if (typeof kcal === 'number') workoutKcal += kcal;
-        const name = (typeof w.name === 'string' ? w.name : 'workout').toLowerCase();
-        const e = byType.get(name) ?? { count: 0, minutes: 0 };
-        e.count++;
-        e.minutes += dur;
-        byType.set(name, e);
-      }
-      for (const m of b.metrics ?? []) {
-        const name = m.name.toLowerCase();
-        for (const p of m.data ?? []) {
-          const q = typeof p.qty === 'number' ? p.qty : Number(p.qty);
-          if (name === 'sleep_analysis' || name === 'sleep') {
-            // newer Apple Watch recordings put 0 in legacy `asleep` and
-            // split the time across `core`/`deep`/`rem` — prefer
-            // totalSleep, then stage sum, then legacy field.
-            const total = typeof p.totalSleep === 'number' ? p.totalSleep : Number(p.totalSleep);
-            const core = typeof p.core === 'number' ? p.core : Number(p.core);
-            const deep = typeof p.deep === 'number' ? p.deep : Number(p.deep);
-            const rem = typeof p.rem === 'number' ? p.rem : Number(p.rem);
-            const legacy = typeof p.asleep === 'number' ? p.asleep : Number(p.asleep);
-            const stageSum = [core, deep, rem]
-              .filter((v) => Number.isFinite(v) && v > 0)
-              .reduce((a, b) => a + b, 0);
-            const a =
-              (Number.isFinite(total) && total > 0 && total) ||
-              (stageSum > 0 && stageSum) ||
-              legacy;
-            if (Number.isFinite(a) && a > 0) {
-              sleepHours += a;
-              sleepNights++;
-            }
-          } else if (name === 'step_count' || name === 'steps') {
-            if (Number.isFinite(q)) steps += q;
-          } else if (name === 'flights_climbed') {
-            if (Number.isFinite(q)) flightsClimbed += q;
-          } else if (name === 'mindful_minutes') {
-            if (Number.isFinite(q)) mindfulMinutes += q;
-          } else if (name === 'time_in_daylight') {
-            if (Number.isFinite(q)) daylightMinutes += q;
-          }
-        }
-      }
-    }
-
-    const workoutsByType = [...byType.entries()]
-      .map(([name, v]) => ({ name, ...v }))
-      .sort((a, b) => b.minutes - a.minutes);
-
-    return {
-      monthsCovered: months.length,
-      earliest: months[0] ?? null,
-      latest: months[months.length - 1] ?? null,
-      totals: {
-        workouts,
-        workoutMinutes,
-        workoutKm,
-        workoutKcal,
-        sleepHours,
-        sleepNights,
-        steps,
-        flightsClimbed,
-        mindfulMinutes,
-        daylightMinutes,
-      },
-      workoutsByType,
-    };
+    const store = await kv.get<LifetimeStore>(HEALTH_LIFETIME_KEY, { type: 'json' });
+    if (!store) return null;
+    return rollUpLifetime(store.perMonth);
   },
 );

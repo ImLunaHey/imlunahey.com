@@ -3,6 +3,8 @@ import { env } from 'cloudflare:workers';
 import {
   HEALTH_INDEX_KEY,
   HEALTH_LATEST_KEY,
+  HEALTH_LIFETIME_KEY,
+  aggregateMonth,
   applyLatestUpdates,
   healthMonthKey,
   monthOf,
@@ -11,6 +13,7 @@ import {
   type HealthMetric,
   type HealthMetricPoint,
   type HealthWorkout,
+  type LifetimeStore,
 } from '../../server/health';
 
 /**
@@ -151,11 +154,16 @@ async function ingest(
   );
 
   const writes: Promise<unknown>[] = [];
+  // We hold onto the merged buckets so the lifetime aggregator below
+  // can re-roll just the touched months in-memory without an extra
+  // round-trip back to KV.
+  const mergedByMonth: Record<string, MonthBucket> = {};
   for (let i = 0; i < months.length; i++) {
     const month = months[i];
     const fresh = byMonth.get(month);
     if (!fresh) continue;
     const merged = mergeIntoBucket(existing[i], fresh);
+    mergedByMonth[month] = merged;
     writes.push(kv.put(healthMonthKey(month), JSON.stringify(merged)));
   }
 
@@ -179,6 +187,23 @@ async function ingest(
   if (changed) {
     writes.push(kv.put(HEALTH_LATEST_KEY, JSON.stringify(nextLatest)));
   }
+
+  // Maintain health:lifetime — per-month aggregates that the page
+  // rolls up on read. Re-aggregate just the months we touched (using
+  // the in-memory merged buckets) and slot them into the existing
+  // perMonth map. This keeps page loads at a single small KV read
+  // instead of scanning every bucket.
+  const prevLifetime = await kv.get<LifetimeStore>(HEALTH_LIFETIME_KEY, { type: 'json' });
+  const perMonth = { ...(prevLifetime?.perMonth ?? {}) };
+  for (const [month, bucket] of Object.entries(mergedByMonth)) {
+    perMonth[month] = aggregateMonth(bucket);
+  }
+  writes.push(
+    kv.put(
+      HEALTH_LIFETIME_KEY,
+      JSON.stringify({ perMonth, lastUpdated: Date.now() } satisfies LifetimeStore),
+    ),
+  );
 
   await Promise.all(writes);
 
