@@ -38,6 +38,11 @@ export type Watch = {
   poster?: string;
   backdrop?: string;
   url?: string;
+  /** External ids carried through from the lexicon record so callers
+   *  (e.g. /library) can cross-reference reviewed items against other
+   *  ID-keyed datasets without re-resolving via tmdb. */
+  imdbId?: string;
+  tmdbId?: string;
   createdAt: string;
 };
 
@@ -93,6 +98,8 @@ function normalizeWatch(r: ReviewRecord): Watch {
     poster: r.value.posterUrl,
     backdrop: r.value.backdropUrl,
     url: tmdbUrl(r.value.creativeWorkType, r.value.identifiers?.tmdbId),
+    imdbId: r.value.identifiers?.imdbId,
+    tmdbId: r.value.identifiers?.tmdbId,
     createdAt: r.value.createdAt,
   };
 }
@@ -126,4 +133,22 @@ export const getPopfeedWatches = createServerFn({ method: 'GET' }).handler((): P
 
 export const getPopfeedGames = createServerFn({ method: 'GET' }).handler((): Promise<PopfeedData> =>
   cached('popfeed:games', TTL.short, loadGames).catch(() => ({ items: [], thisYear: 0 })),
+);
+
+/** Flat list of every IMDb ID that has a popfeed review record. Used by
+ *  /library to mark which titles on the shelf the owner has actually
+ *  watched. Cheap because it shares the same per-page fetch as
+ *  getPopfeedWatches/Games — both go through the same constellation
+ *  walk and the cache layer dedupes. */
+export const getReviewedImdbIds = createServerFn({ method: 'GET' }).handler(
+  (): Promise<string[]> =>
+    cached('popfeed:reviewed-imdb', TTL.short, async () => {
+      const all = await fetchAllReviews();
+      const ids = new Set<string>();
+      for (const r of all) {
+        const id = r.value.identifiers?.imdbId;
+        if (id) ids.add(id);
+      }
+      return [...ids];
+    }).catch(() => [] as string[]),
 );

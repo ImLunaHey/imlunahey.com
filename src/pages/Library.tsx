@@ -1,6 +1,8 @@
-import { Link } from '@tanstack/react-router';
+import { Link, getRouteApi } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
 import LIBRARY from '../data/library.json';
+
+const route = getRouteApi('/_main/library/');
 
 // Source data is built by `pnpm library:build` from data/library.csv (CLZ
 // Movies export) → enriched with TMDB metadata → src/data/library.json.
@@ -30,10 +32,17 @@ function tintFor(seed: string) {
 }
 
 type SortKey = 'title' | 'year' | 'added';
+type SeenKey = 'all' | 'seen' | 'unseen';
 
 export default function LibraryPage() {
+  const { reviewedImdbIds } = route.useLoaderData();
+  // Set lookups beat repeated array.includes(...) inside the filter +
+  // render loop; rebuild only when the loader data changes.
+  const seen = useMemo(() => new Set(reviewedImdbIds), [reviewedImdbIds]);
+
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState<'movie' | 'tv' | 'all'>('all');
+  const [seenFilter, setSeenFilter] = useState<SeenKey>('all');
   const [format, setFormat] = useState<string | 'all'>('all');
   const [decade, setDecade] = useState<string | 'all'>('all');
   const [country, setCountry] = useState<string | 'all'>('all');
@@ -89,6 +98,11 @@ export default function LibraryPage() {
     const q = search.trim().toLowerCase();
     const matching = LIBRARY.filter((it) => {
       if (kind !== 'all' && it.mediaType !== kind) return false;
+      if (seenFilter !== 'all') {
+        const isSeen = seen.has(it.imdbId);
+        if (seenFilter === 'seen' && !isSeen) return false;
+        if (seenFilter === 'unseen' && isSeen) return false;
+      }
       if (format !== 'all' && it.format !== format) return false;
       if (decade !== 'all' && decadeOf(it.releaseYear) !== decade) return false;
       if (country !== 'all' && !it.countries.includes(country)) return false;
@@ -139,7 +153,7 @@ export default function LibraryPage() {
       arr.sort((a, b) => newest(b) - newest(a));
     }
     return arr;
-  }, [search, kind, format, decade, country, genre, sortBy]);
+  }, [search, kind, seenFilter, seen, format, decade, country, genre, sortBy]);
 
   const totalRows = LIBRARY.length;
   // unique titles — same dedup key as the shelf grouping (imdbId+title),
@@ -147,6 +161,17 @@ export default function LibraryPage() {
   // rather than 1.
   const totalTitles = new Set(LIBRARY.map((i) => `${i.imdbId}${i.title}`)).size;
   const showingCopies = groups.reduce((n, g) => n + g.length, 0);
+  // seen-state counts are over unique titles, not rows — owning a film
+  // on dvd + blu-ray shouldn't double-count it as 'seen'.
+  const seenCounts = useMemo(() => {
+    const seenTitles = new Set<string>();
+    const unseenTitles = new Set<string>();
+    for (const it of LIBRARY) {
+      const key = `${it.imdbId}${it.title}`;
+      (seen.has(it.imdbId) ? seenTitles : unseenTitles).add(key);
+    }
+    return { seen: seenTitles.size, unseen: unseenTitles.size };
+  }, [seen]);
 
   return (
     <>
@@ -211,7 +236,7 @@ export default function LibraryPage() {
           </div>
 
           {/* kind has its own renderer because the chip label
-              ("films" / "shows") differs from the underlying value
+              ("movies" / "shows") differs from the underlying value
               ("movie" / "tv"); the generic ChipRow uses the same
               string for both. */}
           <div className="control-row">
@@ -233,6 +258,31 @@ export default function LibraryPage() {
                 {label} <span className="chip-n">{count}</span>
               </button>
             ))}
+          </div>
+
+          <div className="control-row">
+            <span className="control-label">seen</span>
+            <button
+              className={'chip' + (seenFilter === 'all' ? ' on' : '')}
+              onClick={() => setSeenFilter('all')}
+              type="button"
+            >
+              all
+            </button>
+            <button
+              className={'chip' + (seenFilter === 'seen' ? ' on' : '')}
+              onClick={() => setSeenFilter('seen')}
+              type="button"
+            >
+              seen <span className="chip-n">{seenCounts.seen}</span>
+            </button>
+            <button
+              className={'chip' + (seenFilter === 'unseen' ? ' on' : '')}
+              onClick={() => setSeenFilter('unseen')}
+              type="button"
+            >
+              unseen <span className="chip-n">{seenCounts.unseen}</span>
+            </button>
           </div>
 
           <ChipRow
@@ -270,6 +320,7 @@ export default function LibraryPage() {
             <Volume
               key={`${group[0].imdbId}${group[0].title}`}
               group={group}
+              isSeen={seen.has(group[0].imdbId)}
             />
           ))}
           {groups.length === 0 ? (
@@ -331,7 +382,7 @@ function ChipRow<T extends string>({
   );
 }
 
-function Volume({ group }: { group: LibraryItem[] }) {
+function Volume({ group, isSeen }: { group: LibraryItem[]; isSeen: boolean }) {
   // representative for shared title/director/year/poster (all copies of
   // the same imdbId share TMDB metadata)
   const item = group[0];
@@ -351,7 +402,7 @@ function Volume({ group }: { group: LibraryItem[] }) {
     <Link
       to="/library/$imdbId"
       params={{ imdbId: item.imdbId }}
-      className="vol vol-link"
+      className={'vol vol-link' + (isSeen ? ' vol-seen' : '')}
     >
       <div className="vol-poster">
         {poster ? (
@@ -493,6 +544,14 @@ const CSS = `
   .vol-link:hover { text-decoration: none; }
   .vol-link:hover .vol-poster { border-color: var(--color-accent-dim); }
   .vol-link:hover .vol-title { color: var(--color-accent); }
+
+  /* "seen" titles — items that match a popfeed review by imdb id.
+     Phosphor-glow accent border replaces the default border so the
+     thickness stays the same and the grid doesn't reflow. */
+  .vol-seen .vol-poster {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
   .vol-poster {
     position: relative;
     aspect-ratio: 2 / 3;
