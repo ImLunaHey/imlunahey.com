@@ -441,12 +441,14 @@ const CSS = `
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 4px var(--sp-3);
   }
-  /* No background/border on owned rows — the explicit "owned" / "seen"
-     flags carry the same signal without highlighting the whole card.
-     Owned rows are still <Link>s; only the title gets the hover accent. */
+  /* Padding + transparent border on every row so seen/unseen rows
+     have identical box dimensions and the grid doesn't reflow when
+     a row gets the highlight. Seen swaps the transparent border to
+     accent + adds the phosphor glow around the whole row. */
   .credit {
     display: flex; align-items: flex-start; gap: var(--sp-3);
-    padding: 6px 0;
+    padding: 6px 8px;
+    border: 1px solid transparent;
   }
   .credit-link {
     display: flex; align-items: flex-start; gap: var(--sp-3);
@@ -455,12 +457,9 @@ const CSS = `
   }
   .credit-link:hover { text-decoration: none; }
   .credit-link:hover .credit-title { color: var(--color-accent); }
-  /* match the library-grid treatment: accent border + glow on the
-     poster of seen items. swap the border colour rather than thicken
-     it so the row layout doesn't shift between seen/unseen. */
-  .credit-seen .credit-poster {
+  .credit-seen {
     border-color: var(--color-accent);
-    box-shadow: 0 0 6px var(--accent-glow);
+    box-shadow: 0 0 8px var(--accent-glow);
   }
 
   .credit-poster {
