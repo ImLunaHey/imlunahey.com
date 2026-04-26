@@ -246,6 +246,7 @@ function CreditsSection({
   });
 
   const ownedCount = sorted.filter((c) => c.ownedImdbId).length;
+  const seenCount = sorted.filter((c) => c.isSeen).length;
 
   return (
     <section className="section">
@@ -257,6 +258,7 @@ function CreditsSection({
         <span className="t-faint">
           {sorted.length} credit{sorted.length === 1 ? '' : 's'}
           {ownedCount > 0 ? ` · ${ownedCount} on shelf` : ''}
+          {seenCount > 0 ? ` · ${seenCount} seen` : ''}
         </span>
       </div>
       <ul className="credits">
