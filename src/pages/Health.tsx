@@ -697,8 +697,8 @@ function LifetimeStrip({ lifetime }: { lifetime: HealthLifetime }) {
         </div>
         <div className="ls-cell">
           <div className="ls-label">distance</div>
-          <div className="ls-value">{fmtKm(t.workoutKm)}</div>
-          <div className="ls-sub">across all activities</div>
+          <div className="ls-value">{fmtKm((t.distanceKm ?? 0) || t.workoutKm)}</div>
+          <div className="ls-sub">walked + cycled</div>
         </div>
         <div className="ls-cell">
           <div className="ls-label">workout kcal</div>

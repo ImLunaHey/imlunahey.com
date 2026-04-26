@@ -1,4 +1,5 @@
 import { Link, getRouteApi } from '@tanstack/react-router';
+import { useEffect, useRef } from 'react';
 import type { HealthWorkout } from '../server/health';
 
 const route = getRouteApi('/_main/health/workouts/$id');
@@ -44,6 +45,7 @@ function fmtDuration(secs: number | null): string {
 
 export default function HealthWorkoutDetailPage() {
   const workout = route.useLoaderData() as HealthWorkout | null;
+  const { id } = route.useParams();
 
   if (!workout) {
     return (
@@ -140,7 +142,7 @@ export default function HealthWorkoutDetailPage() {
           </section>
         ) : null}
 
-        {/* route silhouette */}
+        {/* route map */}
         {routePoints.length > 2 ? (
           <section className="section">
             <h2 className="section-hd">
@@ -148,8 +150,7 @@ export default function HealthWorkoutDetailPage() {
             </h2>
             <RouteShape points={routePoints} />
             <div className="t-faint route-note">
-              {routePoints.length} gps waypoints · drawn as a silhouette (no basemap; the .gpx
-              file in the export pairs with this for proper map rendering)
+              {routePoints.length.toLocaleString()} gps waypoints · openstreetmap tiles
             </div>
           </section>
         ) : null}
@@ -329,63 +330,64 @@ function HrChart({
   );
 }
 
+/** Leaflet-backed route map, dynamically imported on the client only.
+ *  Leaflet relies on `window`/DOM globals so it can't run during SSR;
+ *  this component renders an empty placeholder server-side and wires
+ *  up the map after mount. Tiles come from OSM directly (their tile-
+ *  usage policy permits low-volume personal sites — if traffic grows
+ *  enough to matter we'd switch to a tile-host with an SLA). */
 function RouteShape({ points }: { points: Array<{ lat: number; lon: number }> }) {
-  // Plot lat/lon as an SVG path normalised to a square viewBox. Apply a
-  // simple Mercator-ish lat correction so the silhouette doesn't squish
-  // east-west at high latitudes — multiply lon by cos(meanLat).
-  const W = 800;
-  const H = 400;
-  const pad = 24;
+  const ref = useRef<HTMLDivElement | null>(null);
 
-  const meanLat = points.reduce((s, p) => s + p.lat, 0) / points.length;
-  const cosLat = Math.cos((meanLat * Math.PI) / 180);
-  const xs = points.map((p) => p.lon * cosLat);
-  const ys = points.map((p) => p.lat);
-  const xMin = Math.min(...xs);
-  const xMax = Math.max(...xs);
-  const yMin = Math.min(...ys);
-  const yMax = Math.max(...ys);
-  const xSpan = xMax - xMin || 1;
-  const ySpan = yMax - yMin || 1;
+  useEffect(() => {
+    if (!ref.current || points.length < 2) return;
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
 
-  // Fit-to-frame while preserving aspect ratio (don't stretch).
-  const aspect = xSpan / ySpan;
-  const frameAspect = (W - pad * 2) / (H - pad * 2);
-  let scaleX: number;
-  let scaleY: number;
-  if (aspect > frameAspect) {
-    scaleX = (W - pad * 2) / xSpan;
-    scaleY = scaleX;
-  } else {
-    scaleY = (H - pad * 2) / ySpan;
-    scaleX = scaleY;
-  }
-  const drawW = xSpan * scaleX;
-  const drawH = ySpan * scaleY;
-  const offsetX = (W - drawW) / 2;
-  const offsetY = (H - drawH) / 2;
+    (async () => {
+      const L = (await import('leaflet')).default;
+      // Leaflet's CSS isn't bundled with the JS — pull it in at runtime
+      // so we don't ship it on every page that doesn't render a map.
+      if (!document.querySelector('link[data-leaflet-css]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+        link.crossOrigin = '';
+        link.setAttribute('data-leaflet-css', '');
+        document.head.appendChild(link);
+      }
+      if (cancelled || !ref.current) return;
 
-  const path = points
-    .map((p, i) => {
-      const x = (p.lon * cosLat - xMin) * scaleX + offsetX;
-      const y = (yMax - p.lat) * scaleY + offsetY;
-      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(' ');
+      const latlngs = points.map((p) => [p.lat, p.lon] as [number, number]);
+      const map = L.map(ref.current, {
+        scrollWheelZoom: false,
+        zoomControl: true,
+        attributionControl: true,
+      });
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(map);
+      const line = L.polyline(latlngs, {
+        color: '#6ce58a',
+        weight: 4,
+        opacity: 0.9,
+        lineJoin: 'round',
+        lineCap: 'round',
+      }).addTo(map);
+      map.fitBounds(line.getBounds(), { padding: [24, 24] });
 
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="route-svg" preserveAspectRatio="xMidYMid meet">
-      <path
-        d={path}
-        fill="none"
-        stroke="var(--color-accent)"
-        strokeWidth="2"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        style={{ filter: 'drop-shadow(0 0 4px var(--accent-glow))' }}
-      />
-    </svg>
-  );
+      cleanup = () => map.remove();
+    })();
+
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
+  }, [points]);
+
+  return <div ref={ref} className="route-map" />;
 }
 
 const CSS = `
@@ -461,11 +463,18 @@ const CSS = `
   .hr-chart-meta b.t-fg { color: var(--color-fg); font-weight: 400; }
 
   /* route */
-  .route-svg {
-    width: 100%; height: auto;
+  .route-map {
+    width: 100%; height: 420px;
     background: var(--color-bg-panel);
     border: 1px solid var(--color-border);
   }
+  /* leaflet attribution sits on top of the map; tone it down to fit */
+  .route-map .leaflet-control-attribution {
+    background: rgba(0,0,0,0.7);
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono); font-size: 9px;
+  }
+  .route-map .leaflet-control-attribution a { color: var(--color-accent-dim); }
   .route-note {
     margin-top: var(--sp-2);
     font-family: var(--font-mono); font-size: 10px;

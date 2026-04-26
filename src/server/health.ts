@@ -216,10 +216,64 @@ export const getHealthMonth = createServerFn({ method: 'GET' })
     return slimSnapshot(mergeMonthBuckets([bucket], [data.month]));
   });
 
-/** Fetch a single full workout (id matches `w.id`). Walks the rolling
- *  window first since users typically click recent rows, then falls
- *  back to older months. Returns the un-slimmed record so the detail
- *  page can render route GPS, HR curves, splits, etc. */
+/** Fields kept when shipping a single workout to the detail page. The
+ *  raw KV record carries per-second accuracy/altitude/course samples
+ *  for every GPS waypoint that the page never reads — stripping them
+ *  drops a typical workout from ~5 MB to ~150 KB. */
+const DETAIL_WORKOUT_FIELDS = [
+  'id',
+  'name',
+  'start',
+  'end',
+  'duration',
+  'distance',
+  'activeEnergyBurned',
+  'avgHeartRate',
+  'maxHeartRate',
+  'heartRate',
+  'heartRateData',
+  'temperature',
+  'humidity',
+  'speed',
+  'intensity',
+  'stepCount',
+  'isIndoor',
+  'location',
+] as const;
+
+function slimWorkoutForDetail(w: HealthWorkout): HealthWorkout {
+  const out: Record<string, unknown> = {};
+  for (const f of DETAIL_WORKOUT_FIELDS) {
+    const v = (w as Record<string, unknown>)[f];
+    if (v !== undefined) out[f] = v;
+  }
+  // Route is the heaviest field by far — keep only lat/lon, drop the
+  // accuracy/altitude/course/speed metadata the map doesn't need.
+  const route = (w as { route?: Array<Record<string, unknown>> }).route;
+  if (Array.isArray(route)) {
+    out.route = route
+      .map((p) => {
+        const lat = typeof p.lat === 'number' ? p.lat
+          : typeof p.latitude === 'number' ? p.latitude : null;
+        const lon = typeof p.lon === 'number' ? p.lon
+          : typeof p.longitude === 'number' ? p.longitude : null;
+        return lat != null && lon != null ? { lat, lon } : null;
+      })
+      .filter((p): p is { lat: number; lon: number } => p != null);
+  }
+  // stepCount can ship as either an array of per-second points or a
+  // scalar { qty } — only keep the scalar form for the conditions
+  // table; the per-second array is unused.
+  const sc = (w as { stepCount?: unknown }).stepCount;
+  if (Array.isArray(sc)) {
+    delete out.stepCount;
+  }
+  return out as HealthWorkout;
+}
+
+/** Fetch a single workout (id matches `w.id`). Walks the index
+ *  newest-first since users typically click recent rows. Returns the
+ *  detail-slim shape — the full bucket stays server-side. */
 export const getHealthWorkout = createServerFn({ method: 'GET' })
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data }): Promise<HealthWorkout | null> => {
@@ -238,7 +292,7 @@ export const getHealthWorkout = createServerFn({ method: 'GET' })
         (w) => typeof (w as { id?: unknown }).id === 'string'
           && (w as { id: string }).id === data.id,
       );
-      if (hit) return hit;
+      if (hit) return slimWorkoutForDetail(hit);
     }
     return null;
   });
@@ -268,6 +322,11 @@ export type HealthLifetime = {
     flightsClimbed: number;
     mindfulMinutes: number;
     daylightMinutes: number;
+    /** Apple's daily walking_running_distance + cycling_distance
+     *  totals summed across every recorded day. Captures non-workout
+     *  steps too, so this number is much larger than workoutKm (which
+     *  only counts time you opened the workout app). */
+    distanceKm: number;
   };
   workoutsByType: Array<{ name: string; count: number; minutes: number }>;
 };
@@ -365,6 +424,10 @@ export type MonthAggregate = {
   flightsClimbed: number;
   mindfulMinutes: number;
   daylightMinutes: number;
+  /** Sum of walking_running_distance + cycling_distance metric points
+   *  for the month — Apple's daily aggregate, includes non-workout
+   *  movement. */
+  distanceKm: number;
   byType: Record<string, { count: number; minutes: number }>;
 };
 
@@ -392,6 +455,7 @@ export function aggregateMonth(bucket: {
   let flightsClimbed = 0;
   let mindfulMinutes = 0;
   let daylightMinutes = 0;
+  let distanceKm = 0;
   const byType: Record<string, { count: number; minutes: number }> = {};
 
   for (const w of bucket.workouts ?? []) {
@@ -441,6 +505,17 @@ export function aggregateMonth(bucket: {
         if (Number.isFinite(q)) mindfulMinutes += q;
       } else if (name === 'time_in_daylight') {
         if (Number.isFinite(q)) daylightMinutes += q;
+      } else if (
+        name === 'walking_running_distance'
+        || name === 'cycling_distance'
+        || name === 'swimming_distance'
+        || name === 'distance_walking_running'
+        || name === 'distance_cycling'
+      ) {
+        // Apple's daily aggregate per-modality. Adding these gives a
+        // realistic "total distance traveled" — workout-only sums miss
+        // every casual walk that wasn't explicitly recorded.
+        if (Number.isFinite(q)) distanceKm += q;
       }
     }
   }
@@ -456,6 +531,7 @@ export function aggregateMonth(bucket: {
     flightsClimbed,
     mindfulMinutes,
     daylightMinutes,
+    distanceKm,
     byType,
   };
 }
@@ -477,6 +553,7 @@ export function rollUpLifetime(
     flightsClimbed: 0,
     mindfulMinutes: 0,
     daylightMinutes: 0,
+    distanceKm: 0,
   };
   const byType = new Map<string, { count: number; minutes: number }>();
   for (const m of months) {
@@ -492,6 +569,7 @@ export function rollUpLifetime(
     totals.flightsClimbed += a.flightsClimbed;
     totals.mindfulMinutes += a.mindfulMinutes;
     totals.daylightMinutes += a.daylightMinutes;
+    totals.distanceKm += a.distanceKm ?? 0;
     for (const [name, t] of Object.entries(a.byType)) {
       const e = byType.get(name) ?? { count: 0, minutes: 0 };
       e.count += t.count;

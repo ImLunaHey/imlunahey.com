@@ -110,6 +110,7 @@ type MonthAggregate = {
   flightsClimbed: number;
   mindfulMinutes: number;
   daylightMinutes: number;
+  distanceKm: number;
   byType: Record<string, { count: number; minutes: number }>;
 };
 
@@ -125,6 +126,7 @@ function aggregateMonth(bucket: Bucket): MonthAggregate {
     flightsClimbed: 0,
     mindfulMinutes: 0,
     daylightMinutes: 0,
+    distanceKm: 0,
     byType: {},
   };
   for (const w of bucket.workouts ?? []) {
@@ -169,6 +171,14 @@ function aggregateMonth(bucket: Bucket): MonthAggregate {
         if (Number.isFinite(q)) a.mindfulMinutes += q;
       } else if (name === 'time_in_daylight') {
         if (Number.isFinite(q)) a.daylightMinutes += q;
+      } else if (
+        name === 'walking_running_distance'
+        || name === 'cycling_distance'
+        || name === 'swimming_distance'
+        || name === 'distance_walking_running'
+        || name === 'distance_cycling'
+      ) {
+        if (Number.isFinite(q)) a.distanceKm += q;
       }
     }
   }
