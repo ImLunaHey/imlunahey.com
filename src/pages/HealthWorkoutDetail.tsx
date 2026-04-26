@@ -1,5 +1,5 @@
 import { Link, getRouteApi } from '@tanstack/react-router';
-import type { HealthSnapshot, HealthWorkout } from '../server/health';
+import type { HealthWorkout } from '../server/health';
 
 const route = getRouteApi('/_main/health/workouts/$id');
 
@@ -43,12 +43,7 @@ function fmtDuration(secs: number | null): string {
 }
 
 export default function HealthWorkoutDetailPage() {
-  const snap = route.useLoaderData() as HealthSnapshot | null;
-  const { id } = route.useParams();
-
-  const workout = snap?.workouts?.find(
-    (w) => typeof (w as { id?: unknown }).id === 'string' && (w as { id: string }).id === id,
-  );
+  const workout = route.useLoaderData() as HealthWorkout | null;
 
   if (!workout) {
     return (
@@ -56,7 +51,7 @@ export default function HealthWorkoutDetailPage() {
         <style>{CSS}</style>
         <main className="shell-w">
           <div className="not-found">
-            <p className="t-faint">no workout matches that id in your snapshot.</p>
+            <p className="t-faint">no workout matches that id.</p>
             <Link to="/health" className="t-accent">
               ← back to /health
             </Link>
@@ -66,7 +61,7 @@ export default function HealthWorkoutDetailPage() {
     );
   }
 
-  const w = workout as HealthWorkout;
+  const w = workout;
 
   // pull common stats; HAE field shapes vary by workout type so cast
   // through Record<string, unknown> first.

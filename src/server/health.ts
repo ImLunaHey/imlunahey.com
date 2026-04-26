@@ -119,6 +119,64 @@ export function mergeMonthBuckets(
   };
 }
 
+/** Whitelist of metrics we expose to the client. The KV bucket holds
+ *  many more (audio exposure, gait analysis, walking stability, etc.)
+ *  but the page never renders them — keep them server-side instead of
+ *  shipping kilobytes of unused data on every page load. */
+export const CLIENT_VISIBLE_METRICS = new Set<string>([
+  'step_count',
+  'steps',
+  'sleep_analysis',
+  'sleep',
+  'active_energy',
+  'active_energy_burned',
+  'resting_heart_rate',
+  'heart_rate_variability',
+  'apple_exercise_time',
+  'apple_stand_hour',
+  'apple_stand_time',
+  'time_in_daylight',
+  'vo2_max',
+  'mindful_minutes',
+  'flights_climbed',
+  'walking_running_distance',
+  'cycling_distance',
+]);
+
+/** Workout fields exposed in the listing snapshot. The detail page
+ *  fetches the full workout via getHealthWorkout(id) — listing only
+ *  needs a thin row, and the heavy fields (route GPS, per-second HR
+ *  series, energy series) can balloon a single workout to >5MB. */
+const SLIM_WORKOUT_FIELDS = [
+  'id',
+  'name',
+  'start',
+  'end',
+  'duration',
+  'distance',
+  'activeEnergyBurned',
+  'avgHeartRate',
+  'maxHeartRate',
+] as const;
+
+function slimWorkout(w: HealthWorkout): HealthWorkout {
+  const out: Record<string, unknown> = {};
+  for (const f of SLIM_WORKOUT_FIELDS) {
+    const v = (w as Record<string, unknown>)[f];
+    if (v !== undefined) out[f] = v;
+  }
+  return out as HealthWorkout;
+}
+
+function slimSnapshot(snap: HealthSnapshot): HealthSnapshot {
+  return {
+    ts: snap.ts,
+    months: snap.months,
+    metrics: snap.metrics.filter((m) => CLIENT_VISIBLE_METRICS.has(m.name.toLowerCase())),
+    workouts: snap.workouts.map(slimWorkout),
+  };
+}
+
 export const getHealth = createServerFn({ method: 'GET' }).handler(
   async (): Promise<HealthSnapshot | null> => {
     const kv = env.HOMELAB;
@@ -135,7 +193,7 @@ export const getHealth = createServerFn({ method: 'GET' }).handler(
         ),
       ),
     );
-    return mergeMonthBuckets(buckets, months);
+    return slimSnapshot(mergeMonthBuckets(buckets, months));
   },
 );
 
@@ -155,7 +213,34 @@ export const getHealthMonth = createServerFn({ method: 'GET' })
       workouts: HealthWorkout[];
     }>(healthMonthKey(data.month), { type: 'json' });
     if (!bucket) return null;
-    return mergeMonthBuckets([bucket], [data.month]);
+    return slimSnapshot(mergeMonthBuckets([bucket], [data.month]));
+  });
+
+/** Fetch a single full workout (id matches `w.id`). Walks the rolling
+ *  window first since users typically click recent rows, then falls
+ *  back to older months. Returns the un-slimmed record so the detail
+ *  page can render route GPS, HR curves, splits, etc. */
+export const getHealthWorkout = createServerFn({ method: 'GET' })
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data }): Promise<HealthWorkout | null> => {
+    const kv = env.HOMELAB;
+    if (!kv) return null;
+    const idx = await kv.get<HealthIndex>(HEALTH_INDEX_KEY, { type: 'json' });
+    const months = (idx?.months ?? []).sort().reverse();
+    if (months.length === 0) return null;
+    for (const m of months) {
+      const b = await kv.get<{ workouts?: HealthWorkout[] }>(
+        healthMonthKey(m),
+        { type: 'json' },
+      );
+      if (!b) continue;
+      const hit = b.workouts?.find(
+        (w) => typeof (w as { id?: unknown }).id === 'string'
+          && (w as { id: string }).id === data.id,
+      );
+      if (hit) return hit;
+    }
+    return null;
   });
 
 /** Just the index — list of every month with data. /health uses it
