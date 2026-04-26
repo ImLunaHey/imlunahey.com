@@ -310,6 +310,14 @@ function CreditRow({
             </>
           ) : null}
         </div>
+        {credit.ownedImdbId || credit.isSeen ? (
+          <div className="credit-flags">
+            {credit.ownedImdbId ? (
+              <span className="flag flag-owned">owned</span>
+            ) : null}
+            {credit.isSeen ? <span className="flag flag-seen">seen</span> : null}
+          </div>
+        ) : null}
       </div>
     </>
   );
@@ -431,28 +439,22 @@ const CSS = `
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 4px var(--sp-3);
   }
+  /* No background/border on owned rows — the explicit "owned" / "seen"
+     flags carry the same signal without highlighting the whole card.
+     Owned rows are still <Link>s; only the title gets the hover accent. */
   .credit {
-    display: block;
-    padding: 6px 8px;
-    border: 1px solid transparent;
+    display: flex; align-items: flex-start; gap: var(--sp-3);
+    padding: 6px 0;
   }
   .credit-link {
-    display: flex; align-items: center; gap: var(--sp-3);
+    display: flex; align-items: flex-start; gap: var(--sp-3);
     text-decoration: none; color: inherit;
+    flex: 1; min-width: 0;
   }
-  .credit-owned {
-    background: var(--color-bg-panel);
-    border-color: var(--color-border);
-  }
-  .credit-owned:hover {
-    border-color: var(--color-accent-dim);
-  }
-  .credit-owned:hover .credit-title { color: var(--color-accent); }
+  .credit-link:hover { text-decoration: none; }
+  .credit-link:hover .credit-title { color: var(--color-accent); }
   .credit-seen .credit-poster {
-    box-shadow: 0 0 8px var(--accent-glow);
-  }
-  .credit:not(.credit-link) {
-    display: flex; align-items: center; gap: var(--sp-3);
+    box-shadow: 0 0 6px var(--accent-glow);
   }
 
   .credit-poster {
@@ -477,6 +479,30 @@ const CSS = `
   }
   .credit-meta .dot { color: var(--color-fg-ghost); }
   .credit-meta .t-accent { color: var(--color-accent); }
+
+  /* per-credit "owned" + "seen" flags — small text pills under the
+     meta line. owned reads neutral; seen takes the accent because
+     it's the more distinguishing signal. */
+  .credit-flags {
+    display: flex; gap: 4px;
+    margin-top: 4px;
+  }
+  .flag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 1px 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border: 1px solid;
+  }
+  .flag-owned {
+    color: var(--color-fg-dim);
+    border-color: var(--color-border-bright);
+  }
+  .flag-seen {
+    color: var(--color-accent);
+    border-color: var(--color-accent-dim);
+  }
 
   .person-footer {
     display: flex; justify-content: space-between;
