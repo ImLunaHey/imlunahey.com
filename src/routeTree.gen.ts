@@ -19,6 +19,7 @@ import { Route as OauthClientMetadataDotjsonRouteImport } from './routes/oauth/c
 import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
 import { Route as ApiStatusRouteImport } from './routes/api/status'
 import { Route as ApiMastodonStreamRouteImport } from './routes/api/mastodon-stream'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as MainUsesRouteImport } from './routes/_main/uses'
 import { Route as MainTimelineRouteImport } from './routes/_main/timeline'
 import { Route as MainMusicRouteImport } from './routes/_main/music'
@@ -211,6 +212,11 @@ const ApiStatusRoute = ApiStatusRouteImport.update({
 const ApiMastodonStreamRoute = ApiMastodonStreamRouteImport.update({
   id: '/api/mastodon-stream',
   path: '/api/mastodon-stream',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MainUsesRoute = MainUsesRouteImport.update({
@@ -952,6 +958,7 @@ export interface FileRoutesByFullPath {
   '/music': typeof MainMusicRoute
   '/timeline': typeof MainTimelineRoute
   '/uses': typeof MainUsesRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/mastodon-stream': typeof ApiMastodonStreamRoute
   '/api/status': typeof ApiStatusRoute
   '/oauth/callback': typeof OauthCallbackRoute
@@ -1105,6 +1112,7 @@ export interface FileRoutesByTo {
   '/music': typeof MainMusicRoute
   '/timeline': typeof MainTimelineRoute
   '/uses': typeof MainUsesRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/mastodon-stream': typeof ApiMastodonStreamRoute
   '/api/status': typeof ApiStatusRoute
   '/oauth/callback': typeof OauthCallbackRoute
@@ -1261,6 +1269,7 @@ export interface FileRoutesById {
   '/_main/music': typeof MainMusicRoute
   '/_main/timeline': typeof MainTimelineRoute
   '/_main/uses': typeof MainUsesRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/mastodon-stream': typeof ApiMastodonStreamRoute
   '/api/status': typeof ApiStatusRoute
   '/oauth/callback': typeof OauthCallbackRoute
@@ -1418,6 +1427,7 @@ export interface FileRouteTypes {
     | '/music'
     | '/timeline'
     | '/uses'
+    | '/api/health'
     | '/api/mastodon-stream'
     | '/api/status'
     | '/oauth/callback'
@@ -1571,6 +1581,7 @@ export interface FileRouteTypes {
     | '/music'
     | '/timeline'
     | '/uses'
+    | '/api/health'
     | '/api/mastodon-stream'
     | '/api/status'
     | '/oauth/callback'
@@ -1726,6 +1737,7 @@ export interface FileRouteTypes {
     | '/_main/music'
     | '/_main/timeline'
     | '/_main/uses'
+    | '/api/health'
     | '/api/mastodon-stream'
     | '/api/status'
     | '/oauth/callback'
@@ -1871,6 +1883,7 @@ export interface RootRouteChildren {
   HumansDottxtRoute: typeof HumansDottxtRoute
   RssDotxmlRoute: typeof RssDotxmlRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiMastodonStreamRoute: typeof ApiMastodonStreamRoute
   ApiStatusRoute: typeof ApiStatusRoute
   OauthCallbackRoute: typeof OauthCallbackRoute
@@ -1949,6 +1962,13 @@ declare module '@tanstack/react-router' {
       path: '/api/mastodon-stream'
       fullPath: '/api/mastodon-stream'
       preLoaderRoute: typeof ApiMastodonStreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_main/uses': {
@@ -3254,6 +3274,7 @@ const rootRouteChildren: RootRouteChildren = {
   HumansDottxtRoute: HumansDottxtRoute,
   RssDotxmlRoute: RssDotxmlRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ApiMastodonStreamRoute: ApiMastodonStreamRoute,
   ApiStatusRoute: ApiStatusRoute,
   OauthCallbackRoute: OauthCallbackRoute,

@@ -32,6 +32,7 @@ export type OgSlug =
   | 'guestbook'
   | 'timeline'
   | 'playstation'
+  | 'health'
   | 'ai'
   // per-lab cards share a common glyph family:
   | 'lab/css-battles'
@@ -176,6 +177,7 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   guestbook: { title: 'guestbook.', subtitle: 'signed entries via atproto', description: 'the guestbook — sign in with your atproto / bluesky identity and leave a message on your own pds. entries are cryptographically signed and portable.', glyph: '✒', slug: '/guestbook' },
   timeline: { title: 'timeline.', subtitle: 'one chronology, four streams', description: 'every published thing on this site in one chronology — blog posts, guestbook entries, github commits, and lastfm scrobbles. firehose-noisy streams cluster per day so the slow streams stay readable.', glyph: '⌖', slug: '/timeline' },
   playstation: { title: 'playstation.', subtitle: 'every title from my psn library', description: 'every title from my playstation library — playtime, last played, platform, pulled live from sony\'s api and cached server-side. ps4 + ps5 + the odd plus-trial.', glyph: '◇', slug: '/playstation' },
+  health: { title: 'health.', subtitle: 'sleep · steps · workouts', description: 'apple health snapshot pushed from the health auto export ios app on a schedule — last night\'s sleep, today\'s steps, recent workouts, resting heart rate.', glyph: '♡', slug: '/health' },
   ai: { title: 'ai.usage.', subtitle: 'every token, every client, every dollar', description: 'every ai token i used — across claude, chatgpt, gemini, and local models — with per-client, per-day cost breakdowns and a rolling spend total.', glyph: '⌬', slug: '/ai' },
   'lab/css-battles': { title: 'css battles.', subtitle: 'daily prompts from cssbattle.dev', description: 'my solutions to cssbattle.dev daily prompts — every entry is pure css + divs, no assets. hand-crafted shapes, gradients, and tricky selectors.', glyph: '□', slug: '/labs/css-battles' },
   'lab/verse-reveal': { title: 'verse reveal.', subtitle: 'staggered ascii text effect', description: 'ascii-scrub reveal animation — each letter cycles through random characters before landing on its final glyph. pure react, staggered by index.', glyph: 'A', slug: '/labs/verse-reveal' },

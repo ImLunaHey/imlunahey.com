@@ -29,6 +29,7 @@ const MORE_LINKS: NavLink[] = [
   { to: '/games', label: '/games', match: (p) => p.startsWith('/games') },
   { to: '/playstation', label: '/playstation', match: (p) => p.startsWith('/playstation') },
   { to: '/music', label: '/music', match: (p) => p.startsWith('/music') },
+  { to: '/health', label: '/health', match: (p) => p.startsWith('/health') },
   { to: '/globe', label: '/globe', match: (p) => p.startsWith('/globe') },
   { to: '/ai', label: '/ai', match: (p) => p.startsWith('/ai') },
   { to: '/homelab', label: '/homelab', match: (p) => p.startsWith('/homelab') },
