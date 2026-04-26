@@ -19,7 +19,8 @@
     "guestbook:marker": "tsx --env-file=.env.local scripts/guestbook-marker.ts",
     "leaderboard:marker": "tsx --env-file=.env.local scripts/leaderboard-marker.ts",
     "lexicons:publish": "tsx --env-file=.env.local scripts/lexicons-publish.ts",
-    "library:build": "tsx scripts/library-build.ts"
+    "library:build": "tsx scripts/library-build.ts",
+    "health:backfill": "tsx --env-file=.env.local scripts/health-backfill.ts"
   },
   "dependencies": {
     "@ariakit/react": "^0.4.17",
