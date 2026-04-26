@@ -19,14 +19,16 @@
 
 import { readFileSync } from 'node:fs';
 
-const FILE = process.argv[2];
+const args = process.argv.slice(2);
+const DRY_RUN = args.includes('--dry-run');
+const FILE = args.find((a) => !a.startsWith('--'));
 if (!FILE) {
-  console.error('usage: pnpm health:backfill <path-to-export.json>');
+  console.error('usage: pnpm health:backfill <path-to-export.json> [--dry-run]');
   process.exit(1);
 }
 
 const TOKEN = process.env.HEALTH_TOKEN;
-if (!TOKEN) {
+if (!TOKEN && !DRY_RUN) {
   console.error('HEALTH_TOKEN not set — add it to .env.local');
   process.exit(1);
 }
@@ -171,14 +173,45 @@ async function main() {
   const file = readFile();
   const chunks = bucketByMonth(file);
   console.log(`split into ${chunks.length} months`);
+  if (DRY_RUN) console.log('(dry-run — no POSTs)');
   console.log('');
+
+  // Pre-compute sizes for the dry-run summary so we can sort + warn
+  // on any oversized chunks before actually shipping anything.
+  const sized = chunks.map((c) => ({ chunk: c, body: chunkBody(c) }));
+
+  if (DRY_RUN) {
+    let totalBytes = 0;
+    let totalPoints = 0;
+    let totalWorkouts = 0;
+    for (const { chunk, body } of sized) {
+      const kb = (body.length / 1024).toFixed(1);
+      const sizeStr = body.length > 10 * 1024 * 1024
+        ? `\x1b[31m${kb}kb\x1b[0m`     // red >10MB
+        : body.length > 5 * 1024 * 1024
+        ? `\x1b[33m${kb}kb\x1b[0m`     // yellow >5MB
+        : `${kb}kb`;
+      console.log(
+        `${chunk.month}  metrics=${chunk.metrics.size}  points=${chunk.points}  workouts=${chunk.workouts.length}  size=${sizeStr}`,
+      );
+      totalBytes += body.length;
+      totalPoints += chunk.points;
+      totalWorkouts += chunk.workouts.length;
+    }
+    const max = sized.reduce((a, b) => (a.body.length > b.body.length ? a : b));
+    console.log('');
+    console.log(`total: ${chunks.length} months · ${totalPoints} points · ${totalWorkouts} workouts · ${(totalBytes / 1024 / 1024).toFixed(1)}mb`);
+    console.log(`largest month: ${max.chunk.month} at ${(max.body.length / 1024 / 1024).toFixed(2)}mb`);
+    console.log(`worker request limit is 100mb · kv value limit is 25mb · typical concern is >5mb`);
+    return;
+  }
 
   let okCount = 0;
   let failCount = 0;
   const failures: Array<{ month: string; status: number; body: string }> = [];
 
-  for (const chunk of chunks) {
-    const sizeKb = Math.round(chunkBody(chunk).length / 1024);
+  for (const { chunk, body } of sized) {
+    const sizeKb = Math.round(body.length / 1024);
     process.stdout.write(
       `${chunk.month}  metrics=${chunk.metrics.size}  points=${chunk.points}  workouts=${chunk.workouts.length}  size=${sizeKb}kb  →  `,
     );
