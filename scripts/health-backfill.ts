@@ -48,12 +48,18 @@ type HaeMetric = { name?: string; units?: string; data?: HaePoint[] };
 type HaeWorkout = Record<string, unknown> & { start?: string };
 type HaeFile = { data?: { metrics?: HaeMetric[]; workouts?: HaeWorkout[] } };
 
+/** Workout names to skip entirely. These are entries Apple Health
+ *  records when external HR-monitor accessories are connected — they
+ *  show up as "Mind & Body" workouts but aren't actual workouts the
+ *  owner did, just stray HR-monitor sessions (e.g. wearing a chest
+ *  strap while reading). */
+const WORKOUT_NAME_SKIP = new Set(['Mind & Body']);
+
 /** We keep every workout field — including the heavy per-minute
  *  `heartRateData` and `route` arrays — so the page can render HR
  *  curves and (eventually) maps per workout. Only `metadata`, which
  *  is always an empty object in HAE's output, gets dropped as a
- *  courtesy. If a per-month chunk gets too big to POST, the script
- *  will fall back to weekly chunking automatically (see below). */
+ *  courtesy. */
 function leanWorkout(w: HaeWorkout): HaeWorkout {
   const out: HaeWorkout = {};
   for (const [k, v] of Object.entries(w)) {
@@ -61,6 +67,11 @@ function leanWorkout(w: HaeWorkout): HaeWorkout {
     out[k] = v;
   }
   return out;
+}
+
+function isSkippedWorkout(w: HaeWorkout): boolean {
+  const name = typeof w.name === 'string' ? w.name : '';
+  return WORKOUT_NAME_SKIP.has(name);
 }
 
 function monthOf(date: string | undefined): string | null {
@@ -118,6 +129,7 @@ function bucketByMonth(file: HaeFile): MonthChunk[] {
   }
 
   for (const w of file.data?.workouts ?? []) {
+    if (isSkippedWorkout(w)) continue;
     const month = monthOf(typeof w.start === 'string' ? w.start : undefined);
     if (!month) continue;
     const b = get(month);
