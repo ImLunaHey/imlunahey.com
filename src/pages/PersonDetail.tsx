@@ -455,7 +455,11 @@ const CSS = `
   }
   .credit-link:hover { text-decoration: none; }
   .credit-link:hover .credit-title { color: var(--color-accent); }
+  /* match the library-grid treatment: accent border + glow on the
+     poster of seen items. swap the border colour rather than thicken
+     it so the row layout doesn't shift between seen/unseen. */
   .credit-seen .credit-poster {
+    border-color: var(--color-accent);
     box-shadow: 0 0 6px var(--accent-glow);
   }
 
