@@ -21,6 +21,14 @@ export default function LibraryDetailPage() {
   const item: LibraryItem | undefined = editions[0];
 
   const tmdb = useTheMovieDBDetail(item?.mediaType ?? null, item?.tmdbId ?? null);
+  // person id of the credited director — used to link the director
+  // name in the lead block to the person page. tv shows surface their
+  // showrunner as 'Created By' rather than 'Director' on tmdb, so try
+  // both jobs.
+  const directorId =
+    tmdb.data?.crew?.find((c) => c.job === 'Director')?.id ??
+    tmdb.data?.crew?.find((c) => c.job === 'Creator' || c.job === 'Created By')?.id ??
+    null;
 
   if (!item) {
     return (
@@ -67,7 +75,20 @@ export default function LibraryDetailPage() {
               {item.director ? (
                 <>
                   <span className="dot">·</span>
-                  <span>dir <b className="t-fg">{item.director}</b></span>
+                  <span>
+                    dir{' '}
+                    {directorId != null ? (
+                      <Link
+                        to="/library/person/$personId"
+                        params={{ personId: String(directorId) }}
+                        className="t-fg person-link"
+                      >
+                        {item.director}
+                      </Link>
+                    ) : (
+                      <b className="t-fg">{item.director}</b>
+                    )}
+                  </span>
                 </>
               ) : null}
               {item.runtime ? (
@@ -131,7 +152,12 @@ export default function LibraryDetailPage() {
             </h2>
             <div className="cast-grid">
               {tmdb.data.cast.map((c) => (
-                <div key={c.id} className="cast-card">
+                <Link
+                  key={c.id}
+                  to="/library/person/$personId"
+                  params={{ personId: String(c.id) }}
+                  className="cast-card"
+                >
                   <div className="cast-photo">
                     {c.profilePath ? (
                       <img src={imgUrl(c.profilePath, 'w185') ?? ''} alt={c.name} loading="lazy" />
@@ -143,7 +169,7 @@ export default function LibraryDetailPage() {
                   {c.character ? (
                     <div className="cast-role t-faint">{c.character}</div>
                   ) : null}
-                </div>
+                </Link>
               ))}
             </div>
           </section>
@@ -311,7 +337,24 @@ const CSS = `
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: var(--sp-3) var(--sp-2);
   }
-  .cast-card { display: flex; flex-direction: column; gap: 6px; }
+  .cast-card {
+    display: flex; flex-direction: column; gap: 6px;
+    text-decoration: none;
+  }
+  .cast-card:hover { text-decoration: none; }
+  .cast-card:hover .cast-photo { border-color: var(--color-accent-dim); }
+  .cast-card:hover .cast-name { color: var(--color-accent); }
+
+  .person-link {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px dotted var(--color-fg-faint);
+  }
+  .person-link:hover {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
+    text-decoration: none;
+  }
   .cast-photo {
     aspect-ratio: 1 / 1;
     background: var(--color-bg-panel);

@@ -147,6 +147,7 @@ import { Route as MainLabsCarExplorerIndexRouteImport } from './routes/_main/lab
 import { Route as MainLabsAtriumIndexRouteImport } from './routes/_main/labs/atrium/index'
 import { Route as MainLabsAtUriIndexRouteImport } from './routes/_main/labs/at-uri/index'
 import { Route as MainPokedexRkeyPokeIdRouteImport } from './routes/_main/pokedex/$rkey/$pokeId'
+import { Route as MainLibraryPersonPersonIdRouteImport } from './routes/_main/library/person/$personId'
 import { Route as MainLabsTwitchLiveLoginRouteImport } from './routes/_main/labs/twitch-live/$login'
 import { Route as MainLabsPlcLogSplatRouteImport } from './routes/_main/labs/plc-log/$'
 import { Route as MainLabsLexiconNsidRouteImport } from './routes/_main/labs/lexicon/$nsid'
@@ -853,6 +854,12 @@ const MainPokedexRkeyPokeIdRoute = MainPokedexRkeyPokeIdRouteImport.update({
   path: '/pokedex/$rkey/$pokeId',
   getParentRoute: () => MainRoute,
 } as any)
+const MainLibraryPersonPersonIdRoute =
+  MainLibraryPersonPersonIdRouteImport.update({
+    id: '/library/person/$personId',
+    path: '/library/person/$personId',
+    getParentRoute: () => MainRoute,
+  } as any)
 const MainLabsTwitchLiveLoginRoute = MainLabsTwitchLiveLoginRouteImport.update({
   id: '/labs/twitch-live/$login',
   path: '/labs/twitch-live/$login',
@@ -1047,6 +1054,7 @@ export interface FileRoutesByFullPath {
   '/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
   '/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
   '/labs/twitch-live/$login': typeof MainLabsTwitchLiveLoginRoute
+  '/library/person/$personId': typeof MainLibraryPersonPersonIdRoute
   '/pokedex/$rkey/$pokeId': typeof MainPokedexRkeyPokeIdRoute
   '/labs/at-uri/': typeof MainLabsAtUriIndexRoute
   '/labs/atrium/': typeof MainLabsAtriumIndexRoute
@@ -1197,6 +1205,7 @@ export interface FileRoutesByTo {
   '/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
   '/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
   '/labs/twitch-live/$login': typeof MainLabsTwitchLiveLoginRoute
+  '/library/person/$personId': typeof MainLibraryPersonPersonIdRoute
   '/pokedex/$rkey/$pokeId': typeof MainPokedexRkeyPokeIdRoute
   '/labs/at-uri': typeof MainLabsAtUriIndexRoute
   '/labs/atrium': typeof MainLabsAtriumIndexRoute
@@ -1349,6 +1358,7 @@ export interface FileRoutesById {
   '/_main/labs/lexicon/$nsid': typeof MainLabsLexiconNsidRoute
   '/_main/labs/plc-log/$': typeof MainLabsPlcLogSplatRoute
   '/_main/labs/twitch-live/$login': typeof MainLabsTwitchLiveLoginRoute
+  '/_main/library/person/$personId': typeof MainLibraryPersonPersonIdRoute
   '/_main/pokedex/$rkey/$pokeId': typeof MainPokedexRkeyPokeIdRoute
   '/_main/labs/at-uri/': typeof MainLabsAtUriIndexRoute
   '/_main/labs/atrium/': typeof MainLabsAtriumIndexRoute
@@ -1501,6 +1511,7 @@ export interface FileRouteTypes {
     | '/labs/lexicon/$nsid'
     | '/labs/plc-log/$'
     | '/labs/twitch-live/$login'
+    | '/library/person/$personId'
     | '/pokedex/$rkey/$pokeId'
     | '/labs/at-uri/'
     | '/labs/atrium/'
@@ -1651,6 +1662,7 @@ export interface FileRouteTypes {
     | '/labs/lexicon/$nsid'
     | '/labs/plc-log/$'
     | '/labs/twitch-live/$login'
+    | '/library/person/$personId'
     | '/pokedex/$rkey/$pokeId'
     | '/labs/at-uri'
     | '/labs/atrium'
@@ -1802,6 +1814,7 @@ export interface FileRouteTypes {
     | '/_main/labs/lexicon/$nsid'
     | '/_main/labs/plc-log/$'
     | '/_main/labs/twitch-live/$login'
+    | '/_main/library/person/$personId'
     | '/_main/pokedex/$rkey/$pokeId'
     | '/_main/labs/at-uri/'
     | '/_main/labs/atrium/'
@@ -2797,6 +2810,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainPokedexRkeyPokeIdRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/library/person/$personId': {
+      id: '/_main/library/person/$personId'
+      path: '/library/person/$personId'
+      fullPath: '/library/person/$personId'
+      preLoaderRoute: typeof MainLibraryPersonPersonIdRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/labs/twitch-live/$login': {
       id: '/_main/labs/twitch-live/$login'
       path: '/labs/twitch-live/$login'
@@ -3005,6 +3025,7 @@ interface MainRouteChildren {
   MainLabsLexiconNsidRoute: typeof MainLabsLexiconNsidRoute
   MainLabsPlcLogSplatRoute: typeof MainLabsPlcLogSplatRoute
   MainLabsTwitchLiveLoginRoute: typeof MainLabsTwitchLiveLoginRoute
+  MainLibraryPersonPersonIdRoute: typeof MainLibraryPersonPersonIdRoute
   MainPokedexRkeyPokeIdRoute: typeof MainPokedexRkeyPokeIdRoute
   MainLabsAtUriIndexRoute: typeof MainLabsAtUriIndexRoute
   MainLabsAtriumIndexRoute: typeof MainLabsAtriumIndexRoute
@@ -3148,6 +3169,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainLabsLexiconNsidRoute: MainLabsLexiconNsidRoute,
   MainLabsPlcLogSplatRoute: MainLabsPlcLogSplatRoute,
   MainLabsTwitchLiveLoginRoute: MainLabsTwitchLiveLoginRoute,
+  MainLibraryPersonPersonIdRoute: MainLibraryPersonPersonIdRoute,
   MainPokedexRkeyPokeIdRoute: MainPokedexRkeyPokeIdRoute,
   MainLabsAtUriIndexRoute: MainLabsAtUriIndexRoute,
   MainLabsAtriumIndexRoute: MainLabsAtriumIndexRoute,
