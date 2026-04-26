@@ -46,6 +46,21 @@ type HaeMetric = { name?: string; units?: string; data?: HaePoint[] };
 type HaeWorkout = Record<string, unknown> & { start?: string };
 type HaeFile = { data?: { metrics?: HaeMetric[]; workouts?: HaeWorkout[] } };
 
+/** We keep every workout field — including the heavy per-minute
+ *  `heartRateData` and `route` arrays — so the page can render HR
+ *  curves and (eventually) maps per workout. Only `metadata`, which
+ *  is always an empty object in HAE's output, gets dropped as a
+ *  courtesy. If a per-month chunk gets too big to POST, the script
+ *  will fall back to weekly chunking automatically (see below). */
+function leanWorkout(w: HaeWorkout): HaeWorkout {
+  const out: HaeWorkout = {};
+  for (const [k, v] of Object.entries(w)) {
+    if (k === 'metadata') continue;
+    out[k] = v;
+  }
+  return out;
+}
+
 function monthOf(date: string | undefined): string | null {
   if (!date) return null;
   const ms = Date.parse(date);
@@ -104,7 +119,7 @@ function bucketByMonth(file: HaeFile): MonthChunk[] {
     const month = monthOf(typeof w.start === 'string' ? w.start : undefined);
     if (!month) continue;
     const b = get(month);
-    b.workouts.push(w);
+    b.workouts.push(leanWorkout(w));
   }
 
   // newest months first so the most-recent / most-relevant data lands
