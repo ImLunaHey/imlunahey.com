@@ -1,34 +1,55 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { env } from 'cloudflare:workers';
-import type { HealthSnapshot } from '../../server/health';
+import {
+  HEALTH_INDEX_KEY,
+  healthMonthKey,
+  monthOf,
+  type HealthIndex,
+  type HealthMetric,
+  type HealthMetricPoint,
+  type HealthWorkout,
+} from '../../server/health';
 
 /**
  * /api/health — receive a Health Auto Export JSON push from iOS.
  *
- *   GET                              → current snapshot (or null)
+ *   GET                              → latest snapshot (rolling window
+ *                                       across the most recent N months)
  *   POST  Authorization: Bearer HEALTH_TOKEN
  *         body: { data: { metrics, workouts } }   (HAE schema)
  *
- * HAE's "REST API" output mode is the expected source. Configure it
- * to POST to https://imlunahey.com/api/health with the bearer token
- * in `Authorization` and the standard JSON shape; tick whichever
- * metrics + workouts you want surfaced. The store overwrites — each
- * push replaces the previous snapshot — so set HAE's "Aggregate Data"
- * window to whatever history you want the page to render (7 / 30 /
- * 90 days are sensible defaults).
+ * Each push is bucketed by month — every metric data point and workout
+ * is filed under the YYYY-MM derived from its own `date`/`start`
+ * field. Existing month buckets are read, merged with the incoming
+ * data (deduped on date+source / start+name), and written back. So
+ * pushing the "last 7 days" today and "last 30 days" next week
+ * accumulates into a single rolling history rather than overwriting,
+ * and pushing an *old* time range later (HAE's "Aggregate Data" lets
+ * you backfill) lands cleanly in its own historical bucket without
+ * disturbing more-recent months.
  *
  * Token-only auth (no HMAC) is fine for the personal-site threat
- * model: the worst a leaked token could do is overwrite the snapshot
- * with junk, which you'd notice immediately and rotate.
+ * model: leaked-token worst case is junk data getting filed into a
+ * month, which is reversible by deleting the affected month key.
  */
-
-const KV_KEY = 'health:latest';
 
 type HaeBody = {
   data?: {
-    metrics?: Array<{ name?: string; units?: string; data?: unknown[] }>;
-    workouts?: unknown[];
+    metrics?: Array<{ name?: string; units?: string; data?: HealthMetricPoint[] }>;
+    workouts?: HealthWorkout[];
   };
+};
+
+type MonthBucket = {
+  ts: number;
+  metrics: HealthMetric[];
+  workouts: HealthWorkout[];
+};
+
+type IngestSummary = {
+  monthsTouched: string[];
+  totalMetricPoints: number;
+  totalWorkouts: number;
 };
 
 export const Route = createFileRoute('/api/health')({
@@ -37,8 +58,8 @@ export const Route = createFileRoute('/api/health')({
       GET: async () => {
         const kv = env.HOMELAB;
         if (!kv) return Response.json(null, { status: 503 });
-        const blob = await kv.get<HealthSnapshot>(KV_KEY, { type: 'json' });
-        return Response.json(blob ?? null);
+        const idx = await kv.get<HealthIndex>(HEALTH_INDEX_KEY, { type: 'json' });
+        return Response.json(idx ?? null);
       },
       POST: async ({ request }: { request: Request }) => {
         const token = process.env.HEALTH_TOKEN;
@@ -55,29 +76,159 @@ export const Route = createFileRoute('/api/health')({
           return new Response('invalid json', { status: 400 });
         }
 
-        // HAE wraps the payload in `data: { metrics, workouts }`. We
-        // tolerate either shape — flat or wrapped — so a curl test
-        // doesn't have to mimic HAE perfectly.
         const wrapped = body.data ?? (body as unknown as HaeBody['data']);
-        const metrics = (wrapped?.metrics ?? []) as HealthSnapshot['metrics'];
-        const workouts = (wrapped?.workouts ?? []) as HealthSnapshot['workouts'];
-
-        const snap: HealthSnapshot = {
-          ts: Date.now(),
-          metrics,
-          workouts,
-        };
+        const incomingMetrics = wrapped?.metrics ?? [];
+        const incomingWorkouts = wrapped?.workouts ?? [];
 
         const kv = env.HOMELAB;
         if (!kv) return new Response('no kv binding', { status: 503 });
-        await kv.put(KV_KEY, JSON.stringify(snap));
-        return Response.json({
-          ok: true,
-          metrics: metrics.length,
-          workouts: workouts.length,
-          ts: snap.ts,
-        });
+
+        const summary = await ingest(kv, incomingMetrics, incomingWorkouts);
+        return Response.json({ ok: true, ...summary, ts: Date.now() });
       },
     },
   },
 });
+
+async function ingest(
+  kv: KVNamespace,
+  incomingMetrics: HaeBody['data'] extends infer T
+    ? T extends { metrics?: infer M }
+      ? NonNullable<M>
+      : never
+    : never,
+  incomingWorkouts: HealthWorkout[],
+): Promise<IngestSummary> {
+  // Group incoming metric data points by month-of-date. A metric whose
+  // points span multiple months gets fanned out: same metric name
+  // appears in each month's bucket, holding only that month's points.
+  const byMonth = new Map<
+    string,
+    { metrics: Map<string, HealthMetric>; workouts: HealthWorkout[] }
+  >();
+  let totalMetricPoints = 0;
+
+  for (const m of incomingMetrics) {
+    if (!m.name) continue;
+    for (const p of m.data ?? []) {
+      const month = monthOf(p.date);
+      if (!month) continue;
+      let bucket = byMonth.get(month);
+      if (!bucket) {
+        bucket = { metrics: new Map<string, HealthMetric>(), workouts: [] };
+        byMonth.set(month, bucket);
+      }
+      let metric = bucket.metrics.get(m.name);
+      if (!metric) {
+        metric = { name: m.name, units: m.units, data: [] };
+        bucket.metrics.set(m.name, metric);
+      } else if (!metric.units && m.units) {
+        metric.units = m.units;
+      }
+      metric.data.push(p);
+      totalMetricPoints++;
+    }
+  }
+
+  for (const w of incomingWorkouts) {
+    const month = monthOf(typeof w.start === 'string' ? w.start : undefined);
+    if (!month) continue;
+    let bucket = byMonth.get(month);
+    if (!bucket) {
+      bucket = { metrics: new Map<string, HealthMetric>(), workouts: [] };
+      byMonth.set(month, bucket);
+    }
+    bucket.workouts.push(w);
+  }
+
+  // Read existing month buckets in parallel, merge, write back.
+  const months = [...byMonth.keys()];
+  const existing = await Promise.all(
+    months.map((m) => kv.get<MonthBucket>(healthMonthKey(m), { type: 'json' })),
+  );
+
+  const writes: Promise<unknown>[] = [];
+  for (let i = 0; i < months.length; i++) {
+    const month = months[i];
+    const fresh = byMonth.get(month);
+    if (!fresh) continue;
+    const merged = mergeIntoBucket(existing[i], fresh);
+    writes.push(kv.put(healthMonthKey(month), JSON.stringify(merged)));
+  }
+
+  // Update the index with whatever months are now present (incoming +
+  // anything already there). Sorted newest-first for the page's
+  // "archive" rendering.
+  const idx = await kv.get<HealthIndex>(HEALTH_INDEX_KEY, { type: 'json' });
+  const nextMonths = new Set<string>(idx?.months ?? []);
+  for (const m of months) nextMonths.add(m);
+  const nextIdx: HealthIndex = {
+    months: [...nextMonths].sort().reverse(),
+    lastUpdated: Date.now(),
+  };
+  writes.push(kv.put(HEALTH_INDEX_KEY, JSON.stringify(nextIdx)));
+
+  await Promise.all(writes);
+
+  return {
+    monthsTouched: months,
+    totalMetricPoints,
+    totalWorkouts: incomingWorkouts.length,
+  };
+}
+
+function mergeIntoBucket(
+  prev: MonthBucket | null,
+  fresh: { metrics: Map<string, HealthMetric>; workouts: HealthWorkout[] },
+): MonthBucket {
+  const metricsByName = new Map<
+    string,
+    { units?: string; pts: Map<string, HealthMetricPoint> }
+  >();
+
+  if (prev) {
+    for (const m of prev.metrics ?? []) {
+      const pts = new Map<string, HealthMetricPoint>();
+      for (const p of m.data ?? []) {
+        const key = `${p.date ?? ''}|${(p.source as string | undefined) ?? ''}`;
+        pts.set(key, p);
+      }
+      metricsByName.set(m.name, { units: m.units, pts });
+    }
+  }
+
+  for (const [name, m] of fresh.metrics) {
+    let entry = metricsByName.get(name);
+    if (!entry) {
+      entry = { units: m.units, pts: new Map<string, HealthMetricPoint>() };
+      metricsByName.set(name, entry);
+    } else if (!entry.units && m.units) {
+      entry.units = m.units;
+    }
+    for (const p of m.data ?? []) {
+      const key = `${p.date ?? ''}|${(p.source as string | undefined) ?? ''}`;
+      entry.pts.set(key, p);
+    }
+  }
+
+  const metrics: HealthMetric[] = [];
+  for (const [name, { units, pts }] of metricsByName) {
+    metrics.push({ name, units, data: [...pts.values()] });
+  }
+
+  const workoutsByKey = new Map<string, HealthWorkout>();
+  for (const w of prev?.workouts ?? []) {
+    const key = `${(w.start as string | undefined) ?? ''}|${w.name ?? ''}`;
+    workoutsByKey.set(key, w);
+  }
+  for (const w of fresh.workouts) {
+    const key = `${(w.start as string | undefined) ?? ''}|${w.name ?? ''}`;
+    workoutsByKey.set(key, w);
+  }
+
+  return {
+    ts: Date.now(),
+    metrics,
+    workouts: [...workoutsByKey.values()],
+  };
+}
