@@ -16,8 +16,17 @@ async function probe(url: string): Promise<ProbeResult> {
     const res = await fetch(url, { headers: { accept: 'application/json' } });
     const ms = Math.round(performance.now() - t0);
     let body: unknown;
-    try { body = await res.json(); } catch { /* not json */ }
-    return { ok: res.ok, status: res.status, ms, body };
+    let error: string | undefined;
+    const ct = res.headers.get('content-type') ?? '';
+    if (ct.includes('json')) {
+      try { body = await res.json(); } catch { /* malformed json */ }
+    } else if (res.ok) {
+      // 200 OK but non-JSON — usually the host's SPA fallthrough
+      // (deer.social, AppView clients). Treat as a soft failure
+      // since /xrpc isn't actually being served.
+      error = `non-json response (${ct || 'no content-type'}) — not a pds endpoint`;
+    }
+    return { ok: res.ok && !error, status: res.status, ms, body, error };
   } catch (err) {
     const ms = Math.round(performance.now() - t0);
     return { ok: false, status: 0, ms, error: err instanceof Error ? err.message : 'fetch failed' };
@@ -75,13 +84,12 @@ function healthVerdict(h: HealthPayload | undefined): { label: string; kind: 'ok
 }
 
 // Community PDSes that also host user handles under the same domain.
-// Safe starting points — all publicly probe-able.
+// Verified to serve /xrpc — apex-domain AppView clients (deer.social,
+// gndr.social) were dropped because they proxy /xrpc to the SPA's
+// HTML fallback.
 const SUGGESTIONS = [
   'https://bsky.social',
   'https://blacksky.app',
-  'https://deer.social',
-  'https://gndr.social',
-  'https://boobee.blue',
 ];
 
 export default function PdsHealthPage() {
@@ -151,6 +159,17 @@ export default function PdsHealthPage() {
         signal: ctl.signal,
       });
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      // Some hosts (deer.social, AppView clients) live at the apex
+      // and proxy unmatched paths to a SPA — listRepos returns the
+      // HTML home instead of XRPC JSON. Detect that explicitly so
+      // the error message says something useful instead of a raw
+      // JSON.parse exception.
+      const ct = res.headers.get('content-type') ?? '';
+      if (!ct.includes('json')) {
+        throw new Error(
+          `endpoint returned ${ct || 'no content-type'} — this host is probably not a PDS (no /xrpc handler)`,
+        );
+      }
       const body = (await res.json()) as ListReposPage;
       const next = body.repos ?? [];
       setRepos((prev) => prev.concat(next));
