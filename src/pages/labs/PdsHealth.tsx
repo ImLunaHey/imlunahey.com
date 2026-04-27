@@ -105,10 +105,6 @@ export default function PdsHealthPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.url]);
 
-  const submit = (v: string) => {
-    const n = normalizePds(v);
-    if (n) navigate({ to: '/labs/pds-health', search: { url: n } });
-  };
 
   const { data, isFetching, refetch } = useQuery({
     queryKey: ['pds-health', submitted],
@@ -196,8 +192,10 @@ export default function PdsHealthPage() {
     }
   }, [reposAutoLoad, reposLoading, reposHasMore, loadReposPage]);
 
-  // First page on submit (or refetch) so the count strip populates
-  // without an extra click.
+  // First page on submit (or browser back/forward) so the count strip
+  // populates without an extra click. We don't gate on the
+  // describeServer probe — listRepos is its own endpoint and the
+  // paginator surfaces its own errors if /xrpc isn't there.
   useEffect(() => {
     if (
       submitted
@@ -205,12 +203,11 @@ export default function PdsHealthPage() {
       && reposHasMore
       && !reposLoading
       && !reposError
-      && data?.listRepos.ok
     ) {
       loadReposPage();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submitted, data?.listRepos.ok]);
+  }, [submitted]);
 
   const stopRepos = () => {
     reposAbortRef.current?.abort();
@@ -325,6 +322,27 @@ export default function PdsHealthPage() {
       cancelled = true;
     };
   }, [submitted, reposVisible]);
+
+  const submit = (v: string) => {
+    const n = normalizePds(v);
+    if (!n || n === submitted) return;
+    // Hard reset everything tied to the previous PDS *before* we
+    // navigate. The useEffects below also reset on `submitted` change,
+    // but they fire on the next render with state still pointing at
+    // the old PDS — so the first-page-load effect would see stale
+    // repos.length > 0 and bail until the user manually refreshed.
+    // Doing the reset imperatively here means by the time the URL
+    // change re-renders the page, account state is already clean.
+    reposAbortRef.current?.abort();
+    setRepos([]);
+    setReposCursor(null);
+    setReposHasMore(true);
+    setReposError(null);
+    setReposAutoLoad(false);
+    setReposLoading(false);
+    setHandleCache(new Map());
+    navigate({ to: '/labs/pds-health', search: { url: n } });
+  };
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
