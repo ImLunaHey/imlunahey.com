@@ -90,6 +90,7 @@ function healthVerdict(h: HealthPayload | undefined): { label: string; kind: 'ok
 const SUGGESTIONS = [
   'https://bsky.social',
   'https://blacksky.app',
+  'https://pds.rip',
 ];
 
 export default function PdsHealthPage() {
