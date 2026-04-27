@@ -127,7 +127,7 @@ const LABS: Array<{ to: string; label: string; subtitle?: string }> = [
   { to: '/labs/handle-sniper', label: 'handle sniper', subtitle: 'check bluesky handle availability' },
   { to: '/labs/did-log', label: 'did log', subtitle: 'atproto identity history timeline' },
   { to: '/labs/thread-tree', label: 'thread tree', subtitle: 'bluesky conversation visualizer' },
-  { to: '/labs/pds-health', label: 'pds health', subtitle: 'probe any atproto pds' },
+  { to: '/labs/pds-health', label: 'pds health', subtitle: 'probe + inspect any atproto pds' },
   { to: '/labs/regex', label: 'regex', subtitle: 'live regex tester with groups' },
   { to: '/labs/encode', label: 'encode', subtitle: 'base64 / url / html / hex / binary' },
   { to: '/labs/diff', label: 'diff', subtitle: 'line-level diff between two blobs' },

@@ -225,7 +225,7 @@ const LABS: Lab[] = [
   {
     slug: 'pds-health',
     title: 'pds health',
-    desc: 'probe any atproto pds — describe/health/listrepos endpoints, response times, and operator metadata. ok/degraded/down verdict at a glance.',
+    desc: 'probe + inspect any atproto pds — health endpoints, operator metadata, and the full account roster paginated from listRepos with live counts.',
     tags: ['atproto', 'tool'],
     year: '2026',
     ready: true,
