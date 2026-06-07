@@ -28,6 +28,7 @@ import { Route as MainGuestbookRouteImport } from './routes/_main/guestbook'
 import { Route as MainGlobeRouteImport } from './routes/_main/globe'
 import { Route as MainGalleryRouteImport } from './routes/_main/gallery'
 import { Route as MainDesignSystemRouteImport } from './routes/_main/design-system'
+import { Route as MainCvRouteImport } from './routes/_main/cv'
 import { Route as MainBookmarksRouteImport } from './routes/_main/bookmarks'
 import { Route as MainAiRouteImport } from './routes/_main/ai'
 import { Route as MainWatchingIndexRouteImport } from './routes/_main/watching/index'
@@ -260,6 +261,11 @@ const MainGalleryRoute = MainGalleryRouteImport.update({
 const MainDesignSystemRoute = MainDesignSystemRouteImport.update({
   id: '/design-system',
   path: '/design-system',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainCvRoute = MainCvRouteImport.update({
+  id: '/cv',
+  path: '/cv',
   getParentRoute: () => MainRoute,
 } as any)
 const MainBookmarksRoute = MainBookmarksRouteImport.update({
@@ -967,6 +973,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ai': typeof MainAiRoute
   '/bookmarks': typeof MainBookmarksRoute
+  '/cv': typeof MainCvRoute
   '/design-system': typeof MainDesignSystemRoute
   '/gallery': typeof MainGalleryRoute
   '/globe': typeof MainGlobeRoute
@@ -1124,6 +1131,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ai': typeof MainAiRoute
   '/bookmarks': typeof MainBookmarksRoute
+  '/cv': typeof MainCvRoute
   '/design-system': typeof MainDesignSystemRoute
   '/gallery': typeof MainGalleryRoute
   '/globe': typeof MainGlobeRoute
@@ -1284,6 +1292,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_main/ai': typeof MainAiRoute
   '/_main/bookmarks': typeof MainBookmarksRoute
+  '/_main/cv': typeof MainCvRoute
   '/_main/design-system': typeof MainDesignSystemRoute
   '/_main/gallery': typeof MainGalleryRoute
   '/_main/globe': typeof MainGlobeRoute
@@ -1445,6 +1454,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/ai'
     | '/bookmarks'
+    | '/cv'
     | '/design-system'
     | '/gallery'
     | '/globe'
@@ -1602,6 +1612,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/ai'
     | '/bookmarks'
+    | '/cv'
     | '/design-system'
     | '/gallery'
     | '/globe'
@@ -1761,6 +1772,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_main/ai'
     | '/_main/bookmarks'
+    | '/_main/cv'
     | '/_main/design-system'
     | '/_main/gallery'
     | '/_main/globe'
@@ -2061,6 +2073,13 @@ declare module '@tanstack/react-router' {
       path: '/design-system'
       fullPath: '/design-system'
       preLoaderRoute: typeof MainDesignSystemRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/cv': {
+      id: '/_main/cv'
+      path: '/cv'
+      fullPath: '/cv'
+      preLoaderRoute: typeof MainCvRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/bookmarks': {
@@ -3035,6 +3054,7 @@ declare module '@tanstack/react-router' {
 interface MainRouteChildren {
   MainAiRoute: typeof MainAiRoute
   MainBookmarksRoute: typeof MainBookmarksRoute
+  MainCvRoute: typeof MainCvRoute
   MainDesignSystemRoute: typeof MainDesignSystemRoute
   MainGalleryRoute: typeof MainGalleryRoute
   MainGlobeRoute: typeof MainGlobeRoute
@@ -3184,6 +3204,7 @@ interface MainRouteChildren {
 const MainRouteChildren: MainRouteChildren = {
   MainAiRoute: MainAiRoute,
   MainBookmarksRoute: MainBookmarksRoute,
+  MainCvRoute: MainCvRoute,
   MainDesignSystemRoute: MainDesignSystemRoute,
   MainGalleryRoute: MainGalleryRoute,
   MainGlobeRoute: MainGlobeRoute,

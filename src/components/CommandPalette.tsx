@@ -98,6 +98,7 @@ const NAV_ITEMS: Array<{ to: string; label: string; subtitle: string; icon: Icon
   { to: '/ai', label: 'ai', subtitle: 'ai sandbox', icon: Sparkles, keywords: ['llm', 'chat'] },
   { to: '/guestbook', label: 'guestbook', subtitle: 'leave a note', icon: MessageSquare, keywords: ['comments'] },
   { to: '/uses', label: 'uses', subtitle: 'hardware & software', icon: Wrench, keywords: ['setup', 'gear'] },
+  { to: '/cv', label: 'cv', subtitle: 'experience & skills', icon: FileCode, keywords: ['resume', 'work', 'experience'] },
   // /bookmarks, /health, /homelab, /library are WIP and intentionally
   // omitted — they're also filtered out of the sitemap. Routes still
   // work via direct URL for local testing.

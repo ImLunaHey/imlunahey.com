@@ -34,6 +34,7 @@ const MORE_LINKS: NavLink[] = [
   { to: '/ai', label: '/ai', match: (p) => p.startsWith('/ai') },
   { to: '/homelab', label: '/homelab', match: (p) => p.startsWith('/homelab') },
   { to: '/uses', label: '/uses', match: (p) => p.startsWith('/uses') },
+  { to: '/cv', label: '/cv', match: (p) => p.startsWith('/cv') },
 ];
 
 const Clock = () => {

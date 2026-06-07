@@ -24,6 +24,7 @@ export type OgSlug =
   | 'music'
   | 'labs'
   | 'uses'
+  | 'cv'
   | 'design-system'
   | 'bookmarks'
   | 'library'
@@ -169,6 +170,7 @@ const ENTRIES: Record<OgSlug, OgEntry> = {
   music: { title: 'music.', subtitle: 'scrobbles from last.fm', description: 'recent listening habits pulled from last.fm — top artists, recent tracks, and what happens to be playing right now. updates roughly daily.', glyph: '♪', slug: '/music' },
   labs: { title: 'labs.', subtitle: 'experiments, demos, tools', description: '80+ small interactive labs — atproto tools, dev utilities, data explorers on uk open-gov / twitch / mastodon firehoses, media converters, and games.', glyph: '⚗', slug: '/labs' },
   uses: { title: 'uses.', subtitle: 'the full rig', description: 'hardware, software, and day-to-day tools i actually use — full rig breakdown covering the mac, keyboard, terminal, editor, browser, and home-lab setup.', glyph: '◈', slug: '/uses' },
+  cv: { title: 'cv.', subtitle: 'experience, open source, skills', description: 'cv — ~10 years building web platforms, apis, and developer tooling. most recently at axiom.co, with a long history of open-source maintenance across the at protocol / bluesky ecosystem.', glyph: '⌥', slug: '/cv' },
   'design-system': { title: 'design.sys.', subtitle: 'tokens, elements, patterns', description: 'the crt/phosphor design system this site is built on — colour tokens, typography, spacing, form elements, and shared interaction patterns.', glyph: '◰', slug: '/design-system' },
   bookmarks: { title: 'bookmarks.', subtitle: 'articles, talks, papers worth keeping', description: 'articles, talks, and papers worth returning to — mostly software engineering, computer science, design, typography, and the occasional physics paper.', glyph: '❖', slug: '/bookmarks' },
   library: { title: 'library.', subtitle: 'physical media shelf', description: 'the physical media shelf — books, dvds, vinyl, and anything else worth keeping on a shelf. each entry links out to where you can find a copy.', glyph: '▥', slug: '/library' },
