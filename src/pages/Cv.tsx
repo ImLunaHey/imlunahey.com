@@ -292,6 +292,16 @@ export default function CvPage() {
           </div>
 
           <footer className="cv-footer">
+            <span className="dl">
+              <span className="dl-label">download:</span>
+              <a href="/luna-cv-light.pdf" download="luna-cv-light.pdf" className="dl-link">
+                pdf --light
+              </a>
+              <span className="dl-sep">·</span>
+              <a href="/luna-cv-dark.pdf" download="luna-cv-dark.pdf" className="dl-link">
+                pdf --dark
+              </a>
+            </span>
             <span>print: ⌘P / Ctrl+P</span>
             <span>
               ←{' '}
@@ -481,10 +491,26 @@ const CSS = `
     color: var(--color-fg-faint);
     display: flex;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
   }
+  .shell-cv .dl { display: inline-flex; align-items: center; gap: 6px; }
+  .shell-cv .dl-label { color: var(--color-fg-faint); }
+  .shell-cv .dl-link {
+    color: var(--color-fg);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--color-fg-faint);
+    font-family: var(--font-mono);
+  }
+  .shell-cv .dl-link:hover {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
+  }
+  .shell-cv .dl-sep { color: var(--color-fg-faint); }
 
   @media print {
     body { background: #fff; color: #000; }
+    .shell-cv .dl { display: none; }
     .shell-cv { border: none; max-width: 100%; background: #fff; margin: 0; }
     .shell-cv .bar { background: #f0f0f0; border-color: #ddd; color: #777; }
     .shell-cv .pad { padding: 24px 30px; }
