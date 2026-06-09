@@ -170,6 +170,8 @@ export default function CvPage() {
             <span className="k">loc:</span> london, england, uk &nbsp;
             <span className="k">pronouns:</span> she/her · they/them
             <br />
+            <span className="k">email:</span> <a href="mailto:xo@wvvw.me">xo@wvvw.me</a>
+            <br />
             <span className="k">git:</span>{' '}
             <a href="https://github.com/ImLunaHey" target="_blank" rel="noopener noreferrer">
               github.com/ImLunaHey
